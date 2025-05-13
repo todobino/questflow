@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image'; // Added import
 import { usePathname } from 'next/navigation';
 import type { NavItem } from '@/lib/constants';
 import { NAV_ITEMS } from '@/lib/constants';
@@ -17,7 +18,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { AppLogo } from '@/components/icons';
+// AppLogo removed as it's no longer used directly here
 import { Separator } from '@/components/ui/separator';
 import {
   Popover,
@@ -33,9 +34,9 @@ import { useToast } from '@/hooks/use-toast';
 
 // Mock data, similar to campaigns page
 const initialCampaignsData: Campaign[] = [
-  { id: '1', name: 'The Whispering Peaks', description: 'An adventure into the mysterious mountains where ancient secrets lie.', isActive: true },
-  { id: '2', name: 'Curse of the Sunken City', description: 'Explore the ruins of a city lost beneath the waves.', isActive: false },
-  { id: '3', name: 'Shadows over Riverwood', description: 'A darkness looms over a quaint village, and heroes must rise.', isActive: false },
+  { id: '1', name: 'The Whispering Peaks', description: 'An adventure into the mysterious mountains where ancient secrets lie.', isActive: true, bannerImageUrl: `https://picsum.photos/seed/peakbanner/800/200` },
+  { id: '2', name: 'Curse of the Sunken City', description: 'Explore the ruins of a city lost beneath the waves.', isActive: false, bannerImageUrl: `https://picsum.photos/seed/sunkenbanner/800/200` },
+  { id: '3', name: 'Shadows over Riverwood', description: 'A darkness looms over a quaint village, and heroes must rise.', isActive: false, bannerImageUrl: `https://picsum.photos/seed/riverwoodbanner/800/200` },
 ];
 
 
@@ -73,12 +74,19 @@ export function SidebarNav() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-          <AppLogo className={cn("h-8 w-8 text-primary", sidebarState === 'collapsed' && "h-6 w-6")} />
-          {sidebarState === 'expanded' && (
-            <h1 className="text-xl font-semibold tracking-tight">Campaign Canvas</h1>
-          )}
-        </div>
+        {/* Display campaign banner if sidebar is expanded (on desktop) or on mobile, and an active campaign exists */}
+        {(isMobile || sidebarState === 'expanded') && activeCampaign && (
+          <div className="w-full aspect-[4/1] relative overflow-hidden rounded-md">
+            <Image
+              src={activeCampaign.bannerImageUrl || `https://picsum.photos/seed/${activeCampaign.id || 'defaultbanner'}/200/50`}
+              alt={`${activeCampaign.name} banner`}
+              layout="fill"
+              objectFit="cover"
+              data-ai-hint="campaign banner fantasy"
+              priority // Consider if this is often LCP
+            />
+          </div>
+        )}
       </SidebarHeader>
       <SidebarContent>
         {/* Campaign Switcher */}
@@ -91,7 +99,6 @@ export function SidebarNav() {
                   className="w-full justify-between bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"
                 >
                   <span className="flex items-center gap-2 truncate">
-                    {/* Icon removed for expanded/mobile view as per request */}
                     <span className="truncate">{activeCampaign ? activeCampaign.name : 'No Active Campaign'}</span>
                   </span>
                   <ChevronDown className="h-4 w-4 opacity-70" />
@@ -139,15 +146,15 @@ export function SidebarNav() {
             </PopoverContent>
           </Popover>
         </div>
-        {/* Removed Separator className="mb-2" */}
-
-        <SidebarMenu>
+        
+        <SidebarMenu className="px-2"> {/* Added px-2 for left/right padding on the menu itself */}
           {NAV_ITEMS.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
                 isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
                 tooltip={item.title}
+                className="mx-0" // Removed specific margin from button, padding handled by SidebarMenu
               >
                 <Link href={item.href}>
                   <item.icon />
@@ -220,4 +227,3 @@ export function SidebarNav() {
     </Sidebar>
   );
 }
-

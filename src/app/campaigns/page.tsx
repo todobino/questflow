@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,9 +23,9 @@ import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
 const initialCampaigns: Campaign[] = [
-  { id: '1', name: 'The Whispering Peaks', description: 'An adventure into the mysterious mountains where ancient secrets lie.', isActive: true },
-  { id: '2', name: 'Curse of the Sunken City', description: 'Explore the ruins of a city lost beneath the waves.', isActive: false },
-  { id: '3', name: 'Shadows over Riverwood', description: 'A darkness looms over a quaint village, and heroes must rise.', isActive: false },
+  { id: '1', name: 'The Whispering Peaks', description: 'An adventure into the mysterious mountains where ancient secrets lie.', isActive: true, bannerImageUrl: `https://picsum.photos/seed/peakbanner/800/200` },
+  { id: '2', name: 'Curse of the Sunken City', description: 'Explore the ruins of a city lost beneath the waves.', isActive: false, bannerImageUrl: `https://picsum.photos/seed/sunkenbanner/800/200` },
+  { id: '3', name: 'Shadows over Riverwood', description: 'A darkness looms over a quaint village, and heroes must rise.', isActive: false, bannerImageUrl: `https://picsum.photos/seed/riverwoodbanner/800/200` },
 ];
 
 export default function CampaignsPage() {
@@ -68,7 +69,7 @@ export default function CampaignsPage() {
       });
     } else {
       // Simulate API call for creation
-      const newCampaign = { ...campaign, id: String(Date.now()) }; // Simple ID generation
+      const newCampaign = { ...campaign, id: String(Date.now()), bannerImageUrl: campaign.bannerImageUrl || `https://picsum.photos/seed/${Date.now()}banner/800/200` }; // Simple ID generation
       setCampaigns(prev => [newCampaign, ...prev]);
       toast({
         title: "Campaign Created",
@@ -97,6 +98,16 @@ export default function CampaignsPage() {
             <PlusCircle className="mr-2 h-4 w-4" /> Create Campaign
           </Button>
         }
+      />
+
+      <CampaignForm
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingCampaign(null);
+        }}
+        onSave={handleSaveCampaign}
+        campaign={editingCampaign}
       />
 
       {campaigns.length === 0 ? (
@@ -131,9 +142,8 @@ export default function CampaignsPage() {
                 <CardDescription className="h-20 overflow-y-auto text-sm">{campaign.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex-grow">
-                {/* Placeholder for campaign image or further details */}
                 <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                   <Image src={`https://picsum.photos/seed/${campaign.id}/400/225`} alt={campaign.name} width={400} height={225} className="rounded-md object-cover" data-ai-hint="fantasy landscape" />
+                   <Image src={campaign.bannerImageUrl || `https://picsum.photos/seed/${campaign.id}/400/225`} alt={campaign.name} width={400} height={225} className="rounded-md object-cover" data-ai-hint="fantasy landscape" />
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end gap-2">
@@ -166,16 +176,6 @@ export default function CampaignsPage() {
           ))}
         </div>
       )}
-
-      <CampaignForm
-        isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false);
-          setEditingCampaign(null);
-        }}
-        onSave={handleSaveCampaign}
-        campaign={editingCampaign}
-      />
     </>
   );
 }

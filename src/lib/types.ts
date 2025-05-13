@@ -3,6 +3,7 @@ export interface Campaign {
   name: string;
   description: string;
   isActive: boolean;
+  bannerImageUrl?: string;
   // Optional: image, gameSystem
 }
 
@@ -37,6 +38,4 @@ export interface Combatant {
 }
 
 export interface OverworldMapData {
-  mapImage: string; // data URI
-  description: string;
-}
+  mapImage:
