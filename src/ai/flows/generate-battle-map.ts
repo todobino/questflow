@@ -36,7 +36,7 @@ const generateBattleMapFlow = ai.defineFlow(
     outputSchema: GenerateBattleMapOutputSchema,
   },
   async (input: GenerateBattleMapInput) => {
-    const imagePrompt = `A top-down view of a Dungeons & Dragons battle map, gridded into 20 squares wide by 25 squares tall. Each square represents 5 feet. The total area is 100ft wide by 125ft tall. The setting is a classic fantasy ${input.terrainType} terrain, drawn in a hand-painted or digital D&D map style, with clear boundaries and gridlines suitable for tabletop RPG play. The details of the terrain and map are as follows: ${input.boardDescription}`;
+    const imagePrompt = `Generate a top-down Dungeons & Dragons battle map, approximately 100ft by 100ft in size. The style should be a hand-drawn or digital D&D map. The setting is a classic fantasy ${input.terrainType}. The map should include these features: ${input.boardDescription}. Do not include any gridlines or squares on the map.`;
 
     const { media, text } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-exp',
@@ -51,8 +51,8 @@ const generateBattleMapFlow = ai.defineFlow(
     }
     
     const finalDescription = text 
-      ? `AI Description for ${input.terrainType}: ${text}` 
-      : `Generated battle map for ${input.terrainType}. Details: ${input.boardDescription}`;
+      ? `AI Description for ${input.terrainType} map: ${text}` 
+      : `Generated D&D style map for ${input.terrainType}. Details: ${input.boardDescription}`;
 
     return {
       mapImage: media.url,
@@ -60,3 +60,4 @@ const generateBattleMapFlow = ai.defineFlow(
     };
   }
 );
+
