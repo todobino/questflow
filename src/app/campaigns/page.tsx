@@ -139,7 +139,7 @@ export default function CampaignsPage() {
 
               <CardContent className="p-4 flex-grow space-y-3">
                 <CardTitle className="text-xl">{campaign.name}</CardTitle>
-                <CardDescription className="text-sm h-20 overflow-y-auto">{campaign.description}</CardDescription>
+                <CardDescription className="text-sm">{campaign.description}</CardDescription>
                 
                 <div className="flex items-center justify-between pt-2">
                   <Label htmlFor={`active-switch-${campaign.id}`} className="text-sm font-medium text-muted-foreground">
@@ -154,7 +154,7 @@ export default function CampaignsPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="flex justify-end gap-2 p-4 border-t border-border bg-muted/50 transition-colors duration-300">
+              <CardFooter className="flex justify-end gap-2 p-3 border-t border-border bg-muted/50">
                 <Button variant="outline" size="sm" onClick={() => handleEditCampaign(campaign)}>
                   <Edit3 className="mr-2 h-4 w-4" /> Edit
                 </Button>
@@ -188,4 +188,3 @@ export default function CampaignsPage() {
     </>
   );
 }
-
