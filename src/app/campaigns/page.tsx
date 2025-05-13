@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card'; // Removed CardHeader
+import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
 import { PlusCircle, Edit3, Trash2 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { CampaignForm } from '@/components/campaign-manager/campaign-form';
@@ -114,7 +114,7 @@ export default function CampaignsPage() {
 
       {campaigns.length === 0 ? (
         <Card className="text-center py-12">
-          <CardContent> {/* Using CardContent directly for simplicity */}
+          <CardContent>
             <CardTitle className="mb-2">No Campaigns Yet</CardTitle>
             <CardDescription className="mb-4">Start your journey by creating your first campaign.</CardDescription>
             <Button onClick={handleCreateCampaign} size="lg">
@@ -154,14 +154,15 @@ export default function CampaignsPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="flex justify-end gap-2 p-4 border-t border-transparent group-hover:border-border transition-colors duration-300">
+              <CardFooter className="flex justify-end gap-2 p-4 border-t border-border bg-muted/50 transition-colors duration-300">
                 <Button variant="outline" size="sm" onClick={() => handleEditCampaign(campaign)}>
                   <Edit3 className="mr-2 h-4 w-4" /> Edit
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    <Button variant="destructive" size="icon" className="h-9 w-9">
+                      <Trash2 className="h-4 w-4" />
+                       <span className="sr-only">Delete</span>
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -187,3 +188,4 @@ export default function CampaignsPage() {
     </>
   );
 }
+
