@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 // AppLogo removed as it's no longer used directly here
-import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -86,12 +85,6 @@ export function SidebarNav() {
   };
 
   const filteredCampaigns = useMemo(() => {
-    // Simulate "most recent" by keeping the order of initialCampaignsData and filtering
-    // In a real app, sort by a date field. New items in mock data are often added to end or start.
-    // Here, we just filter. Sorting for "most recent" would require a creation date.
-    // For now, let's keep original order if no search, or filter then keep that sub-order.
-    // Or, if "most recent" means "last added to initialCampaignsData", then reverse.
-    // Let's assume initialCampaignsData is "oldest to newest", so reverse for "newest first"
     let sorted = [...campaigns].reverse(); 
     if (campaignSearchTerm) {
         sorted = sorted.filter(campaign =>
@@ -105,8 +98,7 @@ export function SidebarNav() {
   return (
     <Sidebar>
       <SidebarHeader>
-        {/* Display campaign banner if sidebar is expanded (on desktop) or on mobile, and an active campaign exists */}
-        {mounted && (isMobile || sidebarState === 'expanded') && activeCampaign && (
+        {mounted && (sidebarState === 'expanded' || isMobile) && activeCampaign && (
           <div className="p-2"> 
             <div className={`aspect-square rounded-lg overflow-hidden relative ${!activeCampaign.bannerImageUrl ? 'bg-muted flex items-center justify-center text-sm text-muted-foreground' : ''}`}>
               {activeCampaign.bannerImageUrl ? (
@@ -115,8 +107,8 @@ export function SidebarNav() {
                   alt={`${activeCampaign.name} banner`}
                   layout="fill"
                   objectFit="cover"
-                  className="rounded-lg" // Ensure image itself is also rounded if needed, parent div handles overflow
-                  data-ai-hint="campaign art" // Updated hint
+                  className="rounded-lg"
+                  data-ai-hint="campaign art"
                   priority 
                 />
               ) : (
@@ -127,22 +119,21 @@ export function SidebarNav() {
         )}
       </SidebarHeader>
       <SidebarContent>
-        {/* Campaign Switcher */}
-        <div className="px-2 mb-2"> {/* px-2 to match SidebarMenu */}
+        <div className="px-2 mb-2">
           <Dialog open={isCampaignDialogOpen} onOpenChange={setIsCampaignDialogOpen}>
             {mounted ? (
                 <DialogTrigger asChild>
                 {(sidebarState === 'expanded' || isMobile) ? (
                     <Button
-                      variant="outline"
-                      className="w-full justify-between bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground h-auto py-2.5 items-start text-sm"
+                      variant="ghost" // Changed from outline
+                      className="group w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-auto py-2 px-3 items-center text-sm" // Adjusted padding, items-center
                     >
                       <span className="flex items-center gap-2 overflow-hidden min-w-0">
-                          <span className="line-clamp-2 text-left break-words leading-tight">
+                          <span className="line-clamp-2 text-left break-words leading-tight font-medium"> {/* Added font-medium */}
                             {activeCampaign ? activeCampaign.name : 'No Active Campaign'}
                           </span>
                       </span>
-                      <ChevronDown className="h-4 w-4 opacity-70 flex-shrink-0 mt-0.5" />
+                      <ChevronDown className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" /> {/* Show on hover */}
                     </Button>
                 ) : ( 
                     <TooltipProvider>
@@ -162,13 +153,13 @@ export function SidebarNav() {
                 )}
                 </DialogTrigger>
             ) : (
-                 <Button variant="outline" className="w-full justify-between opacity-70 h-auto py-2.5 items-start text-sm" disabled>
+                 <Button variant="ghost" className="w-full justify-between opacity-70 h-auto py-2 px-3 items-center text-sm" disabled>
                     <span className="flex items-center gap-2 overflow-hidden min-w-0">
-                        <span className="line-clamp-2 text-left break-words leading-tight">
+                        <span className="line-clamp-2 text-left break-words leading-tight font-medium">
                             {activeCampaign ? activeCampaign.name : 'Select Campaign'}
                         </span>
                     </span>
-                    <ChevronDown className="h-4 w-4 opacity-70 flex-shrink-0 mt-0.5" />
+                    <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
             )}
             <DialogContent className="sm:max-w-md">
@@ -188,7 +179,7 @@ export function SidebarNav() {
                     />
                   </div>
                 </div>
-                <div className="flex flex-col space-y-1 max-h-[300px] overflow-y-auto pr-1 -mr-2 pl-1"> {/* Adjust padding for scrollbar */}
+                <div className="flex flex-col space-y-1 max-h-[300px] overflow-y-auto pr-1 -mr-2 pl-1">
                   {filteredCampaigns.length > 0 ? filteredCampaigns.map(campaign => (
                     <Button
                       key={campaign.id}
