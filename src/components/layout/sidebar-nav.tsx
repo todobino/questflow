@@ -1,11 +1,11 @@
-// This is an auto-generated file from Firebase Studio.
+
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image'; // Added import
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import type { NavItem } from '@/lib/constants';
-import { NAV_ITEMS } from '@/lib/constants';
+import { SITE_NAV_ITEMS, CAMPAIGN_MENU_NAV_ITEMS, APP_LOGO_ICON, APP_NAME } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -16,9 +16,9 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   useSidebar,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-// AppLogo removed as it's no longer used directly here
 import {
   Dialog,
   DialogContent,
@@ -34,12 +34,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger as RadixTooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { PlusCircle, BookOpen, User, Shield, ScrollText, Users as UsersIcon, ChevronDown, Check, Briefcase, Search } from 'lucide-react';
+import { PlusCircle, BookOpen, User, Shield, ScrollText, Users as UsersIcon, ChevronDown, Check, Briefcase, Search as SearchIcon, Map as MapIcon, ListOrdered, Scroll, Brain } from 'lucide-react'; // Added more icons
 import type { Campaign } from '@/lib/types';
-import { useState, useEffect, useMemo } from 'react'; 
+import { useState, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-
 
 // Mock data, similar to campaigns page
 const initialCampaignsData: Campaign[] = [
@@ -55,37 +54,47 @@ export function SidebarNav() {
   const { toast } = useToast();
 
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaignsData);
-  const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(() => initialCampaignsData.find(c => c.isActive) || initialCampaignsData[0] || null);
+  const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(null);
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [campaignSearchTerm, setCampaignSearchTerm] = useState('');
 
   useEffect(() => {
     setMounted(true);
+    // Initialize active campaign based on mock data
+    const currentActive = initialCampaignsData.find(c => c.isActive) || initialCampaignsData[0] || null;
+    setActiveCampaign(currentActive);
+    if (currentActive && !initialCampaignsData.find(c => c.id === currentActive.id)) {
+       setCampaigns(prev => [currentActive, ...prev.filter(c => c.id !== currentActive.id)]);
+    } else {
+       setCampaigns(initialCampaignsData);
+    }
   }, []);
 
   useEffect(() => {
-    // Update activeCampaign if campaigns list changes or active status changes
-    const currentActive = campaigns.find(c => c.isActive);
-    setActiveCampaign(currentActive || campaigns[0] || null);
-  }, [campaigns]);
+    if (mounted) {
+        const currentActiveCampaign = campaigns.find(c => c.isActive);
+        setActiveCampaign(currentActiveCampaign || campaigns[0] || null);
+    }
+  }, [campaigns, mounted]);
+
 
   const handleSetCampaignActive = (campaignId: string) => {
     const selectedCampaign = campaigns.find(c => c.id === campaignId);
     if (selectedCampaign) {
-      setCampaigns(prevCampaigns => 
+      setCampaigns(prevCampaigns =>
         prevCampaigns.map(c => ({ ...c, isActive: c.id === campaignId }))
       );
       toast({
         title: "Active Campaign Changed",
         description: `"${selectedCampaign.name}" is now the active campaign.`,
       });
-      setIsCampaignDialogOpen(false); // Close dialog on selection
+      setIsCampaignDialogOpen(false);
     }
   };
 
   const filteredCampaigns = useMemo(() => {
-    let sorted = [...campaigns].reverse(); 
+    let sorted = [...campaigns].sort((a,b) => (b.isActive ? 1 : 0) - (a.isActive ? 1: 0) || campaigns.indexOf(a) - campaigns.indexOf(b) ); // Keep original sort, active first
     if (campaignSearchTerm) {
         sorted = sorted.filter(campaign =>
           campaign.name.toLowerCase().includes(campaignSearchTerm.toLowerCase())
@@ -94,48 +103,78 @@ export function SidebarNav() {
     return sorted;
   }, [campaigns, campaignSearchTerm]);
 
+  const AppLogoComponent = APP_LOGO_ICON;
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        {mounted && (sidebarState === 'expanded' || isMobile) && activeCampaign && (
-          <div className="p-2"> 
-            <div className={`aspect-square rounded-lg overflow-hidden relative ${!activeCampaign.bannerImageUrl ? 'bg-muted flex items-center justify-center text-sm text-muted-foreground' : ''}`}>
-              {activeCampaign.bannerImageUrl ? (
-                <Image
-                  src={activeCampaign.bannerImageUrl}
-                  alt={`${activeCampaign.name} banner`}
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-lg"
-                  data-ai-hint="campaign art"
-                  priority 
-                />
-              ) : (
-                <span>No Banner</span>
-              )}
-            </div>
+      <SidebarHeader className="p-2 border-b border-sidebar-border">
+        {(sidebarState === 'expanded' || isMobile) ? (
+          <div className="flex items-center gap-2">
+            <AppLogoComponent className="h-6 w-6 text-primary" />
+            <span className="font-extrabold text-lg text-foreground">{APP_NAME}</span>
           </div>
+        ) : (
+          <TooltipProvider>
+            <Tooltip>
+              <RadixTooltipTrigger asChild>
+                <div className="flex justify-center items-center h-8"> {/* Fixed height for collapsed */}
+                  <AppLogoComponent className="h-6 w-6 text-primary" />
+                </div>
+              </RadixTooltipTrigger>
+              <TooltipContent side="right" align="center">
+                <p>{APP_NAME}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </SidebarHeader>
+
       <SidebarContent>
-        <div className="px-2 mb-2">
+        {/* Site Nav Menu */}
+        <SidebarMenu className="px-2 pt-2">
+          {SITE_NAV_ITEMS.map((item) => (
+            <SidebarMenuItem key={item.href}>
+               <TooltipProvider>
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
+                    tooltip={item.title}
+                    disabled={item.disabled}
+                    className={cn(item.disabled && "cursor-not-allowed opacity-50")}
+                >
+                    <Link href={item.disabled ? '#' : item.href}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                    </Link>
+                </SidebarMenuButton>
+               </TooltipProvider>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+
+        <SidebarSeparator className="my-2"/>
+
+        {/* Active Campaign Section */}
+        <div className="px-4 mb-1">
+          {(sidebarState === 'expanded' || isMobile) && (
+            <p className="text-xs font-semibold text-muted-foreground mb-1">ACTIVE CAMPAIGN</p>
+          )}
           <Dialog open={isCampaignDialogOpen} onOpenChange={setIsCampaignDialogOpen}>
             {mounted ? (
                 <DialogTrigger asChild>
                 {(sidebarState === 'expanded' || isMobile) ? (
-                    <Button
-                      variant="ghost" // Changed from outline
-                      className="group w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-auto py-2 px-3 items-center text-sm" // Adjusted padding, items-center
+                     <Button
+                      variant="ghost"
+                      className="group w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-auto py-2 px-3 items-center text-sm"
                     >
                       <span className="flex items-center gap-2 overflow-hidden min-w-0">
-                          <span className="line-clamp-2 text-left break-words leading-tight font-medium"> {/* Added font-medium */}
+                          <span className="line-clamp-2 text-left break-words leading-tight font-medium">
                             {activeCampaign ? activeCampaign.name : 'No Active Campaign'}
                           </span>
                       </span>
-                      <ChevronDown className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" /> {/* Show on hover */}
+                      <ChevronDown className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                     </Button>
-                ) : ( 
+                ) : (
                     <TooltipProvider>
                         <Tooltip>
                             <RadixTooltipTrigger asChild>
@@ -159,7 +198,7 @@ export function SidebarNav() {
                             {activeCampaign ? activeCampaign.name : 'Select Campaign'}
                         </span>
                     </span>
-                    <ChevronDown className="h-4 w-4 opacity-50" />
+                    <ChevronDown className="h-4 w-4 opacity-50 ml-auto flex-shrink-0" />
                 </Button>
             )}
             <DialogContent className="sm:max-w-md">
@@ -169,7 +208,7 @@ export function SidebarNav() {
                 </DialogHeader>
                 <div className="py-2">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <SearchIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type="search"
                       placeholder="Search campaigns..."
@@ -185,11 +224,9 @@ export function SidebarNav() {
                       key={campaign.id}
                       variant="ghost"
                       className={`w-full justify-start text-sm h-auto py-2 ${campaign.id === activeCampaign?.id ? 'bg-accent text-accent-foreground' : ''}`}
-                      onClick={() => {
-                        handleSetCampaignActive(campaign.id);
-                      }}
+                      onClick={() => handleSetCampaignActive(campaign.id)}
                     >
-                      {campaign.id === activeCampaign?.id && <Check className="mr-2 h-4 w-4" />}
+                      {campaign.id === activeCampaign?.id && <Check className="mr-2 h-4 w-4 flex-shrink-0" />}
                       <span className="truncate">{campaign.name}</span>
                     </Button>
                   )) : (
@@ -208,17 +245,20 @@ export function SidebarNav() {
             </DialogContent>
           </Dialog>
         </div>
-        
-        <SidebarMenu className="px-2"> 
-          {NAV_ITEMS.map((item) => (
+
+        {/* Campaign Menu Nav */}
+        <SidebarMenu className="px-2">
+          {CAMPAIGN_MENU_NAV_ITEMS.map((item) => (
             <SidebarMenuItem key={item.href}>
                <TooltipProvider>
                 <SidebarMenuButton
                     asChild
                     isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
                     tooltip={item.title}
+                    disabled={item.disabled || !activeCampaign} // Disable if no active campaign or item itself is disabled
+                    className={cn((item.disabled || !activeCampaign) && "cursor-not-allowed opacity-50")}
                 >
-                    <Link href={item.href}>
+                    <Link href={(item.disabled || !activeCampaign) ? '#' : item.href}>
                     <item.icon />
                     <span>{item.title}</span>
                     </Link>
@@ -228,6 +268,7 @@ export function SidebarNav() {
           ))}
         </SidebarMenu>
       </SidebarContent>
+
       <SidebarFooter className="mt-auto">
          <div className="p-2">
             <Popover>
@@ -271,12 +312,12 @@ export function SidebarNav() {
                     </Link>
                   </Button>
                   <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
-                    <Link href="/creator/characters">
+                    <Link href="/characters">
                       <User className="mr-2 h-4 w-4" /> New Character
                     </Link>
                   </Button>
                   <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild disabled>
-                    <Link href="/creator/encounters">
+                    <Link href="/encounters">
                       <Shield className="mr-2 h-4 w-4" /> New Encounter
                     </Link>
                   </Button>
@@ -286,7 +327,7 @@ export function SidebarNav() {
                     </Link>
                   </Button>
                   <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
-                    <Link href="/creator/characters"> 
+                    <Link href="/characters">
                       <UsersIcon className="mr-2 h-4 w-4" /> New NPC
                     </Link>
                   </Button>
@@ -298,4 +339,3 @@ export function SidebarNav() {
     </Sidebar>
   );
 }
-

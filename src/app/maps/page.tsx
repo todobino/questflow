@@ -6,16 +6,16 @@ import Image from 'next/image';
 import { PageHeader } from '@/components/shared/page-header';
 import { MapForm } from '@/components/map-maker/map-form';
 import { MapDisplay } from '@/components/map-maker/map-display';
-import type { OverworldMapData } from '@/lib/types'; // Reusing this type for {mapImage, description}
-import type { GenerateBattleMapInput } from '@/ai/flows/generate-battle-map'; // Updated import
-import { generateBattleMap } from '@/ai/flows/generate-battle-map'; // Updated import
+import type { OverworldMapData } from '@/lib/types'; 
+import type { GenerateBattleMapInput } from '@/ai/flows/generate-battle-map';
+import { generateBattleMap } from '@/ai/flows/generate-battle-map';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Save, Layers } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export default function MapMakerPage() {
+export default function MapsPage() {
   const [mapData, setMapData] = useState<OverworldMapData | null>(null);
   const [savedMaps, setSavedMaps] = useState<OverworldMapData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +44,6 @@ export default function MapMakerPage() {
 
   const handleSaveMap = () => {
     if (mapData) {
-      // Check for duplicates based on mapImage to avoid saving the exact same image multiple times
       if (savedMaps.some(savedMap => savedMap.mapImage === mapData.mapImage)) {
         toast({
           title: 'Map Already Saved',
@@ -53,7 +52,7 @@ export default function MapMakerPage() {
         });
         return;
       }
-      setSavedMaps(prev => [mapData, ...prev]); // Add to beginning of array
+      setSavedMaps(prev => [mapData, ...prev]); 
       toast({
         title: 'Map Saved!',
         description: 'The battle map has been added to "My Maps".',
@@ -116,7 +115,7 @@ export default function MapMakerPage() {
                         src={sMap.mapImage}
                         alt={`Saved Map ${index + 1}`}
                         width={300}
-                        height={169} // 16:9 aspect ratio for 300 width
+                        height={169} 
                         className="object-cover w-full h-full"
                         data-ai-hint="battlemap rpg"
                         />

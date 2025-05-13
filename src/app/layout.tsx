@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Campaign Canvas',
+  title: 'QuestFlow',
   description: 'Your ultimate RPG campaign management tool, powered by Firebase Studio.',
 };
 

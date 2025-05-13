@@ -1,11 +1,16 @@
 
 import type { LucideIcon } from 'lucide-react';
 import {
-  Home,
-  ScrollText,
-  Users,
-  Map,
   BookOpen,
+  Search,
+  Users,
+  ListOrdered,
+  Shield,
+  Map as MapIcon,
+  Scroll,
+  ScrollText,
+  Brain,
+  Swords, // Added for logo
 } from 'lucide-react';
 
 export interface NavItem {
@@ -16,41 +21,61 @@ export interface NavItem {
   disabled?: boolean;
 }
 
-export const NAV_ITEMS: NavItem[] = [
-  {
-    title: 'Dashboard',
-    href: '/',
-    icon: Home,
-  },
+export const APP_LOGO_ICON = Swords;
+export const APP_NAME = "QuestFlow";
+
+export const SITE_NAV_ITEMS: NavItem[] = [
   {
     title: 'Campaigns',
     href: '/campaigns',
     icon: BookOpen,
   },
   {
-    title: 'Creator Tools',
-    href: '/creator/characters', // Default to characters
+    title: 'Search',
+    href: '/search',
+    icon: Search,
+    disabled: true, // Placeholder for now
+  },
+];
+
+export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
+  {
+    title: 'Characters',
+    href: '/characters',
     icon: Users,
   },
   {
-    title: 'Map Maker',
-    href: '/map-maker',
-    icon: Map,
+    title: 'Tables',
+    href: '/tables',
+    icon: ListOrdered,
+    disabled: true, // Placeholder
+  },
+  {
+    title: 'Encounters',
+    href: '/encounters',
+    icon: Shield, // Using Shield for encounters
+    disabled: true, // Placeholder for now, was /creator/encounters (Soon)
+  },
+  {
+    title: 'Maps',
+    href: '/maps',
+    icon: MapIcon,
+  },
+  {
+    title: 'Quests',
+    href: '/quests',
+    icon: Scroll,
+    disabled: true, // Placeholder
   },
   {
     title: 'Journal',
     href: '/journal',
     icon: ScrollText,
   },
-  // Dice Roller and Combat Tracker moved to right sidebar
-  // {
-  //   title: 'Dice Roller',
-  //   href: '/dice-roller',
-  //   icon: Dice5,
-  // },
-  // {
-  //   title: 'Combat Tracker',
-  //   href: '/combat-tracker',
-  //   icon: Swords,
-  // },
+  {
+    title: 'Lore',
+    href: '/lore',
+    icon: Brain,
+    disabled: true, // Placeholder
+  },
 ];
