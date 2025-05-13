@@ -1,16 +1,18 @@
+
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { BookOpen, Users, Map, ScrollText, Dice5, Swords } from 'lucide-react';
+import { BookOpen, Users, Map, ScrollText } from 'lucide-react'; // Removed Dice5, Swords
 
 const quickAccessItems = [
   { title: 'Manage Campaigns', href: '/campaigns', icon: BookOpen, description: 'Create, edit, and organize your adventures.' },
   { title: 'Character Creator', href: '/creator/characters', icon: Users, description: 'Bring your heroes and villains to life.' },
   { title: 'Map Maker', href: '/map-maker', icon: Map, description: 'Visualize your world with AI-powered maps.' },
   { title: 'Session Journal', href: '/journal', icon: ScrollText, description: 'Log your game sessions and track progress.' },
-  { title: 'Dice Roller', href: '/dice-roller', icon: Dice5, description: 'Quickly roll any dice you need.' },
-  { title: 'Combat Tracker', href: '/combat-tracker', icon: Swords, description: 'Manage initiative and combat encounters.' },
+  // Dice Roller and Combat Tracker moved to right sidebar
+  // { title: 'Dice Roller', href: '/dice-roller', icon: Dice5, description: 'Quickly roll any dice you need.' },
+  // { title: 'Combat Tracker', href: '/combat-tracker', icon: Swords, description: 'Manage initiative and combat encounters.' },
 ];
 
 export default function DashboardPage() {
@@ -53,6 +55,7 @@ export default function DashboardPage() {
             <li>Use the <Link href="/creator/characters" className="text-accent hover:underline">Character Creator</Link> to design your main characters and notable NPCs.</li>
             <li>Explore the <Link href="/map-maker" className="text-accent hover:underline">Map Maker</Link> to generate an overworld map for your setting.</li>
             <li>Keep track of your sessions and important plot points with the <Link href="/journal" className="text-accent hover:underline">Journal</Link>.</li>
+            <li>Access the Dice Roller and Combat Tracker from the right sidebar on larger screens.</li>
           </ul>
         </CardContent>
       </Card>

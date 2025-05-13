@@ -38,4 +38,17 @@ export interface Combatant {
 }
 
 export interface OverworldMapData {
-  mapImage:
+  mapImage: string; // Data URI
+  description: string;
+}
+
+export interface PartyMember {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  level: number;
+  race: string;
+  class: string;
+  currentHp: number;
+  maxHp: number;
+}

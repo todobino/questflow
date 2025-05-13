@@ -1,7 +1,13 @@
+
 import type { ReactNode } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SidebarNav } from './sidebar-nav';
 import { Toaster } from '@/components/ui/toaster';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
+import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
+import { PartySheet } from '@/components/party/party-sheet';
+import { Dices, Shield, Users } from 'lucide-react';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -9,48 +15,47 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <SidebarProvider defaultOpen> {/* Manages left sidebar state and CSS variables */}
-      <div className="flex h-screen w-full bg-background text-foreground"> {/* Overall flex container, ensure w-full */}
+    <SidebarProvider defaultOpen>
+      <div className="flex h-screen w-full bg-background text-foreground">
 
         {/* Left Sidebar */}
-        <SidebarNav /> {/* Renders <Sidebar> which respects CSS variables for width (15vw) */}
+        <SidebarNav />
 
         {/* Center Content Column */}
-        {/* Adjusted width to 50vw and added flex-shrink-0 */}
-        <div className="w-[50vw] flex-shrink-0 flex flex-col overflow-hidden"> 
-          {/* Mobile Header for Center Content */}
+        <div className="w-[calc(100vw-var(--sidebar-width-desktop)-25vw)] md:w-[50vw] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
-            <SidebarTrigger /> {/* Controls left sidebar visibility on mobile */}
+            <SidebarTrigger />
             <h1 className="text-lg font-semibold">Campaign Canvas</h1>
           </header>
-          {/* Main Page Content Area */}
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
             {children}
           </main>
         </div>
 
         {/* Right Sidebar Column */}
-        {/* Adjusted width to 25vw */}
-        <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground p-4 overflow-y-auto hidden md:block">
-          {/* Placeholder for Right Sidebar Content */}
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold">Quick Tools</h2>
-              <p className="text-sm text-muted-foreground">Contextual actions and info.</p>
-            </div>
-            {/* Example Content */}
-            <div className="border rounded-lg p-3">
-              <h3 className="font-medium">Active Character</h3>
-              <p className="text-xs text-muted-foreground">Elara, Level 5 Wizard</p>
-            </div>
-            <div className="border rounded-lg p-3">
-              <h3 className="font-medium">Next Session</h3>
-              <p className="text-xs text-muted-foreground">Saturday, 7 PM - The Goblin Caves</p>
-            </div>
-             <div className="border rounded-lg p-3 h-64 bg-muted flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">More tools coming soon...</p>
-            </div>
-          </div>
+        <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground p-4 hidden md:flex flex-col overflow-hidden">
+          <Tabs defaultValue="party" className="w-full flex-1 flex flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-3 shrink-0">
+              <TabsTrigger value="party" className="text-xs px-1 py-1.5 h-auto">
+                <Users className="h-4 w-4 mr-1 md:mr-2" />Party
+              </TabsTrigger>
+              <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto">
+                <Dices className="h-4 w-4 mr-1 md:mr-2" />Dice
+              </TabsTrigger>
+              <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto">
+                <Shield className="h-4 w-4 mr-1 md:mr-2" />Combat
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="party" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
+              <PartySheet />
+            </TabsContent>
+            <TabsContent value="dice" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
+              <DiceRollerTool />
+            </TabsContent>
+            <TabsContent value="combat" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
+              <CombatTrackerTool />
+            </TabsContent>
+          </Tabs>
         </aside>
 
       </div>
