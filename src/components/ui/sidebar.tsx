@@ -24,7 +24,7 @@ const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 
 // NEW: Define these based on percentages for expanded, fixed for collapsed
-const SIDEBAR_EXPANDED_WIDTH_DESKTOP = "15vw";
+const SIDEBAR_EXPANDED_WIDTH_DESKTOP = "15vw"; // Adjusted to 15%
 const SIDEBAR_COLLAPSED_WIDTH_DESKTOP = "4rem"; 
 const SIDEBAR_EXPANDED_WIDTH_MOBILE = "80vw"; // Standard mobile sidebar width
 
@@ -82,7 +82,7 @@ const SidebarProvider = React.forwardRef<
         .split('; ')
         .find(row => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
         ?.split('=')[1];
-      if (cookieValue) {
+      if (cookieValue && typeof _setOpen === 'function') { // Check if _setOpen is defined
         _setOpen(cookieValue === 'true');
       }
     }, []);
@@ -149,12 +149,18 @@ const SidebarProvider = React.forwardRef<
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
 
-    if (!mounted) {
-        // Render nothing or a placeholder on the server/first client render to avoid hydration mismatch
-        // Or, render with defaultOpen state and let client-side effect correct from cookie
-        // For simplicity here, we'll let it render with defaultOpen state.
-        // The effect will correct it, which might cause a flicker but avoids complex SSR logic for cookie.
-    }
+    // if (!mounted && typeof window !== 'undefined') {
+      // Client-side only effect for cookie reading
+    //   const cookieValue = document.cookie
+    //     .split('; ')
+    //     .find(row => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
+    //     ?.split('=')[1];
+    //   if (cookieValue && openProp === undefined && _open !== (cookieValue === 'true')) {
+         // This direct state update during render phase is problematic.
+         // It should be in useEffect or handled by initializing _open with cookie value.
+         // For now, relying on the useEffect to correct.
+    //   }
+    // }
 
 
     return (
@@ -211,7 +217,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground", // Uses --sidebar-width directly
+            "flex h-full w-[var(--sidebar-width)] flex-col bg-sidebar text-sidebar-foreground", // Uses --sidebar-width directly
             className
           )}
           ref={ref}
@@ -273,7 +279,7 @@ const Sidebar = React.forwardRef<
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2" // Simplified, width is handled by state
-              : "group-data-[side=left]:border-r group-data-[side=right]:border-l",
+              : "group-data-[side=left]:border-r group-data-[side=right]:border-l border-sidebar-border", // Added border-sidebar-border
             className
           )}
           {...props}
@@ -800,3 +806,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
