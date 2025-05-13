@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Terrain, DraftingCompass, ScanText } from 'lucide-react'; // Using Terrain for type, DraftingCompass for general map making, ScanText for description
+import { Layers, DraftingCompass, ScanText } from 'lucide-react'; // Using Layers for type, DraftingCompass for general map making, ScanText for description
 
 const terrainTypes = ["Cave", "Castle", "Forest", "River", "Ocean", "Dungeon", "Tavern", "Plains"] as const;
 
@@ -66,7 +66,7 @@ export function MapForm({ onGenerate, isLoading }: MapFormProps) {
               name="terrainType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><Terrain className="mr-2 h-4 w-4 text-muted-foreground" /> Terrain Type</FormLabel>
+                  <FormLabel className="flex items-center"><Layers className="mr-2 h-4 w-4 text-muted-foreground" /> Terrain Type</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
