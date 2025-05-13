@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -28,13 +27,14 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger as RadixTooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { PlusCircle, BookOpen, User, Shield, ScrollText, Users as UsersIcon, ChevronDown, Check, Briefcase, Search as SearchIcon, Map as MapIcon, ListOrdered, Scroll, Brain } from 'lucide-react'; // Added more icons
+import {
+  ChevronDown,
+  Check,
+  Briefcase,
+  Search as SearchIcon,
+  Settings, // Added Settings icon
+} from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useState, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
@@ -107,7 +107,7 @@ export function SidebarNav() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-2 border-b border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border p-2">
         {(sidebarState === 'expanded' || isMobile) ? (
           <div className="flex items-center gap-2">
             <AppLogoComponent className="h-6 w-6 text-primary" />
@@ -236,9 +236,12 @@ export function SidebarNav() {
                   )}
                 </div>
                  <DialogFooter className="mt-4 pt-4 border-t">
-                   <Button variant="outline" className="w-full justify-center text-sm h-auto py-2" asChild onClick={() => setIsCampaignDialogOpen(false)}>
+                   <Button variant="outline" className="w-full justify-center text-sm h-auto py-2" asChild onClick={() => {
+                      setIsCampaignDialogOpen(false);
+                      // No need to navigate, Link component handles it if path is /campaigns
+                    }}>
                     <Link href="/campaigns">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Manage Campaigns
+                      <Briefcase className="mr-2 h-4 w-4" /> Manage Campaigns
                     </Link>
                   </Button>
                 </DialogFooter>
@@ -270,71 +273,22 @@ export function SidebarNav() {
       </SidebarContent>
 
       <SidebarFooter className="mt-auto">
-         <div className="p-2">
-            <Popover>
-                {mounted ? (
-                    <PopoverTrigger asChild>
-                    {(sidebarState === 'expanded' || isMobile) ? (
-                        <Button variant="outline" className="w-full justify-start">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Make New
-                        </Button>
-                        ) : (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <RadixTooltipTrigger asChild>
-                                <Button variant="outline" size="icon" className="w-full">
-                                    <PlusCircle className="h-4 w-4" />
-                                </Button>
-                                </RadixTooltipTrigger>
-                                <TooltipContent side="right" align="center">
-                                <p>Make New</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        )}
-                    </PopoverTrigger>
-                ) : (
-                    <Button variant="outline" className="w-full justify-start opacity-70" disabled>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Make New
-                    </Button>
-                )}
-              <PopoverContent
-                side="top"
-                align={(mounted && (sidebarState === 'expanded' || isMobile)) ? "start" : "center"}
-                className="w-[var(--radix-popover-trigger-width)] p-1"
-              >
-                <div className="flex flex-col space-y-1">
-                  <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
-                    <Link href="/campaigns">
-                      <BookOpen className="mr-2 h-4 w-4" /> New Campaign
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
-                    <Link href="/characters">
-                      <User className="mr-2 h-4 w-4" /> New Character
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild disabled>
-                    <Link href="/encounters">
-                      <Shield className="mr-2 h-4 w-4" /> New Encounter
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
-                    <Link href="/journal">
-                      <ScrollText className="mr-2 h-4 w-4" /> New Journal Entry
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
-                    <Link href="/characters">
-                      <UsersIcon className="mr-2 h-4 w-4" /> New NPC
-                    </Link>
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-         </div>
+        <SidebarMenu className="p-2">
+            <SidebarMenuItem>
+                <TooltipProvider>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === '/settings'}
+                        tooltip="Settings"
+                    >
+                        <Link href="/settings">
+                            <Settings />
+                            <span>Settings</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </TooltipProvider>
+            </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
