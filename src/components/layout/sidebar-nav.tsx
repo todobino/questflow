@@ -91,7 +91,7 @@ export function SidebarNav() {
                   className="w-full justify-between bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"
                 >
                   <span className="flex items-center gap-2 truncate">
-                    <Briefcase className="h-4 w-4" />
+                    {/* Icon removed for expanded/mobile view as per request */}
                     <span className="truncate">{activeCampaign ? activeCampaign.name : 'No Active Campaign'}</span>
                   </span>
                   <ChevronDown className="h-4 w-4 opacity-70" />
