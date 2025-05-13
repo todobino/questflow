@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 import {
   Home,
@@ -39,6 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Map Maker',
     href: '/map-maker',
     icon: Map,
+    // description: 'Generate D&D battle maps with AI.' // This field is not used by NavItem, description is on PageHeader
   },
   {
     title: 'Journal',
