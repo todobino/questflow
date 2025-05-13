@@ -4,8 +4,8 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Edit3, Trash2, CheckCircle, Circle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card'; // Removed CardHeader
+import { PlusCircle, Edit3, Trash2 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { CampaignForm } from '@/components/campaign-manager/campaign-form';
 import {
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const initialCampaigns: Campaign[] = [
   { id: '1', name: 'The Whispering Peaks', description: 'An adventure into the mysterious mountains where ancient secrets lie.', isActive: true, bannerImageUrl: `https://picsum.photos/seed/peakbanner/800/200` },
@@ -112,11 +114,9 @@ export default function CampaignsPage() {
 
       {campaigns.length === 0 ? (
         <Card className="text-center py-12">
-          <CardHeader>
-            <CardTitle>No Campaigns Yet</CardTitle>
-            <CardDescription>Start your journey by creating your first campaign.</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent> {/* Using CardContent directly for simplicity */}
+            <CardTitle className="mb-2">No Campaigns Yet</CardTitle>
+            <CardDescription className="mb-4">Start your journey by creating your first campaign.</CardDescription>
             <Button onClick={handleCreateCampaign} size="lg">
               <PlusCircle className="mr-2 h-5 w-5" /> Create Your First Campaign
             </Button>
@@ -125,28 +125,36 @@ export default function CampaignsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {campaigns.map((campaign) => (
-            <Card key={campaign.id} className="flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-xl">{campaign.name}</CardTitle>
-                  <Button
-                    variant={campaign.isActive ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleSetActive(campaign.id)}
-                    className={`transition-all ${campaign.isActive ? 'bg-success text-success-foreground hover:bg-success/90' : ''}`}
-                  >
-                    {campaign.isActive ? <CheckCircle className="mr-2 h-4 w-4" /> : <Circle className="mr-2 h-4 w-4" />}
-                    {campaign.isActive ? 'Active' : 'Set Active'}
-                  </Button>
-                </div>
-                <CardDescription className="h-20 overflow-y-auto text-sm">{campaign.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                   <Image src={campaign.bannerImageUrl || `https://picsum.photos/seed/${campaign.id}/400/225`} alt={campaign.name} width={400} height={225} className="rounded-md object-cover" data-ai-hint="fantasy landscape" />
+            <Card key={campaign.id} className="group flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden">
+              <div className="w-full aspect-[16/9] bg-muted">
+                <Image 
+                  src={campaign.bannerImageUrl || `https://picsum.photos/seed/${campaign.id}/400/225`} 
+                  alt={campaign.name} 
+                  width={400} 
+                  height={225} 
+                  className="w-full h-full object-cover"
+                  data-ai-hint="fantasy landscape" 
+                />
+              </div>
+
+              <CardContent className="p-4 flex-grow space-y-3">
+                <CardTitle className="text-xl">{campaign.name}</CardTitle>
+                <CardDescription className="text-sm h-20 overflow-y-auto">{campaign.description}</CardDescription>
+                
+                <div className="flex items-center justify-between pt-2">
+                  <Label htmlFor={`active-switch-${campaign.id}`} className="text-sm font-medium text-muted-foreground">
+                    Set as Active Campaign
+                  </Label>
+                  <Switch
+                    id={`active-switch-${campaign.id}`}
+                    checked={campaign.isActive}
+                    onCheckedChange={() => handleSetActive(campaign.id)}
+                    aria-label={`Set ${campaign.name} as active campaign`}
+                  />
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end gap-2">
+
+              <CardFooter className="flex justify-end gap-2 p-4 border-t border-transparent group-hover:border-border transition-colors duration-300">
                 <Button variant="outline" size="sm" onClick={() => handleEditCampaign(campaign)}>
                   <Edit3 className="mr-2 h-4 w-4" /> Edit
                 </Button>
