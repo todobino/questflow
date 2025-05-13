@@ -10,13 +10,14 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   return (
     <SidebarProvider defaultOpen> {/* Manages left sidebar state and CSS variables */}
-      <div className="flex h-screen bg-background text-foreground"> {/* Overall flex container */}
+      <div className="flex h-screen w-full bg-background text-foreground"> {/* Overall flex container, ensure w-full */}
 
         {/* Left Sidebar */}
-        <SidebarNav /> {/* Renders <Sidebar> which respects CSS variables for width */}
+        <SidebarNav /> {/* Renders <Sidebar> which respects CSS variables for width (15vw) */}
 
         {/* Center Content Column */}
-        <div className="flex-1 flex flex-col overflow-hidden"> {/* Takes up space not used by left and right sidebars */}
+        {/* Adjusted width to 50vw and added flex-shrink-0 */}
+        <div className="w-[50vw] flex-shrink-0 flex flex-col overflow-hidden"> 
           {/* Mobile Header for Center Content */}
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
             <SidebarTrigger /> {/* Controls left sidebar visibility on mobile */}
@@ -29,7 +30,8 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
 
         {/* Right Sidebar Column */}
-        <aside className="w-[30vw] flex-shrink-0 border-l border-border bg-card text-card-foreground p-4 overflow-y-auto hidden md:block">
+        {/* Adjusted width to 25vw */}
+        <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground p-4 overflow-y-auto hidden md:block">
           {/* Placeholder for Right Sidebar Content */}
           <div className="space-y-4">
             <div>
