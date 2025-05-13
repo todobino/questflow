@@ -139,7 +139,7 @@ export function SidebarNav() {
             </PopoverContent>
           </Popover>
         </div>
-        <Separator className="mb-2"/>
+        {/* Removed Separator className="mb-2" */}
 
         <SidebarMenu>
           {NAV_ITEMS.map((item) => (
