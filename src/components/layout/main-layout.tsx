@@ -22,7 +22,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <SidebarNav />
 
         {/* Center Content Column */}
-        <div className="w-[calc(100vw-var(--sidebar-width-desktop)-25vw)] md:w-[50vw] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
+        <div className="w-[calc(100vw-var(--sidebar-width)-25vw)] md:w-[calc(100vw-var(--sidebar-width)-25vw)] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
             <SidebarTrigger />
             <h1 className="text-lg font-semibold">Campaign Canvas</h1>
