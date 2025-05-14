@@ -25,8 +25,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap, X } from 'lucide-react'; // Renamed Shield to ShieldIcon, Added X
-import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogClose } from '../ui/dialog'; // Added DialogClose
+import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap } from 'lucide-react'; // Removed X
+import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '../ui/dialog'; // Removed DialogClose
 
 const characterSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
@@ -355,12 +355,7 @@ export function CharacterForm({
                 {isRandomizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
                 {isRandomizing ? 'Randomizing...' : 'Randomize'}
               </Button>
-              <DialogClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </DialogClose>
+              {/* Removed custom X button here */}
             </div>
           </DialogTitle>
           <DialogDescription>
@@ -394,4 +389,3 @@ export function CharacterForm({
      </div>
   );
 }
-
