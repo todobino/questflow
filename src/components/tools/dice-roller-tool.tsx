@@ -12,16 +12,17 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
+type RollType = DiceType | 'coin';
 type AdvantageStateType = 'advantage' | 'disadvantage' | null;
 
 interface DiceRoll {
   id: string;
-  diceType: DiceType;
-  rawRolls: number[];
-  chosenRoll: number;
+  diceType: RollType;
+  rawRolls?: number[]; // Optional for coin
+  chosenRoll?: number; // Optional for coin
   modifier: number;
   advantageState: AdvantageStateType;
-  finalResult: number;
+  finalResult: number | string; // Can be string for coin flip
   timestamp: Date;
 }
 
@@ -41,6 +42,10 @@ const DICE_CONFIG: { type: DiceType; sides: number }[] = [
 ];
 
 const getRollDetailsDisplay = (roll: DiceRoll): React.ReactNode => {
+  if (roll.diceType === 'coin' || !roll.rawRolls || roll.rawRolls.length === 0 || roll.chosenRoll === undefined) {
+    return ''; // No dice details for coin flip or if data is missing
+  }
+
   if (roll.diceType === 'd20' && roll.advantageState && roll.rawRolls.length === 2) {
     const [roll1, roll2] = roll.rawRolls;
     const isAdvantage = roll.advantageState === 'advantage';
@@ -140,54 +145,73 @@ export function DiceRollerTool() {
     return Math.floor(Math.random() * sides) + 1;
   };
 
-  const executeRoll = (diceType: DiceType, sides: number) => {
+  const executeRoll = (rollType: RollType, sides?: number) => {
     setIsRolling(true);
     setCurrentRoll(null);
     setCriticalMessage(null); 
 
     setTimeout(() => {
-      let rawRolls: number[] = [];
-      let chosenRoll: number;
+      let newRoll: DiceRoll;
 
-      if (diceType === 'd20' && advantageState) {
-        const roll1 = rollDie(sides);
-        const roll2 = rollDie(sides);
-        rawRolls = [roll1, roll2];
-        if (advantageState === 'advantage') {
-          chosenRoll = Math.max(roll1, roll2);
-        } else { 
-          chosenRoll = Math.min(roll1, roll2);
+      if (rollType === 'coin') {
+        const coinResult = Math.random() < 0.5 ? 'Heads' : 'Tails';
+        newRoll = {
+          id: String(Date.now()),
+          diceType: 'coin',
+          modifier: 0, // Not applicable
+          advantageState: null, // Not applicable
+          finalResult: coinResult,
+          timestamp: new Date(),
+        };
+      } else if (sides) { // It's a dice roll
+        let rawRolls: number[] = [];
+        let chosenRoll: number;
+
+        if (rollType === 'd20' && advantageState) {
+          const roll1 = rollDie(sides);
+          const roll2 = rollDie(sides);
+          rawRolls = [roll1, roll2];
+          if (advantageState === 'advantage') {
+            chosenRoll = Math.max(roll1, roll2);
+          } else { 
+            chosenRoll = Math.min(roll1, roll2);
+          }
+        } else {
+          const roll = rollDie(sides);
+          rawRolls = [roll];
+          chosenRoll = roll;
+        }
+
+        const finalResult = chosenRoll + modifier;
+
+        newRoll = {
+          id: String(Date.now()),
+          diceType: rollType,
+          rawRolls,
+          chosenRoll,
+          modifier,
+          advantageState: rollType === 'd20' ? advantageState : null, 
+          finalResult,
+          timestamp: new Date(),
+        };
+        
+        if (rollType === 'd20' && newRoll.chosenRoll === 20) {
+            setCriticalMessage({ text: "CRITICAL SUCCESS!", colorClass: "text-success" });
+        } else if (rollType === 'd20' && newRoll.chosenRoll === 1) {
+            setCriticalMessage({ text: "CRITICAL FAILURE!", colorClass: "text-destructive" });
         }
       } else {
-        const roll = rollDie(sides);
-        rawRolls = [roll];
-        chosenRoll = roll;
+        // Should not happen if sides are always provided for dice
+        console.error("Invalid roll execution: missing sides for dice roll.");
+        setIsRolling(false);
+        return;
       }
 
-      const finalResult = chosenRoll + modifier;
-
-      const newRoll: DiceRoll = {
-        id: String(Date.now()),
-        diceType,
-        rawRolls,
-        chosenRoll,
-        modifier,
-        advantageState: diceType === 'd20' ? advantageState : null, 
-        finalResult,
-        timestamp: new Date(),
-      };
 
       setCurrentRoll(newRoll);
       setRolls(prevRolls => [newRoll, ...prevRolls.slice(0, 19)]);
       setIsRolling(false);
 
-      if (diceType === 'd20') {
-        if (newRoll.chosenRoll === 20) {
-          setCriticalMessage({ text: "CRITICAL SUCCESS!", colorClass: "text-success" });
-        } else if (newRoll.chosenRoll === 1) {
-          setCriticalMessage({ text: "CRITICAL FAILURE!", colorClass: "text-destructive" });
-        }
-      }
     }, 300);
   };
   
@@ -202,8 +226,8 @@ export function DiceRollerTool() {
         </div>
       )}
       <Card className="shadow-md">
-        <CardContent className="space-y-4 px-4 pt-4 pb-4"> {/* Increased pt-4 */}
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        <CardContent className="space-y-4 px-4 pt-4 pb-4">
+          <div className="grid grid-cols-4 gap-2"> {/* Adjusted to 4 columns for coin flip */}
             {DICE_CONFIG.map(({ type, sides }) => (
               <Button
                 key={type}
@@ -216,14 +240,24 @@ export function DiceRollerTool() {
                 {type.toUpperCase()}
               </Button>
             ))}
+            <Button
+                key="coin"
+                onClick={() => executeRoll('coin')}
+                className="h-10 text-sm font-semibold transition-transform hover:scale-105 active:scale-95"
+                size="default"
+                variant="outline"
+                disabled={isRolling}
+              >
+                Coin Flip
+            </Button>
           </div>
 
           <Separator className="my-3" />
 
-          <div className="flex flex-row items-end justify-between pt-1"> {/* Changed items-start to items-end, reduced pt-1 */}
-            <div className="flex flex-col items-start"> {/* Modifier Column */}
+          <div className="flex flex-row items-end justify-between pt-1">
+            <div className="flex flex-col items-start">
               <Label htmlFor="modifier-display-button" className="text-xs text-muted-foreground mb-1 self-start">Modifiers</Label>
-              <div className="flex items-center justify-center space-x-2"> {/* Modifier controls group */}
+              <div className="flex items-center justify-center space-x-2">
                 <Button variant="outline" size="icon" onClick={() => handleModifierChange(-1)} disabled={isRolling} className="h-8 w-8">
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -259,13 +293,13 @@ export function DiceRollerTool() {
               </div>
             </div>
 
-            <div className="flex flex-col space-y-1"> {/* Advantage/Disadvantage Column */}
-              <Button
+            <div className="flex flex-col space-y-1">
+               <Button
                 variant={advantageState === 'advantage' ? 'success' : 'outline'}
                 onClick={() => handleAdvantageToggle('advantage')}
                 disabled={isRolling}
                 className={cn(
-                  "text-xs px-3 py-1.5 h-auto w-full transition-colors duration-150", // Adjusted padding and width
+                  "text-xs px-3 py-1.5 h-auto w-full transition-colors duration-150",
                   advantageState === 'advantage' 
                     ? "border border-success" 
                     : "hover:bg-success hover:text-success-foreground hover:border-success border-input"
@@ -279,7 +313,7 @@ export function DiceRollerTool() {
                 onClick={() => handleAdvantageToggle('disadvantage')}
                 disabled={isRolling}
                  className={cn(
-                  "text-xs px-3 py-1.5 h-auto w-full transition-colors duration-150", // Adjusted padding and width
+                  "text-xs px-3 py-1.5 h-auto w-full transition-colors duration-150",
                   advantageState === 'disadvantage' 
                     ? "border border-destructive" 
                     : "hover:bg-destructive hover:text-destructive-foreground hover:border-destructive border-input"
@@ -291,19 +325,22 @@ export function DiceRollerTool() {
             </div>
           </div>
           
-          {/* Separator removed from here */}
-          
-          <div className="mt-3 mb-0 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]"> {/* Adjusted mt-3 mb-0 */}
+          <div className="mt-3 mb-0 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
             {isRolling && <Dices className="h-10 w-10 animate-spin text-accent" />}
             {!isRolling && currentRoll ? (
               <>
                 <span className="text-4xl font-bold">{currentRoll.finalResult}</span>
-                {mounted && (
+                {mounted && currentRoll.diceType !== 'coin' && (
                   <p className="text-muted-foreground text-xs mt-1 text-center">
                     Rolled {currentRoll.diceType} {getRollDetailsDisplay(currentRoll)}
                     {currentRoll.modifier !== 0 ? ` ${currentRoll.modifier >= 0 ? '+' : ''}${currentRoll.modifier}` : ''}
                     {' = '}
                     <span className="font-semibold text-primary">{currentRoll.finalResult}</span>
+                  </p>
+                )}
+                 {mounted && currentRoll.diceType === 'coin' && (
+                  <p className="text-muted-foreground text-xs mt-1 text-center">
+                    Coin Flip
                   </p>
                 )}
               </>
@@ -327,12 +364,18 @@ export function DiceRollerTool() {
               {rolls.map((roll, index) => (
                 <div key={roll.id}>
                   <div className="flex justify-between items-center p-1.5">
-                    <span className="whitespace-pre-wrap break-words text-left"> 
-                      Rolled {roll.diceType} {getRollDetailsDisplay(roll)}
-                      {roll.modifier !== 0 ? ` ${roll.modifier >= 0 ? '+' : ''}${roll.modifier}` : ''}
-                      {' = '}
-                      <span className="font-semibold text-primary">{roll.finalResult}</span>
-                    </span>
+                    {roll.diceType === 'coin' ? (
+                       <span className="whitespace-pre-wrap break-words text-left"> 
+                         Coin Flip: <span className="font-semibold text-primary">{roll.finalResult}</span>
+                       </span>
+                    ) : (
+                       <span className="whitespace-pre-wrap break-words text-left"> 
+                        Rolled {roll.diceType} {getRollDetailsDisplay(roll)}
+                        {roll.modifier !== 0 ? ` ${roll.modifier >= 0 ? '+' : ''}${roll.modifier}` : ''}
+                        {' = '}
+                        <span className="font-semibold text-primary">{roll.finalResult}</span>
+                      </span>
+                    )}
                     {mounted && (
                          <span className="text-muted-foreground ml-2 flex-shrink-0">
                             {roll.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
