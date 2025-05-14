@@ -25,8 +25,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap } from 'lucide-react'; // Renamed Shield to ShieldIcon to avoid conflict
-import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '../ui/dialog'; // Assuming dialog parts are needed
+import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap, X } from 'lucide-react'; // Renamed Shield to ShieldIcon, Added X
+import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogClose } from '../ui/dialog'; // Added DialogClose
 
 const characterSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
@@ -94,7 +94,7 @@ export function CharacterForm({
     } else {
       setAvailableSubclasses([]);
     }
-  }, [selectedClass]); // Removed form from dependency array as only selectedClass is needed.
+  }, [selectedClass]); 
 
   useEffect(() => {
     const defaultValues = {
@@ -114,7 +114,7 @@ export function CharacterForm({
        form.reset(defaultValues);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCharacter, form.reset, isDialog]); // form.reset added to deps
+  }, [currentCharacter, form.reset, isDialog]); 
 
   const onSubmit = (data: CharacterFormData) => {
     onSave(data); 
@@ -331,7 +331,7 @@ export function CharacterForm({
           />
         </div>
         {isDialog && (
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 border-t"> {/* Added border-t */}
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
@@ -349,11 +349,19 @@ export function CharacterForm({
       <DialogContent className="sm:max-w-2xl"> {/* Increased width for better form layout */}
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            {currentCharacter?.id ? 'Edit Character' : 'Create New Character'}
-            <Button onClick={onRandomize} disabled={isRandomizing} variant="default" size="sm">
-              {isRandomizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
-              {isRandomizing ? 'Randomizing...' : 'Randomize'}
-            </Button>
+            <span>{currentCharacter?.id ? 'Edit Character' : 'Create New Character'}</span>
+            <div className="flex items-center space-x-2"> {/* Group for buttons */}
+              <Button onClick={onRandomize} disabled={isRandomizing} variant="default" size="sm">
+                {isRandomizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
+                {isRandomizing ? 'Randomizing...' : 'Randomize'}
+              </Button>
+              <DialogClose asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </DialogClose>
+            </div>
           </DialogTitle>
           <DialogDescription>
             {currentCharacter?.id ? "Update your character's details." : "Fill in the details for your new party member."}
