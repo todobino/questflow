@@ -9,7 +9,6 @@ import { Separator } from '@/components/ui/separator';
 import { Dices, Plus, Minus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
 
 type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
@@ -47,32 +46,32 @@ const getRollDetailsDisplay = (roll: DiceRoll): React.ReactNode => {
     const isAdvantage = roll.advantageState === 'advantage';
     
     let isRoll1Chosen;
-    if (isAdvantage) {
-      isRoll1Chosen = roll.chosenRoll === roll1;
+    if (roll.chosenRoll === roll1 && roll.chosenRoll === roll2) { 
+        isRoll1Chosen = true; // If they are equal, highlight the first one
+    } else if (isAdvantage) {
+      isRoll1Chosen = roll.chosenRoll === roll1; // For advantage, chosen is max. If roll1 is max, it's chosen.
     } else { 
-      isRoll1Chosen = roll.chosenRoll === roll1;
+      isRoll1Chosen = roll.chosenRoll === roll1; // For disadvantage, chosen is min. If roll1 is min, it's chosen.
     }
     
-    if(roll.chosenRoll === roll1 && roll.chosenRoll === roll2) { 
-        isRoll1Chosen = true;
-    } else if (roll.chosenRoll === roll1) {
-        isRoll1Chosen = true;
-    } else {
-        isRoll1Chosen = false;
-    }
-
+    // Correction for highlighting: if roll1 is chosen, it gets styled. If roll2 is chosen, it gets styled.
+    // If roll1 === chosenRoll, style roll1. Else style roll2.
+    const roll1Classes = cn(
+      roll.chosenRoll === roll1 && "font-bold",
+      roll.chosenRoll === roll1 && isAdvantage && "text-success",
+      roll.chosenRoll === roll1 && !isAdvantage && roll.advantageState === 'disadvantage' && "text-destructive"
+    );
+    const roll2Classes = cn(
+      roll.chosenRoll === roll2 && "font-bold",
+      roll.chosenRoll === roll2 && isAdvantage && "text-success",
+      roll.chosenRoll === roll2 && !isAdvantage && roll.advantageState === 'disadvantage' && "text-destructive"
+    );
 
     return (
       <>
-        (
-        <span className={cn(isRoll1Chosen && "font-bold", isRoll1Chosen && isAdvantage && "text-success", isRoll1Chosen && !isAdvantage && "text-destructive")}>
-          {roll1}
-        </span>
+        (<span className={roll1Classes}>{roll1}</span>
         ,{' '}
-        <span className={cn(!isRoll1Chosen && "font-bold", !isRoll1Chosen && isAdvantage && "text-success", !isRoll1Chosen && !isAdvantage && "text-destructive")}>
-          {roll2}
-        </span>
-        )
+        <span className={roll2Classes}>{roll2}</span>)
       </>
     );
   }
@@ -133,6 +132,15 @@ export function DiceRollerTool() {
   const handleModifierInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleModifierInputBlur();
+    }
+  };
+
+  const handleAdvantageToggle = (clickedState: 'advantage' | 'disadvantage') => {
+    if (isRolling) return;
+    if (advantageState === clickedState) {
+      setAdvantageState(null); // Toggle off
+    } else {
+      setAdvantageState(clickedState); // Toggle on, or switch
     }
   };
 
@@ -265,31 +273,26 @@ export function DiceRollerTool() {
 
           {/* Advantage/Disadvantage Controls for d20 */}
           <div className="space-y-1 pt-2">
-            <RadioGroup 
-              value={advantageState || 'none'} 
-              onValueChange={(value) => setAdvantageState(value === 'none' ? null : value as AdvantageStateType)} 
-              className="flex justify-center space-x-2"
-              aria-label="d20 roll state"
-              disabled={isRolling}
-            >
-              {(['none', 'advantage', 'disadvantage'] as const).map((stateValue) => (
-                <Label
-                  key={stateValue}
-                  htmlFor={`adv-${stateValue}`}
-                  className={cn(
-                    "flex items-center space-x-2 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    (advantageState === stateValue || (stateValue === 'none' && advantageState === null))
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-muted/50 border-transparent text-muted-foreground",
-                    isRolling && "cursor-not-allowed opacity-50"
-                  )}
-                >
-                  <RadioGroupItem value={stateValue} id={`adv-${stateValue}`} className="sr-only" disabled={isRolling} />
-                  {stateValue.charAt(0).toUpperCase() + stateValue.slice(1)}
-                </Label>
-              ))}
-            </RadioGroup>
+            <div className="flex justify-center space-x-2">
+              <Button
+                variant={advantageState === 'advantage' ? 'success' : 'outline'}
+                onClick={() => handleAdvantageToggle('advantage')}
+                disabled={isRolling}
+                className="text-xs px-3 py-1.5 h-auto flex-1"
+                aria-pressed={advantageState === 'advantage'}
+              >
+                Advantage
+              </Button>
+              <Button
+                variant={advantageState === 'disadvantage' ? 'destructive' : 'outline'}
+                onClick={() => handleAdvantageToggle('disadvantage')}
+                disabled={isRolling}
+                className="text-xs px-3 py-1.5 h-auto flex-1"
+                aria-pressed={advantageState === 'disadvantage'}
+              >
+                Disadvantage
+              </Button>
+            </div>
           </div>
           
           <Separator />
@@ -351,4 +354,3 @@ export function DiceRollerTool() {
     </div>
   );
 }
-
