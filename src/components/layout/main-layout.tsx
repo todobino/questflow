@@ -11,21 +11,22 @@ import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
 import { PartySheet } from '@/components/party/party-sheet';
 import { Dices, Shield, Users } from 'lucide-react';
-import { useCampaignContext } from '@/contexts/campaign-context';
+import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context'; // Import CampaignProvider
 
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+// Inner component to access campaign context after CampaignProvider is set up
+function MainLayoutContent({ children }: MainLayoutProps) {
   const { campaigns, activeCampaign, setCampaignActive: handleSetCampaignActive, isLoading } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
+  
   return (
     <SidebarProvider defaultOpen>
       <div className="flex h-screen w-full bg-background text-foreground">
@@ -87,4 +88,13 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Toaster />
     </SidebarProvider>
   );
+}
+
+
+export function MainLayout({ children }: MainLayoutProps) {
+  return (
+    <CampaignProvider>
+      <MainLayoutContent>{children}</MainLayoutContent>
+    </CampaignProvider>
+  )
 }

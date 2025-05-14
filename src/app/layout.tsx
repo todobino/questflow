@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { DM_Sans } from 'next/font/google'; // Import DM_Sans
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
-import { CampaignProvider } from '@/contexts/campaign-context';
+// import { CampaignProvider } from '@/contexts/campaign-context'; // Removed from here
 import { ThemeProvider } from 'next-themes';
 
 const dmSans = DM_Sans({ 
@@ -31,9 +31,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <CampaignProvider>
-            <MainLayout>{children}</MainLayout>
-          </CampaignProvider>
+          {/* CampaignProvider will be moved into MainLayout */}
+          <MainLayout>{children}</MainLayout>
         </ThemeProvider>
       </body>
     </html>
