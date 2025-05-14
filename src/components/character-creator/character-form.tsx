@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -25,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Save } from 'lucide-react';
+import { Save, Shuffle, Loader2 } from 'lucide-react';
 
 const characterSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
@@ -42,9 +43,11 @@ type CharacterFormData = z.infer<typeof characterSchema>;
 interface CharacterFormProps {
   currentCharacter?: Partial<Character>;
   onSave: (character: Character) => void;
+  onRandomize: () => Promise<void>;
+  isRandomizing: boolean;
 }
 
-export function CharacterForm({ currentCharacter, onSave }: CharacterFormProps) {
+export function CharacterForm({ currentCharacter, onSave, onRandomize, isRandomizing }: CharacterFormProps) {
   const form = useForm<CharacterFormData>({
     resolver: zodResolver(characterSchema),
     defaultValues: {
@@ -97,9 +100,15 @@ export function CharacterForm({ currentCharacter, onSave }: CharacterFormProps) 
 
   return (
     <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle>Character Details</CardTitle>
-        <CardDescription>Define your character's core attributes and story.</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle>Character Details</CardTitle>
+          <CardDescription>Define your character's core attributes and story.</CardDescription>
+        </div>
+        <Button onClick={onRandomize} disabled={isRandomizing} variant="outline" size="sm">
+          {isRandomizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
+          {isRandomizing ? 'Randomizing...' : 'Randomize'}
+        </Button>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>

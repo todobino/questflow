@@ -1,24 +1,19 @@
+
 'use client';
 
 import { useState } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
 import { CharacterForm } from '@/components/character-creator/character-form';
 import type { Character } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Wand2, Brain, ImageIcon, Shuffle, Loader2 } from 'lucide-react'; // Added Shuffle, Loader2
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react'; 
 import { useToast } from '@/hooks/use-toast';
-import { generateCharacterName, GenerateCharacterNameInput } from '@/ai/flows/generate-character-name';
-import { generateCharacterBackstory, GenerateCharacterBackstoryInput } from '@/ai/flows/generate-character-backstory';
-import { generateRandomCharacter } from '@/ai/flows/generate-random-character'; // Added
+import { generateRandomCharacter } from '@/ai/flows/generate-random-character'; 
 import Image from 'next/image';
 
 export default function CharacterCreatorPage() {
   const [character, setCharacter] = useState<Partial<Character>>({});
-  const [isGeneratingName, setIsGeneratingName] = useState(false);
-  const [isGeneratingBackstory, setIsGeneratingBackstory] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [isGeneratingRandom, setIsGeneratingRandom] = useState(false); // Added
+  const [isGeneratingRandom, setIsGeneratingRandom] = useState(false); 
   const { toast } = useToast();
 
   const handleSaveCharacter = (data: Character) => {
@@ -30,62 +25,13 @@ export default function CharacterCreatorPage() {
     });
   };
 
-  const handleGenerateName = async () => {
-    setIsGeneratingName(true);
-    try {
-      const input: GenerateCharacterNameInput = {
-        race: character.race || 'Human',
-        gender: 'Any', 
-        setting: 'Fantasy',
-      };
-      const result = await generateCharacterName(input);
-      setCharacter(prev => ({ ...prev, name: result.name }));
-      toast({ title: 'Name Generated!', description: `Suggested name: ${result.name}` });
-    } catch (error) {
-      console.error('Error generating name:', error);
-      toast({ title: 'Error', description: 'Could not generate name.', variant: 'destructive' });
-    }
-    setIsGeneratingName(false);
-  };
-
-  const handleGenerateBackstory = async () => {
-    if (!character.name) {
-      toast({ title: 'Missing Name', description: 'Please provide a character name first.', variant: 'destructive'});
-      return;
-    }
-    setIsGeneratingBackstory(true);
-    try {
-      const input: GenerateCharacterBackstoryInput = {
-        characterName: character.name || 'Unnamed Hero',
-        characterRace: character.race || 'Human',
-        characterClass: character.class || 'Adventurer',
-        setting: 'High Fantasy',
-      };
-      const result = await generateCharacterBackstory(input);
-      setCharacter(prev => ({ ...prev, backstory: result.backstory }));
-      toast({ title: 'Backstory Generated!', description: 'A new backstory has been created.' });
-    } catch (error) {
-      console.error('Error generating backstory:', error);
-      toast({ title: 'Error', description: 'Could not generate backstory.', variant: 'destructive' });
-    }
-    setIsGeneratingBackstory(false);
-  };
-  
-  const handleGenerateImage = async () => {
-    setIsGeneratingImage(true);
-    const imageName = character.name || character.race || 'character';
-    const placeholderImageUrl = `https://placehold.co/400x400.png?text=${encodeURIComponent(imageName)}`;
-    setCharacter(prev => ({ ...prev, imageUrl: placeholderImageUrl }));
-    toast({ title: 'Image Generated!', description: 'A placeholder image has been assigned.' });
-    setIsGeneratingImage(false);
-  };
-
   const handleRandomizeCharacter = async () => {
     setIsGeneratingRandom(true);
     try {
       const result = await generateRandomCharacter();
       setCharacter({
-        name: result.characterClass, // Default name to class if none exists, can be refined
+        // Preserve existing name if user typed one, otherwise use class or race
+        name: character.name || result.characterClass || result.race,
         race: result.race,
         class: result.characterClass,
         subclass: result.subclass,
@@ -105,44 +51,29 @@ export default function CharacterCreatorPage() {
     <>
       <PageHeader
         title="Character Creator"
-        description="Craft your unique characters. Use AI tools to spark inspiration for names, backstories, and visuals."
+        description="Craft your unique characters. Use AI tools to spark inspiration."
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <CharacterForm currentCharacter={character} onSave={handleSaveCharacter} />
+          <CharacterForm 
+            currentCharacter={character} 
+            onSave={handleSaveCharacter}
+            onRandomize={handleRandomizeCharacter}
+            isRandomizing={isGeneratingRandom}
+          />
         </div>
         <div className="space-y-6">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle>AI Assistant</CardTitle>
-              <CardDescription>Enhance your character with AI.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-               <Button onClick={handleRandomizeCharacter} disabled={isGeneratingRandom} className="w-full">
-                {isGeneratingRandom ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
-                {isGeneratingRandom ? 'Randomizing...' : 'Randomize Character'}
-              </Button>
-              <Button onClick={handleGenerateName} disabled={isGeneratingName} className="w-full">
-                 {isGeneratingName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                 {isGeneratingName ? 'Generating...' : 'Generate Name'}
-              </Button>
-              <Button onClick={handleGenerateBackstory} disabled={isGeneratingBackstory || !character.name} className="w-full">
-                {isGeneratingBackstory ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
-                {isGeneratingBackstory ? 'Generating...' : 'Generate Backstory'}
-              </Button>
-              <Button onClick={handleGenerateImage} disabled={isGeneratingImage} className="w-full">
-                {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-2 h-4 w-4" />}
-                {isGeneratingImage ? 'Generating...' : 'Generate Image (Placeholder)'}
-              </Button>
-            </CardContent>
-          </Card>
-
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Character Preview</CardTitle>
             </CardHeader>
             <CardContent>
-              {character.imageUrl ? (
+              {isGeneratingRandom && !character.imageUrl ? (
+                <div className="mx-auto mb-4 flex h-[300px] w-[300px] items-center justify-center rounded-lg border-2 border-dashed bg-muted text-muted-foreground aspect-square">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                   <p className="ml-2">Generating...</p>
+                </div>
+              ) : character.imageUrl ? (
                 <Image 
                   src={character.imageUrl} 
                   alt={character.name || 'Character image'} 
