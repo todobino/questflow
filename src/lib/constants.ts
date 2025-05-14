@@ -2,7 +2,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
-  Search,
+  Search as SearchIcon, // Renamed to avoid conflict if 'Search' component is used
   Users,
   ListOrdered,
   Shield,
@@ -11,8 +11,8 @@ import {
   ScrollText,
   Brain,
   Swords, 
-  Settings, // Added Settings
-  UsersRound, // Added for Party
+  Settings, 
+  UsersRound, 
 } from 'lucide-react';
 
 export interface NavItem {
@@ -27,36 +27,30 @@ export const APP_LOGO_ICON = Swords;
 export const APP_NAME = "QuestFlow";
 
 export const SITE_NAV_ITEMS: NavItem[] = [
-  {
-    title: 'Campaigns',
-    href: '/campaigns',
-    icon: BookOpen,
-  },
+  // { // Removed "Campaigns" from here as it's accessed via the switcher
+  //   title: 'Campaigns',
+  //   href: '/campaigns',
+  //   icon: BookOpen,
+  // },
   {
     title: 'Search',
     href: '/search',
-    icon: Search,
-    disabled: true, // Placeholder for now
+    icon: SearchIcon,
+    disabled: true, 
   },
 ];
 
 export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
-    title: 'Party', // New Party Item
+    title: 'Party', 
     href: '/party',
     icon: UsersRound, 
-  },
-  {
-    title: 'Characters', // Will be removed as per new flow
-    href: '/characters',
-    icon: Users,
-    disabled: true, // Marking as disabled as it's being replaced by Party page
   },
   {
     title: 'Tables',
     href: '/tables',
     icon: ListOrdered,
-    disabled: true, // Placeholder
+    disabled: true, 
   },
   {
     title: 'Encounters',
@@ -73,7 +67,7 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     title: 'Quests',
     href: '/quests',
     icon: Scroll,
-    disabled: true, // Placeholder
+    disabled: true, 
   },
   {
     title: 'Journal',
@@ -84,9 +78,10 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     title: 'Lore',
     href: '/lore',
     icon: Brain,
-    disabled: true, // Placeholder
+    disabled: true, 
   },
 ];
 
 // Filter out the disabled "Characters" link for actual rendering if it's truly removed
 export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
+

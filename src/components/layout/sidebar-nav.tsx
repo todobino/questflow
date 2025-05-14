@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import type { NavItem } from '@/lib/constants';
-import { SITE_NAV_ITEMS, getFilteredCampaignNavItems, APP_LOGO_ICON, APP_NAME } from '@/lib/constants'; // Updated import
+import { SITE_NAV_ITEMS, getFilteredCampaignNavItems, APP_LOGO_ICON, APP_NAME } from '@/lib/constants'; 
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -23,7 +23,7 @@ import {
   Briefcase,
   Settings,
   ChevronDown,
-  Search as SearchIcon,
+  Search as SearchIcon, // Use the imported SearchIcon
 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useState, useEffect } from 'react';
@@ -44,22 +44,15 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
   const pathname = usePathname();
   const { state: sidebarState, isMobile } = useSidebar();
   const [mounted, setMounted] = useState(false);
-  const [isCampaignSwitcherOpen, setIsCampaignSwitcherOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-
+  
   useEffect(() => {
     setMounted(true);
   }, []);
   
   const campaignNavItems = getFilteredCampaignNavItems(); 
-
   const AppLogoComponent = APP_LOGO_ICON;
+  const searchNavItem = SITE_NAV_ITEMS.find(item => item.title === 'Search');
 
-  const filteredCampaigns = campaigns.filter(campaign =>
-    campaign.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ).sort((a, b) => { 
-    return a.name.localeCompare(b.name);
-  });
 
   return (
     <Sidebar>
@@ -74,31 +67,9 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
       <SidebarSeparator/>
 
       <SidebarContent>
-        {/* Site Nav Menu */}
-        <SidebarMenu className="px-2 pt-2">
-          {SITE_NAV_ITEMS.map((item) => (
-            <SidebarMenuItem key={item.href}>
-               <TooltipProvider>
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
-                    tooltip={item.title}
-                    disabled={item.disabled}
-                    className={cn("text-sm", item.disabled && "cursor-not-allowed opacity-50")}
-                >
-                    <Link href={item.disabled ? '#' : item.href}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                    </Link>
-                </SidebarMenuButton>
-               </TooltipProvider>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-
-        <SidebarSeparator className="my-2"/>
+        {/* Site Nav Menu and its separator are removed */}
         
-        {/* Active Campaign Section */}
+        {/* Active Campaign Section - moved up */}
         {mounted && (
           <div className="px-2 mb-2">
               <Link
@@ -163,6 +134,24 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
 
       <SidebarFooter className="mt-auto p-2 border-t border-sidebar-border">
         <SidebarMenu className="px-0">
+          {searchNavItem && (
+            <SidebarMenuItem>
+              <TooltipProvider>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === searchNavItem.href}
+                  tooltip={searchNavItem.title}
+                  disabled={searchNavItem.disabled}
+                  className="text-sm"
+                >
+                  <Link href={searchNavItem.disabled ? '#' : searchNavItem.href}>
+                    <searchNavItem.icon />
+                    <span>{searchNavItem.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </TooltipProvider>
+            </SidebarMenuItem>
+          )}
            <ThemeToggleButton />
             <SidebarMenuItem>
                 <TooltipProvider>
@@ -184,3 +173,4 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
     </Sidebar>
   );
 }
+
