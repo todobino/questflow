@@ -12,6 +12,8 @@ export interface Character {
   name: string;
   race?: string;
   class?: string;
+  subclass?: string; // Added
+  background?: string; // Added
   backstory?: string;
   imageUrl?: string; // URL or data URI
   // Optional: stats, inventory, notes
@@ -51,4 +53,5 @@ export interface PartyMember {
   class: string;
   currentHp: number;
   maxHp: number;
+  dataAiHint?: string;
 }

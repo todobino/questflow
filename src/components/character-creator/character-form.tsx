@@ -1,14 +1,22 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import type { Character } from '@/lib/types';
+import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS, type DndClass } from '@/lib/dnd-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -23,6 +31,8 @@ const characterSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
   race: z.string().optional(),
   class: z.string().optional(),
+  subclass: z.string().optional(),
+  background: z.string().optional(),
   backstory: z.string().optional(),
   imageUrl: z.string().url().optional().or(z.literal('')),
 });
@@ -41,10 +51,25 @@ export function CharacterForm({ currentCharacter, onSave }: CharacterFormProps) 
       name: '',
       race: '',
       class: '',
+      subclass: '',
+      background: '',
       backstory: '',
       imageUrl: '',
     },
   });
+
+  const [availableSubclasses, setAvailableSubclasses] = useState<readonly string[]>([]);
+
+  const selectedClass = form.watch('class') as DndClass | undefined;
+
+  useEffect(() => {
+    if (selectedClass && SUBCLASSES[selectedClass]) {
+      setAvailableSubclasses(SUBCLASSES[selectedClass]);
+    } else {
+      setAvailableSubclasses([]);
+    }
+    // form.setValue('subclass', ''); // Reset subclass when class changes - this might be too aggressive if loading existing char
+  }, [selectedClass, form]);
 
   useEffect(() => {
     if (currentCharacter) {
@@ -52,9 +77,14 @@ export function CharacterForm({ currentCharacter, onSave }: CharacterFormProps) 
         name: currentCharacter.name || '',
         race: currentCharacter.race || '',
         class: currentCharacter.class || '',
+        subclass: currentCharacter.subclass || '',
+        background: currentCharacter.background || '',
         backstory: currentCharacter.backstory || '',
         imageUrl: currentCharacter.imageUrl || '',
       });
+       if (currentCharacter.class && SUBCLASSES[currentCharacter.class as DndClass]) {
+        setAvailableSubclasses(SUBCLASSES[currentCharacter.class as DndClass]);
+      }
     }
   }, [currentCharacter, form]);
 
@@ -94,9 +124,16 @@ export function CharacterForm({ currentCharacter, onSave }: CharacterFormProps) 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Race</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Elf, Dwarf, Human" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a race" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {RACES.map(race => <SelectItem key={race} value={race}>{race}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -107,14 +144,68 @@ export function CharacterForm({ currentCharacter, onSave }: CharacterFormProps) 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Class</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Wizard, Rogue, Paladin" {...field} />
-                    </FormControl>
+                     <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue('subclass', ''); // Reset subclass when class changes
+                      }} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a class" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CLASSES.map(dndClass => <SelectItem key={dndClass} value={dndClass}>{dndClass}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="subclass"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subclass</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={!selectedClass || availableSubclasses.length === 0}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={selectedClass ? "Select a subclass" : "Select class first"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {availableSubclasses.map(subclass => <SelectItem key={subclass} value={subclass}>{subclass}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="background"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Background</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a background" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BACKGROUNDS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="backstory"
