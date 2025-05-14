@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added CardHeader, CardTitle
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Dices, Plus, Minus } from 'lucide-react';
@@ -23,22 +23,44 @@ interface DiceChainEntry {
   count: number;
 }
 
-interface RollResultDetails {
-  total: number | string;
-  breakdown: string;
-  isCritical?: 'success' | 'failure';
-  diceType: RollType; 
-  rawRolls?: (number | string)[]; 
-  chosenRoll?: number | string; 
-  advantageState?: AdvantageStateType | null;
-  modifier?: number;
-  formula?: string; // To store the built formula like "2d6 + 1d4 + 3"
+// Structure for individual roll results within a segment
+interface IndividualDieRollResult {
+  physicalRolls: number[]; // e.g., [val] or [val1, val2] for adv/dis
+  chosenRoll: number;
+  isD20AdvDis: boolean; // Was this a d20 roll with advantage/disadvantage?
+  advantageState?: AdvantageStateType; // The state if it was a d20 roll
 }
+
+// Structure for segments of the roll (e.g., all d6s, all d20s)
+interface RollSegment {
+  die: DiceType;
+  count: number; // How many of this die type were in this specific part of the formula chain
+  results: IndividualDieRollResult[]; // Results for each of the 'count' dice
+}
+
+
+interface RollResultDetails {
+  total: number | string; // number for dice, string for coin
+  breakdown: string; // For concise history log: "2d6 + 1d4 + Mod:3 = 13 (Rolls: 2d6:[3,5]; 1d4:[2]; Mod:3)"
+  isCritical?: 'success' | 'failure';
+  diceType: RollType; // 'coin' or the first die type if multiple in chain
+  
+  rollSegments?: RollSegment[]; // For detailed display of dice rolls
+  
+  modifier?: number;
+  formula?: string; // The input formula, e.g., "2d6 + 1d4 + 3"
+  
+  // Redundant if rollSegments is comprehensive, but kept for now for simpler cases or overall summary
+  rawRolls?: (number | string)[]; // All individual die outcomes from the entire roll chain
+  chosenRoll?: number | string; // Overall sum of dice before modifier (for dice rolls)
+  advantageState?: AdvantageStateType | null; // Overall advantage state applied to d20s in the chain
+}
+
 
 type HistoryEntry = {
   id: string;
   timestamp: Date;
-} & RollResultDetails; 
+} & RollResultDetails;
 
 
 interface CriticalMessage {
@@ -117,8 +139,7 @@ export function DiceRollerTool() {
 
   useEffect(() => {
     if (diceChain.length === 0 && modifier === 0) {
-      setActiveRollFormulaDisplay(<span className="text-muted-foreground">Build your roll</span>);
-      // setLastRollOutput(null); // Keep last roll output until new roll or modification
+      setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>); // Keep text larger
       return;
     }
 
@@ -167,7 +188,6 @@ export function DiceRollerTool() {
     }
     
     setActiveRollFormulaDisplay(<div className="flex flex-wrap items-center justify-center gap-x-0.5">{parts}</div>);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [diceChain, modifier]);
 
 
@@ -249,75 +269,92 @@ export function DiceRollerTool() {
     setCriticalMessage(null);
 
     setTimeout(() => {
-      let currentTotal = 0;
-      const breakdownParts: string[] = [];
-      let finalCriticalEncountered: 'success' | 'failure' | undefined = undefined;
-      let formulaStringParts: string[] = [];
-      const allRawRollsCollected: (number|string)[] = [];
+      let currentTotalSum = 0;
+      const breakdownLogParts: string[] = []; // For the string log in history
+      let formulaStringForLog = "";
+      const allRawRollsCollectedForLog: (number|string)[] = []; // For the string log
       let firstDiceTypeForOutput : DiceType | null = null;
+      
+      const outputRollSegments: RollSegment[] = [];
+      let overallIsCritical: 'success' | 'failure' | undefined = undefined;
 
 
-      diceChain.forEach((item) => {
-        const dieConfig = DICE_CONFIG.find(d => d.type === item.die);
+      diceChain.forEach((chainItem, chainIdx) => {
+        const dieConfig = DICE_CONFIG.find(d => d.type === chainItem.die);
         if (!dieConfig) return;
-        if (!firstDiceTypeForOutput) firstDiceTypeForOutput = item.die;
+        if (!firstDiceTypeForOutput) firstDiceTypeForOutput = chainItem.die;
 
-        formulaStringParts.push(`${item.count > 1 ? item.count : ''}${item.die}`);
+        if (chainIdx > 0) formulaStringForLog += " + ";
+        formulaStringForLog += `${chainItem.count > 1 ? chainItem.count : ''}${chainItem.die}`;
         
-        const rollsForThisDieType: (number|string)[] = [];
-        let sumForThisDieType = 0;
+        const segmentDieRolls: IndividualDieRollResult[] = [];
+        const currentSegmentRawRollsForLog: number[] = [];
 
-        for (let i = 0; i < item.count; i++) {
-          let chosenRoll: number;
-          let rawRoll1: number | undefined, rawRoll2: number | undefined;
+        for (let i = 0; i < chainItem.count; i++) {
+          let chosenRollThisInstance: number;
+          let physicalRollsThisInstance: number[];
+          let advStateThisInstance: AdvantageStateType | undefined = undefined;
 
-          if (item.die === 'd20') {
-            rawRoll1 = rollSingleDie(dieConfig.sides);
-            if (advantageState) {
-              rawRoll2 = rollSingleDie(dieConfig.sides);
-              chosenRoll = advantageState === 'advantage' ? Math.max(rawRoll1, rawRoll2) : Math.min(rawRoll1, rawRoll2);
-              rollsForThisDieType.push(chosenRoll); 
-              allRawRollsCollected.push(`${chosenRoll} (${rawRoll1},${rawRoll2})`);
+          if (chainItem.die === 'd20') {
+            const r1 = rollSingleDie(dieConfig.sides);
+            advStateThisInstance = advantageState; 
+            if (advStateThisInstance) {
+              const r2 = rollSingleDie(dieConfig.sides);
+              chosenRollThisInstance = advStateThisInstance === 'advantage' ? Math.max(r1, r2) : Math.min(r1, r2);
+              physicalRollsThisInstance = [r1, r2];
+              allRawRollsCollectedForLog.push(`${chosenRollThisInstance} (${r1},${r2})`);
             } else {
-              chosenRoll = rawRoll1;
-              rollsForThisDieType.push(chosenRoll);
-              allRawRollsCollected.push(chosenRoll);
+              chosenRollThisInstance = r1;
+              physicalRollsThisInstance = [r1];
+              allRawRollsCollectedForLog.push(chosenRollThisInstance);
             }
             
-            if (chosenRoll === 20 && finalCriticalEncountered !== 'failure') finalCriticalEncountered = 'success';
-            if (chosenRoll === 1) finalCriticalEncountered = 'failure'; 
+            if (chosenRollThisInstance === 20 && overallIsCritical !== 'failure') overallIsCritical = 'success';
+            if (chosenRollThisInstance === 1) overallIsCritical = 'failure'; 
           } else {
-            chosenRoll = rollSingleDie(dieConfig.sides);
-            rollsForThisDieType.push(chosenRoll);
-            allRawRollsCollected.push(chosenRoll);
+            chosenRollThisInstance = rollSingleDie(dieConfig.sides);
+            physicalRollsThisInstance = [chosenRollThisInstance];
+            allRawRollsCollectedForLog.push(chosenRollThisInstance);
           }
-          sumForThisDieType += chosenRoll;
+          currentTotalSum += chosenRollThisInstance;
+          currentSegmentRawRollsForLog.push(chosenRollThisInstance);
+          segmentDieRolls.push({
+            physicalRolls: physicalRollsThisInstance,
+            chosenRoll: chosenRollThisInstance,
+            isD20AdvDis: chainItem.die === 'd20' && !!advStateThisInstance,
+            advantageState: advStateThisInstance
+          });
         }
-        currentTotal += sumForThisDieType;
-        breakdownParts.push(`${item.count > 1 ? item.count : ''}${item.die}:[${rollsForThisDieType.join(',')}]`);
+        outputRollSegments.push({
+          die: chainItem.die,
+          count: chainItem.count,
+          results: segmentDieRolls
+        });
+        breakdownLogParts.push(`${chainItem.count > 1 ? chainItem.count : ''}${chainItem.die}:[${currentSegmentRawRollsForLog.join(',')}]`);
       });
       
-      currentTotal += modifier;
-      let finalFormula = formulaStringParts.join(' + ');
+      const finalTotalWithModifier = currentTotalSum + modifier;
+      let finalFormulaForLog = formulaStringForLog;
+
       if (modifier !== 0) {
-        finalFormula += ` ${modifier > 0 ? '+' : ''} ${Math.abs(modifier)}`; // Use Math.abs for the displayed number
-        breakdownParts.push(`Mod:${modifier > 0 ? '+' : ''}${modifier}`);
+        finalFormulaForLog += ` ${modifier > 0 ? '+' : ''} ${modifier}`; 
+        breakdownLogParts.push(`Mod:${modifier > 0 ? '+' : ''}${modifier}`);
       }
       
-      if (finalFormula === "" && modifier !== 0) finalFormula = String(modifier);
-      else if (finalFormula === "") finalFormula = "0";
-
+      if (finalFormulaForLog === "" && modifier !== 0) finalFormulaForLog = String(modifier);
+      else if (finalFormulaForLog === "") finalFormulaForLog = "0";
 
       const resultDetails: RollResultDetails = {
-        total: currentTotal,
-        breakdown: `${finalFormula} = ${currentTotal} (Rolls: ${breakdownParts.join('; ')})`,
-        isCritical: finalCriticalEncountered, 
-        diceType: firstDiceTypeForOutput || 'd6', 
-        rawRolls: allRawRollsCollected, 
-        chosenRoll: currentTotal - modifier, 
-        advantageState: advantageState,
+        total: finalTotalWithModifier,
+        breakdown: `${finalFormulaForLog} = ${finalTotalWithModifier} (Rolls: ${breakdownLogParts.join('; ')})`,
+        isCritical: overallIsCritical, 
+        diceType: firstDiceTypeForOutput || 'd6', // Fallback if chain was empty but modifier existed
+        rawRolls: allRawRollsCollectedForLog, 
+        chosenRoll: currentTotalSum, // Sum of dice before modifier
+        advantageState: advantageState, // Overall advantage state
         modifier: modifier,
-        formula: finalFormula,
+        formula: formulaStringForLog, // Formula of dice part
+        rollSegments: outputRollSegments,
       };
       setLastRollOutput(resultDetails);
 
@@ -342,6 +379,7 @@ export function DiceRollerTool() {
 
   const handleCoinFlip = () => {
     setIsRolling(true);
+    setLastRollOutput(null); // Clear dice roll output
     setTimeout(() => {
       const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
       const resultDetails: RollResultDetails = {
@@ -407,7 +445,10 @@ export function DiceRollerTool() {
               variant="outline"
               disabled={isRolling}
             >
-              50/50
+              <div className="flex flex-col items-center">
+                <span>Coin</span>
+                <span>Flip</span>
+              </div>
             </Button>
           </div>
           
@@ -488,43 +529,45 @@ export function DiceRollerTool() {
             ) : lastRollOutput ? (
               <>
                 <span className="text-4xl font-bold">{lastRollOutput.total}</span>
-                 {mounted && lastRollOutput.diceType !== 'coin' && lastRollOutput.formula && (
-                  <p className="text-muted-foreground text-xs mt-1 text-center whitespace-pre-wrap">
-                    {lastRollOutput.formula.replace(/(\d*d\d+)/g, (match, _p1, _offset, _string, _groups) => {
-                        const dieType = match.includes('d') ? (match.substring(match.indexOf('d')) as DiceType) : 'd20'; // Default for safety
-                        
-                        // Correctly declare dieConfig before using it in the filter
-                        let dieConfig = DICE_CONFIG.find(dc => dc.type === dieType);
-                        if (!dieConfig && match.includes('d')) { 
-                           const sides = parseInt(match.substring(match.indexOf('d') + 1));
-                           if(!isNaN(sides)) dieConfig = {type: match as DiceType, sides: sides};
-                        }
-
-                        const rollsForThisSegment = lastRollOutput.rawRolls?.filter(r => 
-                            (typeof r === 'string' && r.includes(dieType.substring(1))) || 
-                            (typeof r === 'number' && dieConfig?.type === dieType) 
-                        ) || [];
-                        
-                        const displayDetails = dieConfig ? getRollDetailsDisplay({
-                            rawRolls: rollsForThisSegment.map(r => typeof r === 'string' ? parseInt(r.split(' ')[0]) : r),
-                            chosenRoll: typeof lastRollOutput.chosenRoll === 'number' ? lastRollOutput.chosenRoll : undefined, 
-                            diceType: dieConfig.type,
-                            advantageState: lastRollOutput.advantageState
-                        }) : `(${rollsForThisSegment.join(',')})`;
-
-                        const countPrefix = match.startsWith('d') ? '1' : match.substring(0, match.indexOf('d'));
-                        const numCount = parseInt(countPrefix);
-                        return <>{numCount > 1 ? numCount : ''}{dieType}{displayDetails}</>;
-                    })}
-                    {lastRollOutput.modifier !== 0 ? ` ${lastRollOutput.modifier! > 0 ? '+' : ''} ${Math.abs(lastRollOutput.modifier ?? 0)}` : ''}
-                    {` = ${lastRollOutput.total}`}
-                  </p>
-                )}
-                 {mounted && lastRollOutput.diceType === 'coin' && (
+                
+                {mounted && lastRollOutput.diceType === 'coin' && (
                     <p className="text-muted-foreground text-xs mt-1 text-center whitespace-pre-wrap">
                         {lastRollOutput.breakdown}
                     </p>
                  )}
+
+                {mounted && lastRollOutput.diceType !== 'coin' && lastRollOutput.rollSegments && (
+                  <p className="text-foreground text-xs mt-1 text-center whitespace-pre-wrap flex flex-wrap justify-center items-center">
+                    {lastRollOutput.rollSegments.map((segment, segIdx) => (
+                      <React.Fragment key={`seg-${segIdx}`}>
+                        {segment.results.map((res, resIdx) => (
+                          <React.Fragment key={`res-${segIdx}-${resIdx}`}>
+                            { (segIdx > 0 || resIdx > 0) && <span className="mx-0.5 text-foreground">+</span>}
+                            <span className="mx-0.5 text-foreground">
+                              {segment.die}
+                              {getRollDetailsDisplay({ 
+                                 rawRolls: res.physicalRolls,
+                                 chosenRoll: res.chosenRoll,
+                                 diceType: segment.die,
+                                 advantageState: res.advantageState
+                              })}
+                            </span>
+                          </React.Fragment>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                    {/* Modifier */}
+                    {lastRollOutput.modifier !== undefined && lastRollOutput.modifier !== 0 && (
+                      <>
+                        <span className="mx-0.5 text-foreground">{lastRollOutput.modifier > 0 ? '+' : '-'}</span>
+                        <span className="mx-0.5 text-foreground">{Math.abs(lastRollOutput.modifier)}</span>
+                      </>
+                    )}
+                    {/* Equals and Total */}
+                    <span className="mx-0.5 text-foreground">=</span>
+                    <span className="mx-0.5 font-bold text-xl text-primary">{lastRollOutput.total}</span>
+                  </p>
+                )}
               </>
             ) : (
                 <TooltipProvider>
@@ -549,15 +592,9 @@ export function DiceRollerTool() {
               {rollHistory.map((entry) => (
                 <div key={entry.id}>
                   <div className="flex justify-between items-center p-1.5">
-                    {entry.diceType === 'coin' ? (
-                       <span className="whitespace-pre-wrap break-words text-left"> 
-                         {entry.breakdown}
-                       </span>
-                    ) : (
-                       <span className="whitespace-pre-wrap break-words text-left"> 
-                        {entry.breakdown} 
-                      </span>
-                    )}
+                     <span className="whitespace-pre-wrap break-words text-left"> 
+                       {entry.breakdown} 
+                     </span>
                     {mounted && (
                          <span className="text-muted-foreground ml-2 flex-shrink-0">
                             {entry.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -574,4 +611,3 @@ export function DiceRollerTool() {
     </div>
   );
 }
-
