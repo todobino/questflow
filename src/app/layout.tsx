@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
-import { Manrope } from 'next/font/google'; // Import Manrope
+import { DM_Sans } from 'next/font/google'; // Import DM_Sans
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { CampaignProvider } from '@/contexts/campaign-context';
 
-const manrope = Manrope({
+const dmSans = DM_Sans({ // Changed from manrope to dmSans
   subsets: ['latin'],
-  weight: ['400', '600', '700'], // Include necessary weights, adjust as needed
+  weight: ['400', '500', '700'], // Adjusted weights for DM Sans
   display: 'swap',
-  variable: '--font-manrope', // Optional: if you want to use it as a CSS variable
+  variable: '--font-dm-sans', // Optional: if you want to use it as a CSS variable
 });
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${manrope.className} antialiased`}> {/* Apply Manrope className */}
+      <body className={`${dmSans.className} antialiased`}> {/* Apply DM_Sans className */}
         <CampaignProvider>
           <MainLayout>{children}</MainLayout>
         </CampaignProvider>
