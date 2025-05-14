@@ -10,9 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
 import { PartySheet } from '@/components/party/party-sheet';
-import { Dices, Swords, Users } from 'lucide-react'; // Changed Shield to Swords
+import { Dices, Swords, Users } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
-import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; 
+import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
 
 
 interface MainLayoutProps {
@@ -20,27 +20,27 @@ interface MainLayoutProps {
 }
 
 function MainLayoutContent({ children }: MainLayoutProps) {
-  const { 
-    campaigns, 
-    activeCampaign, 
-    setCampaignActive: handleSetCampaignActive, 
+  const {
+    campaigns,
+    activeCampaign,
+    setCampaignActive: handleSetCampaignActive,
     isLoading,
-    selectedCharacterForProfile, 
-    isProfileOpen,             
-    closeProfileDialog         
+    selectedCharacterForProfile,
+    isProfileOpen,
+    closeProfileDialog
   } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   return (
     <SidebarProvider defaultOpen>
       <div className="flex h-screen w-full bg-background text-foreground">
 
         {mounted && !isLoading && (
-          <SidebarNav 
+          <SidebarNav
             campaigns={campaigns}
             activeCampaign={activeCampaign}
             handleSetCampaignActive={handleSetCampaignActive}
@@ -52,7 +52,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
             <SidebarTrigger />
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>}
           </header>
-          
+
           {/* <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center bg-background/95 px-6 backdrop-blur-sm md:flex">
             {mounted && <Breadcrumbs activeCampaign={activeCampaign} />}
           </header> */}
@@ -72,16 +72,16 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 <Dices className="h-4 w-4 mr-1 md:mr-2" />Dice
               </TabsTrigger>
               <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto">
-                <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat {/* Changed Shield to Swords */}
+                <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="party" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <TabsContent value="party" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               {mounted && <PartySheet />}
             </TabsContent>
-            <TabsContent value="dice" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <TabsContent value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               <DiceRollerTool />
             </TabsContent>
-            <TabsContent value="combat" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <TabsContent value="combat" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               <CombatTrackerTool />
             </TabsContent>
           </Tabs>
@@ -109,7 +109,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, []);
 
   if (!mounted) {
-    return null; // Or a loading skeleton if preferred
+    return null;
   }
 
   return (
