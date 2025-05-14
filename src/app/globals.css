@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  /* Updated font-family to Proxima Nova */
+  font-family: "Proxima Nova", Arial, Helvetica, sans-serif;
 }
 
 @layer base {
