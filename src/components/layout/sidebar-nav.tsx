@@ -64,11 +64,9 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
           )}
         </div>
       </SidebarHeader>
-      <SidebarSeparator/>
+      {/* Removed SidebarSeparator here */}
 
       <SidebarContent>
-        {/* Site Nav Menu and its separator are removed */}
-        
         {/* Active Campaign Section - moved up */}
         {mounted && (
           <div className="px-2 mb-2">
@@ -173,4 +171,3 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
     </Sidebar>
   );
 }
-
