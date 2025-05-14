@@ -45,26 +45,19 @@ const getRollDetailsDisplay = (roll: DiceRoll): React.ReactNode => {
     const [roll1, roll2] = roll.rawRolls;
     const isAdvantage = roll.advantageState === 'advantage';
     
-    let isRoll1Chosen;
-    if (roll.chosenRoll === roll1 && roll.chosenRoll === roll2) { 
-        isRoll1Chosen = true; // If they are equal, highlight the first one
-    } else if (isAdvantage) {
-      isRoll1Chosen = roll.chosenRoll === roll1; // For advantage, chosen is max. If roll1 is max, it's chosen.
-    } else { 
-      isRoll1Chosen = roll.chosenRoll === roll1; // For disadvantage, chosen is min. If roll1 is min, it's chosen.
-    }
-    
-    // Correction for highlighting: if roll1 is chosen, it gets styled. If roll2 is chosen, it gets styled.
-    // If roll1 === chosenRoll, style roll1. Else style roll2.
+    // Determine which roll was chosen. If equal, style roll1 as chosen.
+    const roll1IsChosen = roll.chosenRoll === roll1 || (roll1 === roll2 && isAdvantage && roll1 >= roll2) || (roll1 === roll2 && !isAdvantage && roll1 <= roll2) ;
+    const roll2IsChosen = roll.chosenRoll === roll2 && roll1 !== roll2;
+
     const roll1Classes = cn(
-      roll.chosenRoll === roll1 && "font-bold",
-      roll.chosenRoll === roll1 && isAdvantage && "text-success",
-      roll.chosenRoll === roll1 && !isAdvantage && roll.advantageState === 'disadvantage' && "text-destructive"
+      roll1IsChosen && "font-bold",
+      roll1IsChosen && isAdvantage && "text-success",
+      roll1IsChosen && !isAdvantage && roll.advantageState === 'disadvantage' && "text-destructive"
     );
     const roll2Classes = cn(
-      roll.chosenRoll === roll2 && "font-bold",
-      roll.chosenRoll === roll2 && isAdvantage && "text-success",
-      roll.chosenRoll === roll2 && !isAdvantage && roll.advantageState === 'disadvantage' && "text-destructive"
+      roll2IsChosen && "font-bold",
+      roll2IsChosen && isAdvantage && "text-success",
+      roll2IsChosen && !isAdvantage && roll.advantageState === 'disadvantage' && "text-destructive"
     );
 
     return (
@@ -232,8 +225,9 @@ export function DiceRollerTool() {
 
           <Separator />
 
-          {/* Modifier Controls */}
-          <div className="space-y-1 pt-1">
+          {/* Modifier and Advantage/Disadvantage Controls in one row */}
+          <div className="flex flex-row items-center justify-between pt-2">
+            {/* Modifier Controls (aligned left) */}
             <div className="flex items-center justify-center space-x-2">
               <Button variant="outline" size="icon" onClick={() => handleModifierChange(-1)} disabled={isRolling} className="h-8 w-8">
                 <Minus className="h-4 w-4" />
@@ -267,30 +261,32 @@ export function DiceRollerTool() {
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-          </div>
 
-          <Separator />
-
-          {/* Advantage/Disadvantage Controls for d20 */}
-          <div className="space-y-1 pt-2">
-            <div className="flex justify-center space-x-2">
+            {/* Advantage/Disadvantage Column (aligned right) */}
+            <div className="flex flex-col space-y-1">
               <Button
                 variant={advantageState === 'advantage' ? 'success' : 'outline'}
                 onClick={() => handleAdvantageToggle('advantage')}
                 disabled={isRolling}
-                className="text-xs px-3 py-1.5 h-auto flex-1"
+                className={cn(
+                  "text-xs px-2 py-1 h-auto w-16", 
+                  advantageState !== 'advantage' && "hover:border-success hover:bg-background"
+                )}
                 aria-pressed={advantageState === 'advantage'}
               >
-                Advantage
+                ADV
               </Button>
               <Button
                 variant={advantageState === 'disadvantage' ? 'destructive' : 'outline'}
                 onClick={() => handleAdvantageToggle('disadvantage')}
                 disabled={isRolling}
-                className="text-xs px-3 py-1.5 h-auto flex-1"
+                className={cn(
+                  "text-xs px-2 py-1 h-auto w-16", 
+                  advantageState !== 'disadvantage' && "hover:border-destructive hover:bg-background"
+                )}
                 aria-pressed={advantageState === 'disadvantage'}
               >
-                Disadvantage
+                DIS
               </Button>
             </div>
           </div>
@@ -354,3 +350,4 @@ export function DiceRollerTool() {
     </div>
   );
 }
+
