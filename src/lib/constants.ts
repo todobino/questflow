@@ -50,7 +50,7 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     title: 'Tables',
     href: '/tables',
     icon: ListOrdered,
-    disabled: true, 
+    // disabled: true, // Removed disabled state
   },
   {
     title: 'Encounters',
@@ -84,4 +84,5 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
 
 // Filter out the disabled "Characters" link for actual rendering if it's truly removed
 export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
+
 
