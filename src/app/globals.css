@@ -22,7 +22,7 @@ body {
     --muted-foreground: 0 0% 45.1%; /* Medium Gray */
     --accent: 0 0% 9%; /* Dark Gray / Black */
     --accent-foreground: 0 0% 98%; /* White */
-    --destructive: 0 84.2% 60.2%; /* Red */
+    --destructive: 0 75% 45%; /* Darker Red */
     --destructive-foreground: 0 0% 98%; /* White */
     --success: 145 63% 40%; /* Green */
     --success-foreground: 0 0% 98%; /* White */
@@ -64,7 +64,7 @@ body {
     --muted-foreground: 0 0% 63.9%;
     --accent: 0 0% 9%; /* Dark Gray / Black */
     --accent-foreground: 0 0% 98%; /* White */
-    --destructive: 0 70% 50%; /* Adjusted Red */
+    --destructive: 0 65% 40%; /* Darker Red for dark mode */
     --destructive-foreground: 0 0% 98%;
     --success: 145 63% 50%; /* Adjusted Green */
     --success-foreground: 0 0% 98%;
