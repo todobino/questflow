@@ -46,16 +46,14 @@ const getRollDetailsDisplay = (roll: DiceRoll): React.ReactNode => {
     const [roll1, roll2] = roll.rawRolls;
     const isAdvantage = roll.advantageState === 'advantage';
     
-    // Determine which roll was chosen based on advantage/disadvantage
     let isRoll1Chosen;
     if (isAdvantage) {
-      isRoll1Chosen = roll1 >= roll2;
-    } else { // disadvantage
-      isRoll1Chosen = roll1 <= roll2;
+      isRoll1Chosen = roll.chosenRoll === roll1;
+    } else { 
+      isRoll1Chosen = roll.chosenRoll === roll1;
     }
-    // Ensure chosenRoll from the DiceRoll object matches the logic here
-    // This logic assumes chosenRoll in DiceRoll is correctly set
-    if(roll.chosenRoll === roll1 && roll.chosenRoll === roll2) { // If both rolls are equal, the first one is "chosen" for styling.
+    
+    if(roll.chosenRoll === roll1 && roll.chosenRoll === roll2) { 
         isRoll1Chosen = true;
     } else if (roll.chosenRoll === roll1) {
         isRoll1Chosen = true;
@@ -111,7 +109,7 @@ export function DiceRollerTool() {
     if (criticalMessage) {
       const timer = setTimeout(() => {
         setCriticalMessage(null);
-      }, 1800); // Duration of the explode animation + a bit
+      }, 1800); 
       return () => clearTimeout(timer);
     }
   }, [criticalMessage]);
@@ -145,7 +143,7 @@ export function DiceRollerTool() {
   const executeRoll = (diceType: DiceType, sides: number) => {
     setIsRolling(true);
     setCurrentRoll(null);
-    setCriticalMessage(null); // Clear previous critical message
+    setCriticalMessage(null); 
 
     setTimeout(() => {
       let rawRolls: number[] = [];
@@ -157,7 +155,7 @@ export function DiceRollerTool() {
         rawRolls = [roll1, roll2];
         if (advantageState === 'advantage') {
           chosenRoll = Math.max(roll1, roll2);
-        } else { // disadvantage
+        } else { 
           chosenRoll = Math.min(roll1, roll2);
         }
       } else {
@@ -205,28 +203,26 @@ export function DiceRollerTool() {
       )}
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle className="text-lg">Dice Roller Deluxe</CardTitle>
+          {/* Title removed */}
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
-            {isRolling && <Dices className="h-10 w-10 animate-spin text-accent" />}
-            {!isRolling && currentRoll ? (
-              <>
-                <span className="text-4xl font-bold">{currentRoll.finalResult}</span>
-                {mounted && (
-                  <p className="text-muted-foreground text-xs mt-1 text-center">
-                    Rolled {currentRoll.diceType} {getRollDetailsDisplay(currentRoll)}
-                    {currentRoll.modifier !== 0 ? ` ${currentRoll.modifier >= 0 ? '+' : ''}${currentRoll.modifier}` : ''}
-                    {' = '}
-                    <span className="font-semibold text-primary">{currentRoll.finalResult}</span>
-                  </p>
-                )}
-              </>
-            ) : (
-              !isRolling && <span className="text-4xl font-bold text-muted-foreground">0</span>
-            )}
+          {/* Dice Buttons First */}
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {DICE_CONFIG.map(({ type, sides }) => (
+              <Button
+                key={type}
+                onClick={() => executeRoll(type, sides)}
+                className="h-10 text-sm font-semibold transition-transform hover:scale-105 active:scale-95"
+                size="default"
+                variant="outline"
+                disabled={isRolling}
+              >
+                {type.toUpperCase()}
+              </Button>
+            ))}
           </div>
 
+          <Separator />
 
           {/* Modifier Controls */}
           <div className="space-y-1 pt-1">
@@ -265,6 +261,8 @@ export function DiceRollerTool() {
             </div>
           </div>
 
+          <Separator />
+
           {/* Advantage/Disadvantage Controls for d20 */}
           <div className="space-y-1 pt-2">
             <RadioGroup 
@@ -295,20 +293,25 @@ export function DiceRollerTool() {
           </div>
           
           <Separator />
-
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {DICE_CONFIG.map(({ type, sides }) => (
-              <Button
-                key={type}
-                onClick={() => executeRoll(type, sides)}
-                className="h-10 text-sm font-semibold transition-transform hover:scale-105 active:scale-95"
-                size="default"
-                variant="outline"
-                disabled={isRolling}
-              >
-                {type.toUpperCase()}
-              </Button>
-            ))}
+          
+          {/* Roll Result Display Box */}
+          <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
+            {isRolling && <Dices className="h-10 w-10 animate-spin text-accent" />}
+            {!isRolling && currentRoll ? (
+              <>
+                <span className="text-4xl font-bold">{currentRoll.finalResult}</span>
+                {mounted && (
+                  <p className="text-muted-foreground text-xs mt-1 text-center">
+                    Rolled {currentRoll.diceType} {getRollDetailsDisplay(currentRoll)}
+                    {currentRoll.modifier !== 0 ? ` ${currentRoll.modifier >= 0 ? '+' : ''}${currentRoll.modifier}` : ''}
+                    {' = '}
+                    <span className="font-semibold text-primary">{currentRoll.finalResult}</span>
+                  </p>
+                )}
+              </>
+            ) : (
+              !isRolling && <span className="text-4xl font-bold text-muted-foreground">0</span>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -326,7 +329,7 @@ export function DiceRollerTool() {
               {rolls.map((roll, index) => (
                 <div key={roll.id}>
                   <div className="flex justify-between items-center p-1.5">
-                    <span className="whitespace-pre-wrap break-words text-left"> {/* Changed break-all to break-words and added text-left */}
+                    <span className="whitespace-pre-wrap break-words text-left"> 
                       Rolled {roll.diceType} {getRollDetailsDisplay(roll)}
                       {roll.modifier !== 0 ? ` ${roll.modifier >= 0 ? '+' : ''}${roll.modifier}` : ''}
                       {' = '}
@@ -348,3 +351,4 @@ export function DiceRollerTool() {
     </div>
   );
 }
+

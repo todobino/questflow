@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
 import { PartySheet } from '@/components/party/party-sheet';
-import { Dices, Shield, Users } from 'lucide-react';
+import { Dices, Swords, Users } from 'lucide-react'; // Changed Shield to Swords
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; 
 
@@ -72,7 +72,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 <Dices className="h-4 w-4 mr-1 md:mr-2" />Dice
               </TabsTrigger>
               <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto">
-                <Shield className="h-4 w-4 mr-1 md:mr-2" />Combat
+                <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat {/* Changed Shield to Swords */}
               </TabsTrigger>
             </TabsList>
             <TabsContent value="party" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
