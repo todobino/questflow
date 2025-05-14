@@ -24,7 +24,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger, // Added AlertDialogTrigger here
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 
@@ -36,27 +36,29 @@ interface CharacterCardProps {
 
 function CharacterCard({ character, onEdit, onDelete }: CharacterCardProps) {
   return (
-    <Card className="group relative flex flex-col overflow-hidden rounded-lg shadow-lg transition-shadow hover:shadow-xl">
-      <div className="aspect-square w-full bg-muted">
+    <Card className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-shadow hover:shadow-xl h-36"> {/* Adjusted: flex-row and fixed height h-36 */}
+      {/* Image on the left */}
+      <div className="w-32 flex-shrink-0 h-full bg-muted relative"> {/* Adjusted: Fixed width for image part */}
         <Image
-          src={character.imageUrl || `https://placehold.co/300x300.png`}
+          src={character.imageUrl || `https://placehold.co/128x144.png`} // Adjusted placeholder size
           alt={character.name}
-          width={300}
-          height={300}
-          className="h-full w-full object-cover"
+          layout="fill"
+          objectFit="cover"
           data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
         />
       </div>
-      <CardContent className="flex-grow p-3">
-        <CardTitle className="text-lg">{character.name}</CardTitle>
-        <CardDescription className="text-xs">
+      {/* Content on the right */}
+      <div className="flex-grow flex flex-col p-3 overflow-hidden"> {/* Adjusted: flex-grow and internal flex structure */}
+        <CardTitle className="text-lg mb-0.5 truncate">{character.name}</CardTitle>
+        <CardDescription className="text-xs mb-1.5 truncate">
           Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
           {character.subclass ? ` (${character.subclass})` : ''}
         </CardDescription>
         {character.backstory && (
-          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{character.backstory}</p>
+          <p className="line-clamp-3 text-xs text-muted-foreground overflow-hidden flex-grow">{character.backstory}</p>
         )}
-      </CardContent>
+      </div>
+      {/* Edit/Delete buttons remain absolutely positioned relative to the card */}
       <div className="absolute right-2 top-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
         <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => onEdit(character)}>
           <Edit3 className="h-3.5 w-3.5" />
@@ -218,13 +220,13 @@ export default function PartyManagerPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> {/* Adjusted grid cols for wider cards */}
           {partyMembers.map((character) => (
             <CharacterCard key={character.id} character={character} onEdit={handleEditCharacter} onDelete={handleDeleteCharacter} />
           ))}
           <Card 
             onClick={handleAddCharacterClick}
-            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted min-h-[300px]"
+            className="flex h-36 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted" // Adjusted: height to h-36
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleAddCharacterClick()}
