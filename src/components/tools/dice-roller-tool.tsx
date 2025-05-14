@@ -202,7 +202,7 @@ export function DiceRollerTool() {
         </div>
       )}
       <Card className="shadow-md">
-        <CardContent className="space-y-4 px-4 pt-2 pb-4">
+        <CardContent className="space-y-4 px-4 pt-4 pb-4"> {/* Increased pt-4 */}
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {DICE_CONFIG.map(({ type, sides }) => (
               <Button
@@ -218,12 +218,12 @@ export function DiceRollerTool() {
             ))}
           </div>
 
-          <Separator />
+          <Separator className="my-3" />
 
-          <div className="flex flex-row items-start justify-between pt-2">
-            <div className="flex flex-col items-start">
+          <div className="flex flex-row items-end justify-between pt-1"> {/* Changed items-start to items-end, reduced pt-1 */}
+            <div className="flex flex-col items-start"> {/* Modifier Column */}
               <Label htmlFor="modifier-display-button" className="text-xs text-muted-foreground mb-1 self-start">Modifiers</Label>
-              <div className="flex items-center justify-center space-x-2">
+              <div className="flex items-center justify-center space-x-2"> {/* Modifier controls group */}
                 <Button variant="outline" size="icon" onClick={() => handleModifierChange(-1)} disabled={isRolling} className="h-8 w-8">
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -259,15 +259,16 @@ export function DiceRollerTool() {
               </div>
             </div>
 
-            <div className="flex flex-col space-y-1">
+            <div className="flex flex-col space-y-1"> {/* Advantage/Disadvantage Column */}
               <Button
                 variant={advantageState === 'advantage' ? 'success' : 'outline'}
                 onClick={() => handleAdvantageToggle('advantage')}
                 disabled={isRolling}
                 className={cn(
-                  "text-xs px-2 py-1 h-auto", 
-                  advantageState !== 'advantage' && "hover:bg-success/10 hover:text-success-foreground hover:border-success",
-                  advantageState === 'advantage' && "text-success-foreground"
+                  "text-xs px-3 py-1.5 h-auto w-full transition-colors duration-150", // Adjusted padding and width
+                  advantageState === 'advantage' 
+                    ? "border border-success" 
+                    : "hover:bg-success hover:text-success-foreground hover:border-success border-input"
                 )}
                 aria-pressed={advantageState === 'advantage'}
               >
@@ -277,10 +278,11 @@ export function DiceRollerTool() {
                 variant={advantageState === 'disadvantage' ? 'destructive' : 'outline'}
                 onClick={() => handleAdvantageToggle('disadvantage')}
                 disabled={isRolling}
-                className={cn(
-                  "text-xs px-2 py-1 h-auto", 
-                  advantageState !== 'disadvantage' && "hover:bg-destructive/10 hover:text-destructive-foreground hover:border-destructive",
-                  advantageState === 'disadvantage' && "text-destructive-foreground"
+                 className={cn(
+                  "text-xs px-3 py-1.5 h-auto w-full transition-colors duration-150", // Adjusted padding and width
+                  advantageState === 'disadvantage' 
+                    ? "border border-destructive" 
+                    : "hover:bg-destructive hover:text-destructive-foreground hover:border-destructive border-input"
                 )}
                 aria-pressed={advantageState === 'disadvantage'}
               >
@@ -291,7 +293,7 @@ export function DiceRollerTool() {
           
           {/* Separator removed from here */}
           
-          <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
+          <div className="mt-3 mb-0 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]"> {/* Adjusted mt-3 mb-0 */}
             {isRolling && <Dices className="h-10 w-10 animate-spin text-accent" />}
             {!isRolling && currentRoll ? (
               <>
