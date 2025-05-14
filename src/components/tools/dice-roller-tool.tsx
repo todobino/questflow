@@ -107,11 +107,12 @@ export function DiceRollerTool() {
 
 
   useEffect(() => {
-    if (lastRollOutput?.diceType !== 'coin' && diceChain.length === 0 && modifier === 0 && !lastRollOutput) {
+    if (lastRollOutput) return; // Don't update formula display if a result is showing
+
+    if (diceChain.length === 0 && modifier === 0) {
       setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>);
       return;
     }
-    if(lastRollOutput) return; // Don't update formula display if a result is showing
 
     const parts: React.ReactNode[] = [];
     diceChain.forEach((item, index) => {
@@ -157,7 +158,6 @@ export function DiceRollerTool() {
       );
     }
     setActiveRollFormulaDisplay(<div className="flex flex-wrap items-center justify-center gap-x-0.5">{parts}</div>);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [diceChain, modifier, lastRollOutput]);
 
 
@@ -243,7 +243,7 @@ export function DiceRollerTool() {
       const outputRollSegments: RollSegment[] = [];
       let overallIsCritical: 'success' | 'failure' | undefined = undefined;
       
-      let primaryDiceTypeForOutput: DiceType = 'd6'; // Default if no dice in chain
+      let primaryDiceTypeForOutput: DiceType = 'd6'; 
       if (diceChain.length > 0) {
         primaryDiceTypeForOutput = diceChain.sort((a,b) => DICE_CONFIG.find(dc => dc.type === b.die)!.sides - DICE_CONFIG.find(dc => dc.type === a.die)!.sides)[0].die;
       }
@@ -262,7 +262,7 @@ export function DiceRollerTool() {
 
           if (chainItem.die === 'd20') {
             const r1 = rollSingleDie(dieConfig.sides);
-            advStateThisInstance = advantageState; // Use overall advantage state for all d20s in this chain roll
+            advStateThisInstance = advantageState; 
             if (advStateThisInstance) {
               const r2 = rollSingleDie(dieConfig.sides);
               chosenRollThisInstance = advStateThisInstance === 'advantage' ? Math.max(r1, r2) : Math.min(r1, r2);
@@ -272,9 +272,8 @@ export function DiceRollerTool() {
               physicalRollsThisInstance = [r1];
             }
 
-            // Critical check applies only to the d20s rolled in the chain
             if (chosenRollThisInstance === 20 && overallIsCritical !== 'failure') overallIsCritical = 'success';
-            if (chosenRollThisInstance === 1) overallIsCritical = 'failure'; // A single 1 overrides previous successes
+            if (chosenRollThisInstance === 1) overallIsCritical = 'failure'; 
           } else {
             chosenRollThisInstance = rollSingleDie(dieConfig.sides);
             physicalRollsThisInstance = [chosenRollThisInstance];
@@ -304,8 +303,9 @@ export function DiceRollerTool() {
 
 
       let historyBreakdownString = outputRollSegments.map(segment => {
-        const chosenRollsSum = segment.results.map(r => r.chosenRoll).join('+');
-        return `${segment.count > 1 ? segment.count : ''}${segment.die}(${chosenRollsSum})`;
+        const chosenRollsSum = segment.results.reduce((sum, r) => sum + r.chosenRoll, 0);
+        const chosenRollsDisplay = segment.results.map(r => r.chosenRoll).join('+');
+        return `${segment.count > 1 ? segment.count : ''}${segment.die}(${chosenRollsDisplay})`;
       }).join(' + ');
 
       if (diceChain.length === 0 && modifier !== 0) {
@@ -344,15 +344,12 @@ export function DiceRollerTool() {
         setCriticalMessage({ text: "CRITICAL FAILURE!", colorClass: "text-destructive" });
       }
 
-      // Do not clear chain or modifier here, user might want to re-roll or adjust
-      // They will be cleared if user adds a new die or changes modifier.
       setIsRolling(false);
     }, 300);
   };
 
   const handleCoinFlip = () => {
     setIsRolling(true);
-    // Do not clear diceChain, modifier, or lastRollOutput from dice rolls
     
     setTimeout(() => {
       const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
@@ -363,14 +360,12 @@ export function DiceRollerTool() {
         breakdown: `Coin Flip: ${result}`,
         diceType: 'coin',
       };
-      // We don't set lastRollOutput for coin flips to keep dice chain visible
       const historyEntry: HistoryEntry = {
         id: resultId,
         timestamp: new Date(),
         ...resultDetails,
       };
       setRollHistory(prev => [historyEntry, ...prev.slice(0, 19)]);
-      // Removed toast for coin flip
       setIsRolling(false);
     }, 300);
   };
@@ -388,7 +383,7 @@ export function DiceRollerTool() {
         const r1 = rollSingleDie(20);
         if (advantageState) {
             const r2 = rollSingleDie(20);
-            rawD20Rolls = [r1, r2].sort((a,b) => a-b); // Store sorted
+            rawD20Rolls = [r1, r2].sort((a,b) => a-b); 
             chosenD20Roll = advantageState === 'advantage' ? Math.max(r1, r2) : Math.min(r1, r2);
             historyBreakdownText = `Quick d20 (${advantageState === 'advantage' ? 'Adv:' : 'Dis:'} ${r1},${r2} \u2192 ${chosenD20Roll}): ${chosenD20Roll}`;
         } else {
@@ -417,13 +412,13 @@ export function DiceRollerTool() {
                     advantageState: advantageState
                 }] 
             }],
-            modifier: 0, // No modifier for quick d20
+            modifier: 0,
             advantageState: advantageState,
             formula: "1d20"
         };
 
         const historyEntry: HistoryEntry = {
-            id: resultDetails.id,
+            id: resultId,
             timestamp: new Date(),
             ...resultDetails
         };
@@ -485,7 +480,7 @@ export function DiceRollerTool() {
                   "font-semibold transition-transform hover:scale-105 active:scale-95",
                   "h-auto aspect-square flex flex-col items-center justify-center p-1 text-xs"
                 )}
-                variant="alert" // Changed to alert variant
+                variant="alert" 
                 disabled={isRolling}
               >
                 <div className="flex flex-col items-center">
@@ -494,7 +489,7 @@ export function DiceRollerTool() {
                 </div>
               </Button>
           </div>
-
+          
           <div className="flex flex-row items-end justify-between pt-1">
             <div className="flex flex-col items-start">
               <Label className="text-xs text-muted-foreground mb-1 self-start">Modifiers</Label>
@@ -515,7 +510,7 @@ export function DiceRollerTool() {
                 ) : (
                   <Button
                     variant="outline"
-                    onClick={() => { setModifierInput(String(modifier)); setIsEditingModifier(true); }}
+                    onClick={() => { setModifierInput(String(modifier)); setIsEditingModifier(true); setLastRollOutput(null); }}
                     className="h-8 w-16 text-sm"
                     disabled={isRolling}
                   >
@@ -560,19 +555,19 @@ export function DiceRollerTool() {
               {isRolling && !(lastRollOutput?.diceType === 'coin') ? <Dices className="mr-2 h-4 w-4 animate-spin" /> : <Dices className="mr-2 h-4 w-4" />}
               Roll Dice
             </Button>
-            <Button onClick={handleQuickD20Roll} variant="default" className="flex-1" disabled={isRolling}>
+            <Button onClick={handleQuickD20Roll} variant="outline" className="flex-1" disabled={isRolling}>
                <Dices className="mr-2 h-4 w-4" /> Quick d20
             </Button>
           </div>
 
 
-          <div className="mt-3 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px] mb-3"> {/* Added mb-3 */}
-            {isRolling && lastRollOutput?.diceType !== 'coin' ? ( // Check if rolling for dice, not coin
+          <div className="mt-3 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px] mb-3">
+            {isRolling && lastRollOutput?.diceType !== 'coin' ? ( 
                 <Dices className="h-10 w-10 animate-spin text-accent" />
             ) : lastRollOutput ? (
                 <span
-                    key={lastRollOutput.id} // Key helps re-trigger animation on new roll
-                    className="text-5xl font-bold text-foreground animate-roll-burst" // Changed text-primary to text-foreground
+                    key={lastRollOutput.id} 
+                    className="text-5xl font-bold text-foreground animate-roll-burst" 
                 >
                     {lastRollOutput.total}
                 </span>
@@ -603,9 +598,9 @@ export function DiceRollerTool() {
                       {mounted && (
                           <span className="text-muted-foreground ml-2 flex-shrink-0">
                               {new Date(entry.timestamp).toLocaleTimeString([], {
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true,
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true,
                               })}
                           </span>
                       )}
@@ -621,3 +616,4 @@ export function DiceRollerTool() {
     </div>
   );
 }
+
