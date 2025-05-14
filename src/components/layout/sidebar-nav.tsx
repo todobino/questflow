@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import type { NavItem } from '@/lib/constants';
-import { SITE_NAV_ITEMS, CAMPAIGN_MENU_NAV_ITEMS, APP_LOGO_ICON, APP_NAME } from '@/lib/constants';
+import { SITE_NAV_ITEMS, getFilteredCampaignNavItems, APP_LOGO_ICON, APP_NAME } from '@/lib/constants'; // Updated import
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -18,7 +18,6 @@ import {
   useSidebar,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger as RadixTooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import {
   Briefcase,
@@ -26,6 +25,7 @@ import {
 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useState, useEffect } from 'react';
+
 
 interface SidebarNavProps {
   campaigns: Campaign[];
@@ -37,36 +37,34 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
   const pathname = usePathname();
   const { state: sidebarState, isMobile } = useSidebar();
   const [mounted, setMounted] = useState(false);
+  const [isCampaignSwitcherOpen, setIsCampaignSwitcherOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  const campaignNavItems = getFilteredCampaignNavItems(); // Use filtered items
 
   const AppLogoComponent = APP_LOGO_ICON;
 
+  const filteredCampaigns = campaigns.filter(campaign =>
+    campaign.name.toLowerCase().includes(searchTerm.toLowerCase())
+  ).sort((a, b) => { // Assuming you want to sort by name or a date property if available
+    return a.name.localeCompare(b.name);
+  });
+
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border p-2">
-        {(sidebarState === 'expanded' || isMobile) ? (
-          <div className="flex items-center gap-2 px-2">
-            <AppLogoComponent className="h-6 w-6 text-primary" />
+      <SidebarHeader className="p-2">
+        <div className="flex items-center gap-2 px-2">
+          <AppLogoComponent className="h-6 w-6 text-primary" />
+          {(sidebarState === 'expanded' || isMobile) && (
             <span className="font-extrabold text-lg text-foreground">{APP_NAME}</span>
-          </div>
-        ) : (
-          <TooltipProvider>
-            <Tooltip>
-              <RadixTooltipTrigger asChild>
-                <div className="flex justify-center items-center h-10"> {/* Consistent height */}
-                  <AppLogoComponent className="h-6 w-6 text-primary" />
-                </div>
-              </RadixTooltipTrigger>
-              <TooltipContent side="right" align="center">
-                <p>{APP_NAME}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+          )}
+        </div>
       </SidebarHeader>
+      <SidebarSeparator/>
 
       <SidebarContent>
         {/* Site Nav Menu */}
@@ -92,7 +90,7 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
         </SidebarMenu>
 
         <SidebarSeparator className="my-2"/>
-
+        
         {/* Active Campaign Section */}
         {mounted && (
           <div className="px-2 mb-2">
@@ -132,9 +130,10 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
           </div>
         )}
 
+
         {/* Campaign Menu Nav */}
         <SidebarMenu className="px-2">
-          {CAMPAIGN_MENU_NAV_ITEMS.map((item) => (
+          {campaignNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
                <TooltipProvider>
                 <SidebarMenuButton

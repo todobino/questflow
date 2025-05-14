@@ -1,3 +1,4 @@
+
 export interface Campaign {
   id: string;
   name: string;
@@ -9,11 +10,13 @@ export interface Campaign {
 
 export interface Character {
   id: string;
+  campaignId: string; // Link to campaign
   name: string;
   race?: string;
   class?: string;
-  subclass?: string; // Added
-  background?: string; // Added
+  subclass?: string; 
+  background?: string; 
+  level?: number; // Added level
   backstory?: string;
   imageUrl?: string; // URL or data URI
   // Optional: stats, inventory, notes
@@ -44,10 +47,10 @@ export interface OverworldMapData {
   description: string;
 }
 
-export interface PartyMember {
+export interface PartyMember { // This might be redundant if Character type now covers party members fully
   id: string;
   name: string;
-  avatarUrl: string;
+  avatarUrl: string; // Consider aligning with Character's imageUrl
   level: number;
   race: string;
   class: string;

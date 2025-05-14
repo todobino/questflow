@@ -10,7 +10,9 @@ import {
   Scroll,
   ScrollText,
   Brain,
-  Swords, // Added for logo
+  Swords, 
+  Settings, // Added Settings
+  UsersRound, // Added for Party
 } from 'lucide-react';
 
 export interface NavItem {
@@ -40,9 +42,15 @@ export const SITE_NAV_ITEMS: NavItem[] = [
 
 export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
-    title: 'Characters',
+    title: 'Party', // New Party Item
+    href: '/party',
+    icon: UsersRound, 
+  },
+  {
+    title: 'Characters', // Will be removed as per new flow
     href: '/characters',
     icon: Users,
+    disabled: true, // Marking as disabled as it's being replaced by Party page
   },
   {
     title: 'Tables',
@@ -53,8 +61,8 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
     title: 'Encounters',
     href: '/encounters',
-    icon: Shield, // Using Shield for encounters
-    disabled: true, // Placeholder for now, was /creator/encounters (Soon)
+    icon: Shield, 
+    disabled: true, 
   },
   {
     title: 'Maps',
@@ -79,3 +87,6 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     disabled: true, // Placeholder
   },
 ];
+
+// Filter out the disabled "Characters" link for actual rendering if it's truly removed
+export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
