@@ -140,8 +140,13 @@ export default function PartyManagerPage() {
   };
   
   const handleSaveCharacter = (characterData: Omit<Character, 'id' | 'campaignId'>) => {
+    if (!activeCampaign) {
+      toast({ title: "Error", description: "No active campaign to save character to.", variant: "destructive" });
+      setIsFormOpen(false);
+      return;
+    }
     if (editingCharacter && editingCharacter.id) {
-      updateCharacter({ ...characterData, id: editingCharacter.id, campaignId: activeCampaign!.id });
+      updateCharacter({ ...characterData, id: editingCharacter.id, campaignId: activeCampaign.id });
     } else {
       addCharacter(characterData);
     }
@@ -164,10 +169,10 @@ export default function PartyManagerPage() {
         backstory: result.backstory,
         imageUrl: result.imageUrl,
         level: 1, 
-        currentHp: 10, // Default for random
-        maxHp: 10,     // Default for random
-        armorClass: 10, // Default for random
-        initiativeModifier: 0, // Default for random
+        currentHp: 10, 
+        maxHp: 10,     
+        armorClass: 10, 
+        initiativeModifier: 0, 
       };
       setRandomizedData(newCharacterData); 
       
@@ -184,7 +189,6 @@ export default function PartyManagerPage() {
   };
   
   const handleLevelUpParty = () => {
-    // Placeholder functionality
     toast({ title: 'Level Up!', description: 'Party level up functionality coming soon!' });
   };
 
@@ -219,7 +223,6 @@ export default function PartyManagerPage() {
     <>
       <PageHeader
         title="Party Manager"
-        description={`Manage the heroes of "${activeCampaign?.name || 'your campaign'}"`}
         actions={
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
@@ -230,7 +233,7 @@ export default function PartyManagerPage() {
               />
               <Label htmlFor="link-level-switch" className="text-sm">Link Party Level</Label>
             </div>
-            <Button onClick={handleLevelUpParty} variant="outline" size="sm">
+            <Button onClick={handleLevelUpParty} variant="default" size="sm"> {/* Changed variant to default */}
               <Zap className="mr-2 h-4 w-4" /> Level Up Party
             </Button>
           </div>
@@ -280,7 +283,6 @@ export default function PartyManagerPage() {
           setRandomizedData({});
         }
       }}>
-        {/* DialogContent for CharacterForm is now part of CharacterForm component itself */}
         <CharacterForm
           isDialog={true}
           currentCharacter={editingCharacter || randomizedData} 
