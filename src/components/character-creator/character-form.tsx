@@ -105,7 +105,7 @@ export function CharacterForm({ currentCharacter, onSave, onRandomize, isRandomi
           <CardTitle>Character Details</CardTitle>
           <CardDescription>Define your character's core attributes and story.</CardDescription>
         </div>
-        <Button onClick={onRandomize} disabled={isRandomizing} variant="outline" size="sm">
+        <Button onClick={onRandomize} disabled={isRandomizing} variant="default" size="sm">
           {isRandomizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
           {isRandomizing ? 'Randomizing...' : 'Randomize'}
         </Button>
