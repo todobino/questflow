@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, Edit3, Trash2, Brain, Save, Loader2 } from 'lucide-react';
-import type { SessionNote, Campaign } from '@/lib/types'; // Assuming Campaign type is needed for context
+import type { SessionNote, Campaign } from '@/lib/types'; 
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -51,12 +52,10 @@ export default function JournalPage() {
 
   useEffect(() => {
     if (selectedCampaignId) {
-      // Filter mock notes for selected campaign
       setSessionNotes(mockSessionNotes.filter(note => note.campaignId === selectedCampaignId));
     } else {
       setSessionNotes([]);
     }
-    // Reset form when campaign changes
     setCurrentNote({ title: '', notes: '' });
     setEditingNoteId(null);
   }, [selectedCampaignId]);
@@ -68,11 +67,9 @@ export default function JournalPage() {
     }
 
     if (editingNoteId) {
-      // Update existing note
       setSessionNotes(prev => prev.map(n => n.id === editingNoteId ? { ...n, ...currentNote, campaignId: selectedCampaignId } as SessionNote : n));
-      toast({ title: 'Note Updated', description: `Session note "${currentNote.title}" updated.` });
+      // Removed informational toast
     } else {
-      // Create new note
       const newNote: SessionNote = {
         id: String(Date.now()),
         campaignId: selectedCampaignId,
@@ -82,7 +79,7 @@ export default function JournalPage() {
         summary: currentNote.summary,
       };
       setSessionNotes(prev => [newNote, ...prev]);
-      toast({ title: 'Note Saved', description: `Session note "${newNote.title}" saved.` });
+      // Removed informational toast
     }
     setCurrentNote({ title: '', notes: '' });
     setEditingNoteId(null);
@@ -111,7 +108,7 @@ export default function JournalPage() {
     try {
       const result = await generateSessionSummary({ sessionNotes: currentNote.notes });
       setCurrentNote(prev => ({ ...prev, summary: result.summary }));
-      toast({ title: 'Summary Generated', description: 'AI summary created for the current notes.' });
+      // Removed informational toast
     } catch (error) {
       console.error('Error generating summary:', error);
       toast({ title: 'Error', description: 'Could not generate summary.', variant: 'destructive' });

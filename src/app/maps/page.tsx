@@ -27,10 +27,7 @@ export default function MapsPage() {
     try {
       const result = await generateBattleMap(input);
       setMapData(result);
-      toast({
-        title: 'Battle Map Generated!',
-        description: 'Your D&D battle map has been successfully created.',
-      });
+      // Removed informational toast
     } catch (error) {
       console.error('Error generating map:', error);
       toast({
@@ -45,18 +42,11 @@ export default function MapsPage() {
   const handleSaveMap = () => {
     if (mapData) {
       if (savedMaps.some(savedMap => savedMap.mapImage === mapData.mapImage)) {
-        toast({
-          title: 'Map Already Saved',
-          description: 'This map is already in your collection.',
-          variant: 'default' 
-        });
+        // Removed informational toast
         return;
       }
       setSavedMaps(prev => [mapData, ...prev]); 
-      toast({
-        title: 'Map Saved!',
-        description: 'The battle map has been added to "My Maps".',
-      });
+      // Removed informational toast
     }
   };
 

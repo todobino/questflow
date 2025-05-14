@@ -35,7 +35,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger as ShadAlertDialogTrigger, // Alias to avoid conflict if used locally
+  AlertDialogTrigger as ShadAlertDialogTrigger, 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -45,20 +45,16 @@ export function CombatTrackerTool() {
   const { activeCampaign, characters: partyCharacters } = useCampaignContext();
   const [combatants, setCombatants] = useState<Combatant[]>(initialCombatants);
   
-  // State for "Add Enemy" dialog
   const [isAddEnemyDialogOpen, setIsAddEnemyDialogOpen] = useState(false);
   const [enemyName, setEnemyName] = useState('');
   const [enemyHp, setEnemyHp] = useState('');
   const [enemyMaxHp, setEnemyMaxHp] = useState('');
   const [enemyInitiative, setEnemyInitiative] = useState('');
 
-  // State for "Add Player" dialog
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
   const [selectedPlayerCharacterId, setSelectedPlayerCharacterId] = useState<string | undefined>(undefined);
 
-  // State for editing combatant in list (existing logic)
   const [editingCombatantId, setEditingCombatantId] = useState<string | null>(null);
-  // Temp state for the inline edit form (if we re-introduce it or use a dialog for edit)
   const [editFormName, setEditFormName] = useState('');
   const [editFormHp, setEditFormHp] = useState('');
   const [editFormMaxHp, setEditFormMaxHp] = useState('');
@@ -98,7 +94,7 @@ export function CombatTrackerTool() {
       isPlayerCharacter: false,
     };
     setCombatants(prev => [...prev, newEnemy]);
-    toast({ title: "Enemy Added", description: `${enemyName} has joined the fray.` });
+    // Removed informational toast
     setEnemyName(''); setEnemyHp(''); setEnemyMaxHp(''); setEnemyInitiative('');
     setIsAddEnemyDialogOpen(false);
   };
@@ -128,14 +124,14 @@ export function CombatTrackerTool() {
       type: 'player',
       hp: characterToAdd.maxHp ?? 10,
       maxHp: characterToAdd.maxHp ?? 10,
-      initiative: undefined, // To be rolled
+      initiative: undefined, 
       conditions: [],
       initiativeModifier: characterToAdd.initiativeModifier ?? 0,
       isPlayerCharacter: true,
       originalCharacterId: characterToAdd.id,
     };
     setCombatants(prev => [...prev, newPlayerCombatant]);
-    toast({ title: "Player Added", description: `${characterToAdd.name} has joined the combat.` });
+    // Removed informational toast
     setSelectedPlayerCharacterId(undefined);
     setIsAddPlayerDialogOpen(false);
   };
@@ -149,7 +145,6 @@ export function CombatTrackerTool() {
     let newCombatants = [...combatants];
     let updatedExisting = false;
 
-    // Add party members not yet in combat
     partyCharacters
       .filter(char => char.campaignId === activeCampaign.id)
       .forEach(char => {
@@ -170,7 +165,6 @@ export function CombatTrackerTool() {
         }
       });
 
-    // Roll for existing player combatants without initiative
     newCombatants = newCombatants.map(c => {
       if (c.isPlayerCharacter && c.initiative === undefined) {
         updatedExisting = true;
@@ -180,23 +174,19 @@ export function CombatTrackerTool() {
     });
 
     setCombatants(newCombatants);
-    toast({ title: "Party Initiative Rolled!", description: "Initiative set for all party members." });
+    // Removed informational toast
   };
 
 
-  // Edit existing combatant (dialog-based, simplified)
   const openEditDialog = (combatant: Combatant) => {
     setEditingCombatantId(combatant.id);
     setEditFormName(combatant.name);
     setEditFormHp(String(combatant.hp));
     setEditFormMaxHp(String(combatant.maxHp));
     setEditFormInitiative(combatant.initiative !== undefined ? String(combatant.initiative) : '');
-    // Consider opening a specific edit dialog here if needed. For now, this pre-fills a hypothetical general edit form.
-    // For simplicity, direct list item editing will be kept. This function is a placeholder for dialog-based editing.
-    toast({title: "Editing", description: `Prepare to edit ${combatant.name}. Inline editing is active.`})
+    // Removed informational toast
   };
   
-  // This function is now for the *list item* editing primarily, not the top-level form
   const handleUpdateCombatantFromList = (id: string, updates: Partial<Combatant>) => {
     setCombatants(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
   };
@@ -225,16 +215,16 @@ export function CombatTrackerTool() {
       toast({ title: "Missing Initiative", description: "All combatants need an initiative score to start combat.", variant: "destructive"});
       return;
     }
-    if (combatants.length < 1) { // Changed to 1, technically can start with 1
+    if (combatants.length < 1) { 
       toast({ title: "Not Enough Combatants", description: "Need at least one combatant.", variant: "destructive"});
       return;
     }
     const sorted = [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
-    setCombatants(sorted); // Set combatants to the sorted list to lock order
+    setCombatants(sorted); 
     setRound(1);
     setTurnIndex(0);
     setCombatStarted(true);
-    toast({ title: "Combat Started!", description: `Round 1, ${sorted[0]?.name}'s turn.`});
+    // Removed informational toast
   };
 
   const nextTurn = () => {
@@ -247,21 +237,19 @@ export function CombatTrackerTool() {
     }
     setTurnIndex(newTurnIndex);
     setRound(newRound);
-    toast({ title: "Next Turn", description: `Round ${newRound}, ${sortedCombatants[newTurnIndex]?.name}'s turn.`});
+    // Removed informational toast
   };
   
   const resetCombat = () => {
     setRound(0);
     setTurnIndex(0);
     setCombatStarted(false);
-    // Reset HP and conditions, keep initiative for potential re-use or manual adjustment
     setCombatants(prev => prev.map(c => ({...c, hp: c.maxHp, conditions: []}))); 
-    toast({ title: "Combat Reset", description: "Ready for a new encounter."});
+    // Removed informational toast
   };
 
   return (
     <div className="space-y-4">
-      {/* Add Player/Enemy Buttons */}
       <div className="grid grid-cols-2 gap-2">
         <Button onClick={() => setIsAddPlayerDialogOpen(true)} variant="outline" size="sm">
           <UserPlus className="mr-2 h-4 w-4" /> Add Player
@@ -274,7 +262,6 @@ export function CombatTrackerTool() {
         <Users className="mr-2 h-4 w-4" /> Roll Entire Party Initiative
       </Button>
 
-      {/* Add Player Dialog */}
       <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -304,7 +291,6 @@ export function CombatTrackerTool() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Enemy Dialog */}
       <Dialog open={isAddEnemyDialogOpen} onOpenChange={setIsAddEnemyDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -338,7 +324,6 @@ export function CombatTrackerTool() {
         </DialogContent>
       </Dialog>
       
-      {/* Combat Controls Card (Start/Next/Reset) */}
       {combatants.length > 0 && (
         <Card className="shadow-md">
             <CardHeader>
@@ -366,7 +351,6 @@ export function CombatTrackerTool() {
         </Card>
       )}
 
-      {/* Initiative Order Card */}
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center text-lg"><Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order</CardTitle>
@@ -385,7 +369,7 @@ export function CombatTrackerTool() {
                       <div className="flex items-center gap-1.5">
                           {!combatStarted && (
                             <Input 
-                              type="text" // Allow empty string
+                              type="text" 
                               value={c.initiative === undefined ? '' : String(c.initiative)} 
                               onChange={(e) => handleInitiativeChange(c.id, e.target.value)}
                               placeholder="Init"
@@ -437,5 +421,3 @@ export function CombatTrackerTool() {
     </div>
   );
 }
-
-

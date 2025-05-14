@@ -58,7 +58,7 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
           {character.subclass ? ` (${character.subclass})` : ''}
         </CardDescription>
         
-        <div className="mt-1.5 space-y-1 text-xs flex-grow"> {/* Added flex-grow here */}
+        <div className="mt-1.5 space-y-1 text-xs flex-grow"> 
           <div className="flex items-center">
             <Heart className="h-3.5 w-3.5 mr-1.5 text-red-500 flex-shrink-0" />
             <span>HP: {character.currentHp ?? 'N/A'} / {character.maxHp ?? 'N/A'}</span>
@@ -73,7 +73,6 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
           </div>
         </div>
 
-        {/* Removed backstory display from here */}
       </div>
       <div className="absolute right-2 top-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
         <Button variant="outline" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(character); }}>
@@ -176,8 +175,8 @@ export default function PartyManagerPage() {
       class: randomClass,
       subclass: randomSubclass,
       background: randomBackground,
-      backstory: '', // No AI backstory
-      imageUrl: 'https://placehold.co/400x400.png', // Default placeholder
+      backstory: '', 
+      imageUrl: 'https://placehold.co/400x400.png', 
       level: 1,
       currentHp: 10,
       maxHp: 10,
@@ -191,12 +190,12 @@ export default function PartyManagerPage() {
        setEditingCharacter(prev => ({ ...prev, ...newCharacterData }));
     }
 
-    toast({ title: 'Character Randomized!', description: `A new ${randomRace} ${randomClass} named ${randomName} has been conceptualized locally.` });
+    // Removed informational toast
     setIsRandomizing(false);
   };
   
   const handleLevelUpParty = () => {
-    toast({ title: 'Level Up!', description: 'Party level up functionality coming soon!' });
+    // Removed informational toast
   };
 
   const handleViewProfile = (character: Character) => {
@@ -305,4 +304,3 @@ export default function PartyManagerPage() {
     </>
   );
 }
-

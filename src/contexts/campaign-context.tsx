@@ -17,10 +17,10 @@ interface CampaignContextType {
   addCharacter: (characterData: Omit<Character, 'id' | 'campaignId'>) => void;
   updateCharacter: (character: Character) => void;
   deleteCharacter: (characterId: string) => void;
-  selectedCharacterForProfile: Character | null; // Added for global profile dialog
-  isProfileOpen: boolean; // Added for global profile dialog
-  openProfileDialog: (character: Character) => void; // Added for global profile dialog
-  closeProfileDialog: () => void; // Added for global profile dialog
+  selectedCharacterForProfile: Character | null; 
+  isProfileOpen: boolean; 
+  openProfileDialog: (character: Character) => void; 
+  closeProfileDialog: () => void; 
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -90,7 +90,6 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // State for global character profile dialog
   const [selectedCharacterForProfile, setSelectedCharacterForProfile] = useState<Character | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -148,11 +147,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       }
       return newCampaigns;
     });
-     toast({
-      title: "Campaign Created",
-      description: `${newCampaign.name} has been created.`,
-    });
-  }, [toast]);
+    // Removed informational toast
+  }, []);
 
   const updateCampaign = useCallback((updatedCampaign: Campaign) => {
     setCampaignsState(prev => {
@@ -162,11 +158,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       }
       return newCampaigns;
     });
-    toast({
-      title: "Campaign Updated",
-      description: `${updatedCampaign.name} has been updated.`,
-    });
-  }, [toast]);
+    // Removed informational toast
+  }, []);
 
   const deleteCampaign = useCallback((campaignId: string) => {
     setCampaignsState(prev => prev.filter(c => c.id !== campaignId));
@@ -195,20 +188,19 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       imageUrl: characterData.imageUrl || `https://placehold.co/400x400.png`,
     };
     setCharactersState(prev => [newCharacter, ...prev]);
-    toast({ title: "Character Added", description: `${newCharacter.name} has joined the party.` });
+    // Removed informational toast
   }, [activeCampaign, toast]);
 
   const updateCharacter = useCallback((updatedCharacter: Character) => {
     setCharactersState(prev => prev.map(c => c.id === updatedCharacter.id ? updatedCharacter : c));
-    toast({ title: "Character Updated", description: `${updatedCharacter.name}'s details have been updated.` });
-  }, [toast]);
+    // Removed informational toast
+  }, []);
 
   const deleteCharacter = useCallback((characterId: string) => {
     setCharactersState(prev => prev.filter(c => c.id !== characterId));
     toast({ title: "Character Removed", description: "The character has been removed.", variant: "destructive" });
   }, [toast]);
 
-  // Functions for global character profile dialog
   const openProfileDialog = useCallback((character: Character) => {
     setSelectedCharacterForProfile(character);
     setIsProfileOpen(true);
@@ -227,7 +219,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     <CampaignContext.Provider value={{ 
       campaigns, activeCampaign, setCampaignActive, addCampaign, updateCampaign, deleteCampaign, isLoading,
       characters, addCharacter, updateCharacter, deleteCharacter,
-      selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog // Expose new state and functions
+      selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog 
     }}>
       {children}
     </CampaignContext.Provider>

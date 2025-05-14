@@ -43,21 +43,17 @@ export default function RandomTablesPage() {
     setIsRolling(true);
     setRolledResult(null);
 
-    // Simulate rolling animation
     setTimeout(() => {
       const randomIndex = Math.floor(Math.random() * table.items.length);
       const result = table.items[randomIndex];
       setRolledResult(result);
       setIsRolling(false);
-      toast({ title: `Rolled on "${table.name}"`, description: `Result: ${result.value}` });
+      // Removed informational toast
     }, 300);
   };
 
   const handleAddNewTable = () => {
-    toast({
-      title: 'Feature Coming Soon!',
-      description: 'Creating custom random tables will be available in a future update.',
-    });
+    // Removed informational toast
   };
   
   const getIconForTable = (tableId: string) => {
@@ -77,15 +73,14 @@ export default function RandomTablesPage() {
         title="Random Tables"
         description="Generate unexpected twists, mundane details, or crucial plot hooks for your campaigns."
       />
-      <div className="grid grid-cols-1 gap-6"> {/* Changed to single column layout */}
-        {/* Roll on Table Section */}
+      <div className="grid grid-cols-1 gap-6"> 
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center"><Dices className="mr-2 h-5 w-5 text-primary" /> Roll on a Table</CardTitle>
             <CardDescription>Select a table from the dropdown and click "Roll" to get a random result.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Internal grid for controls and result */}
-            <div className="space-y-4"> {/* Column for controls */}
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6"> 
+            <div className="space-y-4"> 
               <Select
                 value={selectedTableId}
                 onValueChange={(value) => {
@@ -110,7 +105,7 @@ export default function RandomTablesPage() {
               </Button>
             </div>
 
-            <div className="min-h-[100px]"> {/* Column for result */}
+            <div className="min-h-[100px]"> 
               {mounted && rolledResult && (
                 <Card className="bg-muted/50 p-4 shadow-inner h-full">
                   <CardHeader className="p-0 pb-2">
@@ -135,7 +130,6 @@ export default function RandomTablesPage() {
           </CardContent>
         </Card>
 
-        {/* Available Tables Section - Now below */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center"><ListChecks className="mr-2 h-5 w-5 text-primary" /> Available Tables</CardTitle>
@@ -180,4 +174,3 @@ export default function RandomTablesPage() {
     </>
   );
 }
-
