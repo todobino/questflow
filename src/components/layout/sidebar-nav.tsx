@@ -23,14 +23,15 @@ import { Tooltip, TooltipContent, TooltipTrigger as RadixTooltipTrigger, Tooltip
 import {
   Briefcase,
   Settings,
+  Swords, // Assuming APP_LOGO_ICON resolves to this
 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useState, useEffect } from 'react';
 
 interface SidebarNavProps {
-  campaigns: Campaign[]; // Campaigns is still needed for the activeCampaign logic
+  campaigns: Campaign[];
   activeCampaign: Campaign | null;
-  handleSetCampaignActive: (campaignId: string) => void; // This might be removed if direct switching is gone
+  handleSetCampaignActive: (campaignId: string) => void;
 }
 
 export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive }: SidebarNavProps) {
@@ -95,24 +96,23 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
 
         {/* Active Campaign Section */}
         <div className="px-2 mb-2">
-            <Link 
-                href="/campaigns" 
+            <Link
+                href="/campaigns"
                 className={cn(
-                    "block rounded-md p-2 bg-muted border border-transparent hover:border-primary transition-colors group",
-                    (sidebarState !== 'expanded' && !isMobile) && "flex justify-center items-center h-12" // Adjust height for collapsed icon view
+                    "block rounded-md p-2 bg-sidebar-accent border border-transparent hover:border-primary transition-colors group", // Changed bg-muted to bg-sidebar-accent
+                    (sidebarState !== 'expanded' && !isMobile) && "flex justify-center items-center h-12"
                 )}
                 aria-label={activeCampaign ? `Manage campaigns. Active: ${activeCampaign.name}` : "Manage campaigns"}
             >
             {(sidebarState === 'expanded' || isMobile) ? (
               <>
-                <p className="text-xs font-semibold text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">ACTIVE CAMPAIGN</p>
+                <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign</p> {/* Changed text and removed font-semibold */}
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 overflow-hidden min-w-0">
-                      <span className="line-clamp-2 text-left break-words leading-tight font-medium text-foreground">
+                      <span className="line-clamp-2 text-left break-words leading-tight font-extrabold text-foreground"> {/* Changed font-medium to font-extrabold */}
                         {mounted && activeCampaign ? activeCampaign.name : (mounted ? 'No Active Campaign' : 'Loading...')}
                       </span>
                   </span>
-                  {/* Chevron removed */}
                 </div>
               </>
             ) : (
