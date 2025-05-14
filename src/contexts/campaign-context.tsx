@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Campaign, Character } from '@/lib/types'; // Added Character
+import type { Campaign, Character } from '@/lib/types';
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,10 +13,14 @@ interface CampaignContextType {
   updateCampaign: (campaign: Campaign) => void;
   deleteCampaign: (campaignId: string) => void;
   isLoading: boolean;
-  characters: Character[]; // Added characters state
-  addCharacter: (characterData: Omit<Character, 'id' | 'campaignId'>) => void; // Added addCharacter
-  updateCharacter: (character: Character) => void; // Added updateCharacter
-  deleteCharacter: (characterId: string) => void; // Added deleteCharacter
+  characters: Character[];
+  addCharacter: (characterData: Omit<Character, 'id' | 'campaignId'>) => void;
+  updateCharacter: (character: Character) => void;
+  deleteCharacter: (characterId: string) => void;
+  selectedCharacterForProfile: Character | null; // Added for global profile dialog
+  isProfileOpen: boolean; // Added for global profile dialog
+  openProfileDialog: (character: Character) => void; // Added for global profile dialog
+  closeProfileDialog: () => void; // Added for global profile dialog
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -27,7 +31,6 @@ const initialMockCampaigns: Campaign[] = [
   { id: '3', name: 'Shadows over Riverwood', description: 'A darkness looms over a quaint village, and heroes must rise.', isActive: false, bannerImageUrl: `https://picsum.photos/seed/riverwoodbanner/800/200` },
 ];
 
-// Mock characters, some linked to campaigns
 const initialMockCharacters: Character[] = [
     { 
       id: 'char1', 
@@ -64,7 +67,7 @@ const initialMockCharacters: Character[] = [
     { 
       id: 'char3', 
       campaignId: '2', 
-      name: 'Seraphina Moonwhisper', // Added last name for consistency
+      name: 'Seraphina Moonwhisper',
       race: 'Human', 
       class: 'Cleric', 
       subclass: 'Life Domain', 
@@ -83,12 +86,15 @@ const initialMockCharacters: Character[] = [
 export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const [campaigns, setCampaignsState] = useState<Campaign[]>([]);
   const [activeCampaign, setActiveCampaignState] = useState<Campaign | null>(null);
-  const [characters, setCharactersState] = useState<Character[]>([]); // Character state
+  const [characters, setCharactersState] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // State for global character profile dialog
+  const [selectedCharacterForProfile, setSelectedCharacterForProfile] = useState<Character | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
   useEffect(() => {
-    // Simulate loading from a persistent store
     const storedCampaigns = localStorage.getItem('campaigns');
     const storedCharacters = localStorage.getItem('characters');
     
@@ -120,14 +126,12 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [characters, isLoading]);
 
-
   const setCampaignActive = useCallback((campaignId: string) => {
     const selectedCampaign = campaigns.find(c => c.id === campaignId);
     if (selectedCampaign) {
       setCampaignsState(prevCampaigns =>
         prevCampaigns.map(c => ({ ...c, isActive: c.id === campaignId }))
       );
-      // No toast here, page will reflect change
     }
   }, [campaigns]);
 
@@ -166,7 +170,6 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteCampaign = useCallback((campaignId: string) => {
     setCampaignsState(prev => prev.filter(c => c.id !== campaignId));
-    // Also delete characters associated with this campaign
     setCharactersState(prevChars => prevChars.filter(char => char.campaignId !== campaignId));
     toast({
       title: "Campaign Deleted",
@@ -175,7 +178,6 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [toast]);
 
-  // Character management functions
   const addCharacter = useCallback((characterData: Omit<Character, 'id' | 'campaignId'>) => {
     if (!activeCampaign) {
       toast({ title: "Error", description: "No active campaign selected.", variant: "destructive" });
@@ -183,14 +185,14 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     }
     const newCharacter: Character = {
       ...characterData,
-      id: String(Date.now() + Math.random()), // Ensure unique ID
+      id: String(Date.now() + Math.random()),
       campaignId: activeCampaign.id,
-      level: characterData.level || 1, // Default level
-      currentHp: characterData.currentHp !== undefined ? characterData.currentHp : (characterData.maxHp || 10), // Default HP current to max if available
+      level: characterData.level || 1,
+      currentHp: characterData.currentHp !== undefined ? characterData.currentHp : (characterData.maxHp || 10),
       maxHp: characterData.maxHp || 10,
       armorClass: characterData.armorClass || 10,
       initiativeModifier: characterData.initiativeModifier || 0,
-      imageUrl: characterData.imageUrl || `https://placehold.co/400x400.png`, // Default placeholder
+      imageUrl: characterData.imageUrl || `https://placehold.co/400x400.png`,
     };
     setCharactersState(prev => [newCharacter, ...prev]);
     toast({ title: "Character Added", description: `${newCharacter.name} has joined the party.` });
@@ -206,16 +208,26 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     toast({ title: "Character Removed", description: "The character has been removed.", variant: "destructive" });
   }, [toast]);
 
+  // Functions for global character profile dialog
+  const openProfileDialog = useCallback((character: Character) => {
+    setSelectedCharacterForProfile(character);
+    setIsProfileOpen(true);
+  }, []);
+
+  const closeProfileDialog = useCallback(() => {
+    setSelectedCharacterForProfile(null);
+    setIsProfileOpen(false);
+  }, []);
 
   if (isLoading && typeof window === 'undefined') { 
     return null; 
   }
 
-
   return (
     <CampaignContext.Provider value={{ 
       campaigns, activeCampaign, setCampaignActive, addCampaign, updateCampaign, deleteCampaign, isLoading,
-      characters, addCharacter, updateCharacter, deleteCharacter 
+      characters, addCharacter, updateCharacter, deleteCharacter,
+      selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog // Expose new state and functions
     }}>
       {children}
     </CampaignContext.Provider>
@@ -229,4 +241,3 @@ export const useCampaignContext = () => {
   }
   return context;
 };
-

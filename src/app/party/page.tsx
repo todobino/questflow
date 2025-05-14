@@ -6,9 +6,9 @@ import Image from 'next/image';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogTrigger, DialogContent as CharacterFormDialogContent } from '@/components/ui/dialog'; // Renamed to avoid conflict
+import { Dialog } from '@/components/ui/dialog'; 
 import { CharacterForm } from '@/components/character-creator/character-form';
-import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; // New component
+// import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; // Removed: Now handled globally
 import type { Character } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
 import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon } from 'lucide-react';
@@ -39,20 +39,18 @@ interface CharacterCardProps {
 function CharacterCard({ character, onEdit, onDelete, onViewProfile }: CharacterCardProps) {
   return (
     <Card 
-      className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-shadow hover:shadow-xl h-auto min-h-[144px] cursor-pointer"
+      className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-colors hover:border-primary cursor-pointer h-auto min-h-[144px]"
       onClick={() => onViewProfile(character)}
     >
-      {/* Image on the left */}
       <div className="w-32 flex-shrink-0 h-full bg-muted relative">
         <Image
-          src={character.imageUrl || `https://placehold.co/128x160.png`} // Adjusted placeholder size for potentially taller card
+          src={character.imageUrl || `https://placehold.co/128x160.png`} 
           alt={character.name}
           layout="fill"
           objectFit="cover"
           data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
         />
       </div>
-      {/* Content on the right */}
       <div className="flex-grow flex flex-col p-3 overflow-hidden">
         <CardTitle className="text-lg mb-0.5 truncate">{character.name}</CardTitle>
         <CardDescription className="text-xs mb-1 truncate">
@@ -79,7 +77,6 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
           <p className="line-clamp-2 text-xs text-muted-foreground mt-2 flex-grow">{character.backstory}</p>
         )}
       </div>
-      {/* Edit/Delete buttons remain absolutely positioned relative to the card */}
       <div className="absolute right-2 top-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
         <Button variant="outline" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(character); }}>
           <Edit3 className="h-3.5 w-3.5" />
@@ -108,17 +105,22 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
 
 
 export default function PartyManagerPage() {
-  const { activeCampaign, characters, addCharacter, updateCharacter, deleteCharacter: deleteCharacterFromContext, isLoading: isCampaignLoading } = useCampaignContext();
+  const { 
+    activeCampaign, 
+    characters, 
+    addCharacter, 
+    updateCharacter, 
+    deleteCharacter: deleteCharacterFromContext, 
+    isLoading: isCampaignLoading,
+    openProfileDialog // Get from context
+  } = useCampaignContext();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Partial<Character> | null>(null);
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [randomizedData, setRandomizedData] = useState<Partial<Character>>({});
   
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [selectedCharacterForProfile, setSelectedCharacterForProfile] = useState<Character | null>(null);
-
-
   const { toast } = useToast();
 
   const partyMembers = characters.filter(char => char.campaignId === activeCampaign?.id);
@@ -193,8 +195,7 @@ export default function PartyManagerPage() {
   };
 
   const handleViewProfile = (character: Character) => {
-    setSelectedCharacterForProfile(character);
-    setIsProfileOpen(true);
+    openProfileDialog(character); // Use context function
   };
 
   if (isCampaignLoading) {
@@ -233,7 +234,7 @@ export default function PartyManagerPage() {
               />
               <Label htmlFor="link-level-switch" className="text-sm">Link Party Level</Label>
             </div>
-            <Button onClick={handleLevelUpParty} variant="default" size="sm"> {/* Changed variant to default */}
+            <Button onClick={handleLevelUpParty} variant="default" size="sm">
               <Zap className="mr-2 h-4 w-4" /> Level Up Party
             </Button>
           </div>
@@ -296,15 +297,7 @@ export default function PartyManagerPage() {
           isRandomizing={isRandomizing}
         />
       </Dialog>
-
-      {selectedCharacterForProfile && (
-        <CharacterProfileDialog
-          character={selectedCharacterForProfile}
-          isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
-        />
-      )}
+      {/* CharacterProfileDialog is now rendered globally in MainLayoutContent */}
     </>
   );
 }
-

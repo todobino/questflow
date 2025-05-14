@@ -11,16 +11,24 @@ import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
 import { PartySheet } from '@/components/party/party-sheet';
 import { Dices, Shield, Users } from 'lucide-react';
-import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context'; // Import CampaignProvider
+import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
+import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; // Import the dialog
 
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
-// Inner component to access campaign context after CampaignProvider is set up
 function MainLayoutContent({ children }: MainLayoutProps) {
-  const { campaigns, activeCampaign, setCampaignActive: handleSetCampaignActive, isLoading } = useCampaignContext();
+  const { 
+    campaigns, 
+    activeCampaign, 
+    setCampaignActive: handleSetCampaignActive, 
+    isLoading,
+    selectedCharacterForProfile, // Get from context
+    isProfileOpen,             // Get from context
+    closeProfileDialog         // Get from context
+  } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -31,7 +39,6 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     <SidebarProvider defaultOpen>
       <div className="flex h-screen w-full bg-background text-foreground">
 
-        {/* Left Sidebar */}
         {!isLoading && mounted && (
           <SidebarNav 
             campaigns={campaigns}
@@ -40,17 +47,14 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           />
         )}
 
-        {/* Center Content Column */}
         <div className="w-[calc(100vw-var(--sidebar-width)-25vw)] md:w-[calc(100vw-var(--sidebar-width)-25vw)] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
-          {/* Mobile Header */}
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
             <SidebarTrigger />
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>}
           </header>
           
-          {/* Desktop Header area removed/adjusted to remove top space */}
           {/* <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center bg-background/95 px-6 backdrop-blur-sm md:flex">
-             Removed breadcrumb header content
+            {mounted && <Breadcrumbs activeCampaign={activeCampaign} />}
           </header> */}
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
@@ -58,7 +62,6 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           </main>
         </div>
 
-        {/* Right Sidebar Column */}
         <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground p-4 hidden md:flex flex-col overflow-hidden">
           <Tabs defaultValue="party" className="w-full flex-1 flex flex-col min-h-0">
             <TabsList className="grid w-full grid-cols-3 shrink-0">
@@ -86,6 +89,14 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
       </div>
       <Toaster />
+      {/* Render the global CharacterProfileDialog */}
+      {mounted && selectedCharacterForProfile && (
+        <CharacterProfileDialog
+          character={selectedCharacterForProfile}
+          isOpen={isProfileOpen}
+          onClose={closeProfileDialog}
+        />
+      )}
     </SidebarProvider>
   );
 }
