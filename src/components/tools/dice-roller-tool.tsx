@@ -26,6 +26,11 @@ interface DiceRoll {
   timestamp: Date;
 }
 
+interface CriticalMessage {
+  text: string;
+  colorClass: string;
+}
+
 const DICE_CONFIG: { type: DiceType; sides: number }[] = [
   { type: 'd4', sides: 4 },
   { type: 'd6', sides: 6 },
@@ -46,6 +51,8 @@ export function DiceRollerTool() {
   const [isEditingModifier, setIsEditingModifier] = useState(false);
   const [modifierInput, setModifierInput] = useState('0');
   const [advantageState, setAdvantageState] = useState<AdvantageStateType>(null);
+  const [criticalMessage, setCriticalMessage] = useState<CriticalMessage | null>(null);
+
 
   const modifierInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +65,15 @@ export function DiceRollerTool() {
       modifierInputRef.current.select();
     }
   }, [isEditingModifier]);
+
+  useEffect(() => {
+    if (criticalMessage) {
+      const timer = setTimeout(() => {
+        setCriticalMessage(null);
+      }, 1800); // Duration of the explode animation + a bit
+      return () => clearTimeout(timer);
+    }
+  }, [criticalMessage]);
 
   const handleModifierChange = (delta: number) => {
     setModifier(prev => prev + delta);
@@ -88,6 +104,7 @@ export function DiceRollerTool() {
   const executeRoll = (diceType: DiceType, sides: number) => {
     setIsRolling(true);
     setCurrentRoll(null);
+    setCriticalMessage(null); // Clear previous critical message
 
     setTimeout(() => {
       let rawRolls: number[] = [];
@@ -116,14 +133,22 @@ export function DiceRollerTool() {
         rawRolls,
         chosenRoll,
         modifier,
-        advantageState: diceType === 'd20' ? advantageState : null, // Only store adv/disadv for d20
+        advantageState: diceType === 'd20' ? advantageState : null, 
         finalResult,
         timestamp: new Date(),
       };
 
       setCurrentRoll(newRoll);
-      setRolls(prevRolls => [newRoll, ...prevRolls.slice(0, 19)]); // Keep last 20 rolls
+      setRolls(prevRolls => [newRoll, ...prevRolls.slice(0, 19)]);
       setIsRolling(false);
+
+      if (diceType === 'd20') {
+        if (newRoll.chosenRoll === 20) {
+          setCriticalMessage({ text: "CRITICAL SUCCESS!", colorClass: "text-success" });
+        } else if (newRoll.chosenRoll === 1) {
+          setCriticalMessage({ text: "CRITICAL FAILURE!", colorClass: "text-destructive" });
+        }
+      }
     }, 300);
   };
   
@@ -146,6 +171,13 @@ export function DiceRollerTool() {
 
   return (
     <div className="space-y-3">
+      {criticalMessage && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <span className={`text-5xl sm:text-6xl md:text-7xl font-extrabold animate-explode-text ${criticalMessage.colorClass} drop-shadow-lg`}>
+            {criticalMessage.text}
+          </span>
+        </div>
+      )}
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle className="text-lg">Dice Roller Deluxe</CardTitle>
@@ -154,7 +186,7 @@ export function DiceRollerTool() {
           <div className="mb-4 flex items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-6 text-4xl font-bold text-primary shadow-inner min-h-[90px]">
             {isRolling && <Dices className="h-10 w-10 animate-spin text-accent" />}
             {!isRolling && currentRoll ? (
-              <span className="transition-opacity duration-300 ease-in-out animate-pulse">{currentRoll.finalResult}</span>
+              <span>{currentRoll.finalResult}</span>
             ) : (
               !isRolling && <span className="text-muted-foreground">0</span>
             )}
@@ -166,8 +198,7 @@ export function DiceRollerTool() {
           )}
 
           {/* Modifier Controls */}
-          <div className="space-y-1">
-            <Label className="text-xs">Modifier</Label>
+          <div className="space-y-1 pt-1"> {/* Removed Label */}
             <div className="flex items-center justify-center space-x-2">
               <Button variant="outline" size="icon" onClick={() => handleModifierChange(-1)} disabled={isRolling} className="h-8 w-8">
                 <Minus className="h-4 w-4" />
@@ -181,6 +212,7 @@ export function DiceRollerTool() {
                   onBlur={handleModifierInputBlur}
                   onKeyDown={handleModifierInputKeyDown}
                   className="h-8 w-16 text-center px-1 text-sm"
+                  aria-label="Roll modifier"
                 />
               ) : (
                 <Button 
@@ -191,6 +223,7 @@ export function DiceRollerTool() {
                   }} 
                   className="h-8 w-16 text-sm"
                   disabled={isRolling}
+                  aria-label={`Current modifier: ${modifier >= 0 ? `+${modifier}` : modifier}. Click to edit.`}
                 >
                   {modifier >= 0 ? `+${modifier}` : modifier}
                 </Button>
@@ -202,12 +235,12 @@ export function DiceRollerTool() {
           </div>
 
           {/* Advantage/Disadvantage Controls for d20 */}
-          <div className="space-y-1">
-            <Label className="text-xs">d20 Rolls</Label>
+          <div className="space-y-1 pt-2"> {/* Removed Label */}
             <RadioGroup 
               value={advantageState || 'none'} 
               onValueChange={(value) => setAdvantageState(value === 'none' ? null : value as AdvantageStateType)} 
-              className="flex justify-center space-x-2 pt-1"
+              className="flex justify-center space-x-2"
+              aria-label="d20 roll state"
               disabled={isRolling}
             >
               {(['none', 'advantage', 'disadvantage'] as const).map((stateValue) => (
