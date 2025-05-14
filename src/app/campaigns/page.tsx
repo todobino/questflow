@@ -84,7 +84,7 @@ export default function CampaignsPage() {
         title="Campaign Manager"
         actions={
           <Button onClick={handleCreateCampaign}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Create Campaign
+            <PlusCircle className="mr-2 h-4 w-4" /> New Campaign
           </Button>
         }
       />
