@@ -43,12 +43,14 @@ export default function CampaignsPage() {
     setIsFormOpen(true);
   };
 
-  const handleEditCampaign = (campaign: Campaign) => {
+  const handleEditCampaign = (e: React.MouseEvent, campaign: Campaign) => {
+    e.stopPropagation();
     setEditingCampaign(campaign);
     setIsFormOpen(true);
   };
 
-  const handleDeleteCampaign = (campaignId: string) => {
+  const handleDeleteCampaign = (e: React.MouseEvent, campaignId: string) => {
+    e.stopPropagation();
     deleteCampaignFromContext(campaignId);
   };
 
@@ -66,6 +68,10 @@ export default function CampaignsPage() {
 
   const handleSetActiveSwitch = (campaignId: string) => {
     setCampaignActive(campaignId);
+  };
+
+  const handleSwitchClick = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
   };
 
   if (isLoading) {
@@ -114,7 +120,11 @@ export default function CampaignsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {campaigns.map((campaign) => (
-            <Card key={campaign.id} className="group flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden relative">
+            <Card 
+              key={campaign.id} 
+              className="group flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden relative cursor-pointer"
+              onClick={() => handleSetActiveSwitch(campaign.id)}
+            >
               <div className="w-full aspect-[16/9] bg-muted">
                 <Image 
                   src={campaign.bannerImageUrl || `https://picsum.photos/seed/${campaign.id}/400/225`} 
@@ -125,18 +135,18 @@ export default function CampaignsPage() {
                   data-ai-hint="fantasy landscape" 
                 />
                  <div className="absolute top-3 right-3 p-1.5 bg-background/70 backdrop-blur-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1.5 z-10">
-                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleEditCampaign(campaign)}>
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={(e) => handleEditCampaign(e, campaign)}>
                     <Edit3 className="h-4 w-4" />
                     <span className="sr-only">Edit Campaign</span>
                   </Button>
                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                    <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
                       <Button variant="destructive" size="icon" className="h-8 w-8">
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete Campaign</span>
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -145,7 +155,7 @@ export default function CampaignsPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteCampaign(campaign.id)}>
+                        <AlertDialogAction onClick={(e) => handleDeleteCampaign(e, campaign.id)}>
                           Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -159,14 +169,18 @@ export default function CampaignsPage() {
                 <CardDescription className="text-sm min-h-[auto]">{campaign.description}</CardDescription>
               </CardContent>
 
-              <CardFooter className="flex items-center justify-between gap-2 p-3 border-t border-border bg-muted/50">
-                 <Label htmlFor={`active-switch-${campaign.id}`} className="text-sm font-medium text-muted-foreground flex-grow">
+              <CardFooter 
+                className="flex items-center justify-between gap-2 p-3 border-t border-border bg-muted/50"
+                onClick={(e) => e.stopPropagation()} // Stop propagation for footer clicks too
+              >
+                 <Label htmlFor={`active-switch-${campaign.id}`} className="text-sm font-medium text-muted-foreground flex-grow cursor-pointer">
                     Active Campaign
                   </Label>
                   <Switch
                     id={`active-switch-${campaign.id}`}
                     checked={campaign.id === activeCampaign?.id}
                     onCheckedChange={() => handleSetActiveSwitch(campaign.id)}
+                    onClick={handleSwitchClick} // Use specific handler for switch
                     aria-label={`Set ${campaign.name} as active campaign`}
                   />
               </CardFooter>
