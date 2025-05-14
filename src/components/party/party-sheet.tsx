@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import type { Character } from '@/lib/types'; 
+import type { Character } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button'; // Import Button
 import Link from 'next/link'; // Import Link
@@ -11,12 +11,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Shield as ShieldIcon, Heart } from 'lucide-react'; 
+import { Shield as ShieldIcon, Heart } from 'lucide-react';
 
 export function PartySheet() {
-  const { 
-    activeCampaign, 
-    characters, 
+  const {
+    activeCampaign,
+    characters,
     isLoading: isCampaignLoading,
     openProfileDialog // Get from context
   } = useCampaignContext();
@@ -26,7 +26,7 @@ export function PartySheet() {
     if (activeCampaign && characters) {
       setPartyMembers(characters.filter(char => char.campaignId === activeCampaign.id));
     } else {
-      setPartyMembers([]); 
+      setPartyMembers([]);
     }
   }, [activeCampaign, characters]);
 
@@ -39,17 +39,17 @@ export function PartySheet() {
       <ScrollArea className="flex-grow">
         <div className="space-y-3 pr-1">
           {partyMembers.map((member) => (
-            <Card 
-              key={member.id} 
-              className="shadow-sm relative hover:border-primary transition-colors cursor-pointer"
+            <Card
+              key={member.id}
+              className="shadow-lg relative hover:border-primary transition-colors cursor-pointer"
               onClick={() => openProfileDialog(member)}
             >
               <CardContent className="p-3">
                 <div className="flex items-center space-x-3 mb-2">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage 
-                      src={member.imageUrl || `https://placehold.co/64x64.png`} 
-                      alt={member.name} 
+                    <AvatarImage
+                      src={member.imageUrl || `https://placehold.co/64x64.png`}
+                      alt={member.name}
                       data-ai-hint={`${member.race || ''} ${member.class || ''} portrait`}
                     />
                     <AvatarFallback>{member.name.substring(0, 1).toUpperCase()}</AvatarFallback>
@@ -61,7 +61,7 @@ export function PartySheet() {
                     </p>
                   </div>
                 </div>
-                
+
                 {member.armorClass !== undefined && (
                   <div className="absolute top-2 right-2 flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-1 rounded-md shadow-sm text-xs">
                     <ShieldIcon className="h-3.5 w-3.5 mr-1 text-foreground" />
