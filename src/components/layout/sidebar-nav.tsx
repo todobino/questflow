@@ -23,7 +23,6 @@ import { Tooltip, TooltipContent, TooltipTrigger as RadixTooltipTrigger, Tooltip
 import {
   Briefcase,
   Settings,
-  Swords, // Assuming APP_LOGO_ICON resolves to this
 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useState, useEffect } from 'react';
@@ -95,41 +94,43 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
         <SidebarSeparator className="my-2"/>
 
         {/* Active Campaign Section */}
-        <div className="px-2 mb-2">
-            <Link
-                href="/campaigns"
-                className={cn(
-                    "block rounded-md p-2 bg-sidebar-accent border border-transparent hover:border-primary transition-colors group", // Changed bg-muted to bg-sidebar-accent
-                    (sidebarState !== 'expanded' && !isMobile) && "flex justify-center items-center h-12"
-                )}
-                aria-label={activeCampaign ? `Manage campaigns. Active: ${activeCampaign.name}` : "Manage campaigns"}
-            >
-            {(sidebarState === 'expanded' || isMobile) ? (
-              <>
-                <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign</p> {/* Changed text and removed font-semibold */}
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 overflow-hidden min-w-0">
-                      <span className="line-clamp-2 text-left break-words leading-tight font-extrabold text-foreground"> {/* Changed font-medium to font-extrabold */}
-                        {mounted && activeCampaign ? activeCampaign.name : (mounted ? 'No Active Campaign' : 'Loading...')}
-                      </span>
-                  </span>
-                </div>
-              </>
-            ) : (
-                <TooltipProvider>
-                    <Tooltip>
-                        <RadixTooltipTrigger asChild>
-                           <Briefcase className="h-5 w-5 text-foreground" />
-                        </RadixTooltipTrigger>
-                        <TooltipContent side="right" align="center">
-                            <p>{activeCampaign ? `Active: ${activeCampaign.name}` : 'No Active Campaign'}</p>
-                            <p className="text-xs text-muted-foreground">(Manage Campaigns)</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-          </Link>
-        </div>
+        {mounted && (
+          <div className="px-2 mb-2">
+              <Link
+                  href="/campaigns"
+                  className={cn(
+                      "block rounded-md p-2 bg-sidebar-accent border border-transparent hover:border-primary transition-colors group",
+                      (sidebarState !== 'expanded' && !isMobile) && "flex justify-center items-center h-12"
+                  )}
+                  aria-label={activeCampaign ? `Manage campaigns. Active: ${activeCampaign.name}` : "Manage campaigns"}
+              >
+              {(sidebarState === 'expanded' || isMobile) ? (
+                <>
+                  <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign</p>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 overflow-hidden min-w-0">
+                        <span className="line-clamp-2 text-left break-words leading-tight font-extrabold text-foreground">
+                          {activeCampaign ? activeCampaign.name : 'No Active Campaign'}
+                        </span>
+                    </span>
+                  </div>
+                </>
+              ) : (
+                  <TooltipProvider>
+                      <Tooltip>
+                          <RadixTooltipTrigger asChild>
+                             <Briefcase className="h-5 w-5 text-foreground" />
+                          </RadixTooltipTrigger>
+                          <TooltipContent side="right" align="center">
+                              <p>{activeCampaign ? `Active: ${activeCampaign.name}` : 'No Active Campaign'}</p>
+                              <p className="text-xs text-muted-foreground">(Manage Campaigns)</p>
+                          </TooltipContent>
+                      </Tooltip>
+                  </TooltipProvider>
+              )}
+            </Link>
+          </div>
+        )}
 
         {/* Campaign Menu Nav */}
         <SidebarMenu className="px-2">
