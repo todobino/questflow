@@ -1,6 +1,7 @@
+
 'use server';
 /**
- * @fileOverview Generates a random D&D 5e character concept including attributes, backstory, and image.
+ * @fileOverview Generates a random D&D 5e character concept including name, attributes, backstory, and image.
  *
  * - generateRandomCharacter - A function that handles the character randomization process.
  * - GenerateRandomCharacterOutput - The return type for the generateRandomCharacter function.
@@ -30,6 +31,7 @@ const subclassPromptInfo = getClassSubclassPromptInfo();
 
 
 const GenerateRandomCharacterOutputSchema = z.object({
+  name: z.string().describe('The generated name for the character, fitting their race, class, and background.'),
   race: z.string().describe('The selected D&D 5e race for the character.'),
   characterClass: z.string().describe('The selected D&D 5e class for the character.'),
   subclass: z.string().describe('The selected D&D 5e subclass, appropriate for the chosen class.'),
@@ -52,23 +54,27 @@ const characterDetailsPrompt = ai.definePrompt({
   name: 'generateRandomCharacterDetailsPrompt',
   input: { schema: z.object({}) }, // No specific input needed for this part
   output: { schema: z.object({
+    name: z.string().describe('A fitting and unique name for the character based on the generated attributes.'),
     race: z.string().describe(`Chosen from: ${raceOptions}`),
     characterClass: z.string().describe(`Chosen from: ${classOptions}`),
     subclass: z.string().describe('Chosen based on the selected class and available D&D 5e subclasses.'),
     background: z.string().describe(`Chosen from: ${backgroundOptions}`),
     backstory: z.string().describe('A 2-3 sentence compelling backstory for the character.'),
   })},
-  prompt: `You are an expert D&D character concept generator. Generate a random character concept by selecting one option for each of the following attributes, and then create a short backstory.
+  prompt: `You are an expert D&D character concept generator. Generate a random character concept.
 
+First, select one option for each of the following attributes:
 Available Races: ${raceOptions}.
 Available Classes: ${classOptions}.
 Available Backgrounds: ${backgroundOptions}.
 
 Subclass guidance (pick one appropriate for the chosen Class): ${subclassPromptInfo}
 
-Generate a compelling and concise backstory (2-3 sentences) for this character based on the selections.
+Second, generate a fitting and unique name for this character based on the selections above.
 
-Return the output as a JSON object with keys: 'race', 'characterClass', 'subclass', 'background', 'backstory'.
+Third, generate a compelling and concise backstory (2-3 sentences) for this character based on the selections.
+
+Return the output as a JSON object with keys: 'name', 'race', 'characterClass', 'subclass', 'background', 'backstory'.
 Ensure the subclass is valid for the chosen class.
 `,
 });
@@ -81,14 +87,14 @@ const generateRandomCharacterFlow = ai.defineFlow(
     outputSchema: GenerateRandomCharacterOutputSchema,
   },
   async (_input) => {
-    // Step 1: Generate character details (race, class, subclass, background, backstory)
+    // Step 1: Generate character details (name, race, class, subclass, background, backstory)
     const { output: characterDetails } = await characterDetailsPrompt({});
     if (!characterDetails) {
       throw new Error('Failed to generate character details.');
     }
 
     // Step 2: Generate character image based on details
-    const imagePromptText = `Generate a square (1:1 aspect ratio) Dungeons & Dragons character portrait. The character is a ${characterDetails.race} ${characterDetails.subclass} ${characterDetails.characterClass}. Style: fantasy art, detailed portrait. Backstory hint: ${characterDetails.backstory.substring(0,100)}`;
+    const imagePromptText = `Generate a square (1:1 aspect ratio) Dungeons & Dragons character portrait. The character is a ${characterDetails.race} ${characterDetails.subclass} ${characterDetails.characterClass} named ${characterDetails.name}. Style: fantasy art, detailed portrait. Backstory hint: ${characterDetails.backstory.substring(0,100)}`;
     
     let imageUrl = `https://placehold.co/400x400.png`; // Default placeholder
     let imageDescription = `Placeholder for ${characterDetails.race} ${characterDetails.characterClass}`;
@@ -115,6 +121,7 @@ const generateRandomCharacterFlow = ai.defineFlow(
 
 
     return {
+      name: characterDetails.name,
       race: characterDetails.race,
       characterClass: characterDetails.characterClass,
       subclass: characterDetails.subclass,
@@ -124,3 +131,4 @@ const generateRandomCharacterFlow = ai.defineFlow(
     };
   }
 );
+

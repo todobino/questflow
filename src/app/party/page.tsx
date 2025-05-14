@@ -163,7 +163,7 @@ export default function PartyManagerPage() {
     try {
       const result = await generateRandomCharacter();
       const newCharacterData: Partial<Character> = {
-        name: result.characterClass || result.race || 'Random Hero', 
+        name: result.name, 
         race: result.race,
         class: result.characterClass,
         subclass: result.subclass,
@@ -182,7 +182,7 @@ export default function PartyManagerPage() {
          setEditingCharacter(prev => ({ ...prev, ...newCharacterData }));
       }
 
-      toast({ title: 'Character Randomized!', description: `A new ${result.race} ${result.characterClass} has been conceptualized.` });
+      toast({ title: 'Character Randomized!', description: `A new ${result.race} ${result.characterClass} named ${result.name} has been conceptualized.` });
     } catch (error) {
       console.error('Error randomizing character:', error);
       toast({ title: 'Randomization Failed', description: (error as Error).message || 'Could not randomize character.', variant: 'destructive' });
@@ -301,3 +301,4 @@ export default function PartyManagerPage() {
     </>
   );
 }
+
