@@ -3,10 +3,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed CardDescription
+import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Dices, Plus, Minus, Trash2 } from 'lucide-react';
+import { Dices, Plus, Minus } from 'lucide-react'; // Removed Trash2 as it's not used
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,7 @@ interface DiceChainEntry {
 
 interface RollResultDetails {
   total: number;
-  breakdown: string; // e.g., "d4:[1,3] d6:[5] Mod:+2 = 11"
+  breakdown: string;
   isCritical?: 'success' | 'failure';
 }
 
@@ -30,7 +30,7 @@ type HistoryEntry = {
   id: string;
   timestamp: Date;
 } & (
-  | { type: 'coin'; result: 'Heads' | 'Tails' }
+  | { type: 'coin'; result: 'Heads' | 'Tails'; formula: 'Coin Flip' }
   | {
       type: 'complex';
       formula: string;
@@ -62,7 +62,7 @@ export function DiceRollerTool() {
   const [lastRollOutput, setLastRollOutput] = useState<RollResultDetails | null>(null);
   
   const [rollHistory, setRollHistory] = useState<HistoryEntry[]>([]);
-  const [isRolling, setIsRolling] = useState(false); // For "Roll Dice" button
+  const [isRolling, setIsRolling] = useState(false);
   const [isEditingModifier, setIsEditingModifier] = useState(false);
   const [modifierInput, setModifierInput] = useState('0');
   const [criticalMessage, setCriticalMessage] = useState<CriticalMessage | null>(null);
@@ -88,7 +88,6 @@ export function DiceRollerTool() {
     }
   }, [criticalMessage]);
 
-  // Update activeRollFormulaDisplay when diceChain or modifier changes
   useEffect(() => {
     if (diceChain.length === 0 && modifier === 0) {
       setActiveRollFormulaDisplay(<span className="text-muted-foreground">Build your roll</span>);
@@ -109,7 +108,7 @@ export function DiceRollerTool() {
         </Button>
       );
       if (index < diceChain.length - 1 || modifier !== 0) {
-        parts.push(<span key={`plus-${index}`} className="mx-1 text-muted-foreground">+</span>);
+        parts.push(<span key={`plus-${index}`} className="mx-0.5 text-muted-foreground text-xs">+</span>);
       }
     });
 
@@ -133,7 +132,7 @@ export function DiceRollerTool() {
 
   const handleModifierValueChange = (delta: number) => {
     setModifier(prev => prev + delta);
-    setLastRollOutput(null); // Clear previous roll result when formula changes
+    setLastRollOutput(null);
   };
 
   const handleModifierInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +157,7 @@ export function DiceRollerTool() {
   const handleAdvantageToggle = (clickedState: 'advantage' | 'disadvantage') => {
     if (advantageState === clickedState) setAdvantageState(null);
     else setAdvantageState(clickedState);
+    setLastRollOutput(null);
   };
 
   const addDieToChain = (dieToAdd: DiceType) => {
@@ -216,7 +216,7 @@ export function DiceRollerTool() {
         const dieConfig = DICE_CONFIG.find(d => d.type === item.die);
         if (!dieConfig) return;
 
-        formulaString += `${item.count}${item.die}`;
+        formulaString += `${item.count > 1 ? item.count : ''}${item.die}`;
         
         const rollsForThisDieType: string[] = [];
         for (let i = 0; i < item.count; i++) {
@@ -234,22 +234,21 @@ export function DiceRollerTool() {
           }
           
           if (item.die === 'd20') {
-            if (chosenRoll === 20) criticalEncountered = 'success';
-            if (chosenRoll === 1 && criticalEncountered !== 'success') criticalEncountered = 'failure'; // Don't overwrite success with failure if both occur
+            if (chosenRoll === 20 && criticalEncountered !== 'failure') criticalEncountered = 'success';
+            if (chosenRoll === 1) criticalEncountered = 'failure'; 
           }
           total += chosenRoll;
         }
-        breakdownParts.push(`${item.count}${item.die}:[${rollsForThisDieType.join(',')}]`);
-        if (index < diceChain.length - 1) formulaString += " + ";
+        breakdownParts.push(`${item.count > 1 ? item.count : ''}${item.die}:[${rollsForThisDieType.join(',')}]`);
+        if (index < diceChain.length - 1 || modifier !==0) formulaString += " + ";
       });
       
       total += modifier;
       if (modifier !== 0) {
-        if (formulaString !== "") formulaString += ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}`;
-        else formulaString = String(modifier);
+        formulaString += ` ${modifier > 0 ? '' : ''}${modifier}`; // Simplified modifier string
         breakdownParts.push(`Mod:${modifier > 0 ? '+' : ''}${modifier}`);
       }
-      if (formulaString === "") formulaString = "0"; // Handle case of only modifier and it's 0
+      if (formulaString === "") formulaString = "0";
 
       const resultDetails: RollResultDetails = {
         total,
@@ -273,7 +272,6 @@ export function DiceRollerTool() {
         setCriticalMessage({ text: "CRITICAL FAILURE!", colorClass: "text-destructive" });
       }
       
-      // Clear the chain for the next roll
       setDiceChain([]);
       setModifier(0); 
       setIsRolling(false);
@@ -281,7 +279,7 @@ export function DiceRollerTool() {
   };
 
   const handleCoinFlip = () => {
-    setIsRolling(true); // Reuse for button disabling
+    setIsRolling(true);
     setTimeout(() => {
       const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
       const historyEntry: HistoryEntry = {
@@ -289,6 +287,7 @@ export function DiceRollerTool() {
         timestamp: new Date(),
         type: 'coin',
         result,
+        formula: 'Coin Flip',
       };
       setRollHistory(prev => [historyEntry, ...prev.slice(0, 19)]);
       toast({ title: "Coin Flip Result", description: result });
@@ -308,23 +307,37 @@ export function DiceRollerTool() {
       <Card className="shadow-md">
         <CardContent className="space-y-4 px-4 pt-4 pb-4">
           <div className="grid grid-cols-4 gap-2">
-            {DICE_CONFIG.map(({ type }) => (
-              <Button
-                key={type}
-                onClick={() => addDieToChain(type)}
-                className="h-10 text-sm font-semibold transition-transform hover:scale-105 active:scale-95"
-                size="default"
-                variant="outline"
-                disabled={isRolling}
-              >
-                {type.toUpperCase()}
-              </Button>
-            ))}
+            {DICE_CONFIG.map(({ type }) => {
+              const dieEntry = diceChain.find(item => item.die === type);
+              const currentDieCount = dieEntry ? dieEntry.count : 0;
+              return (
+                <Button
+                  key={type}
+                  onClick={() => addDieToChain(type)}
+                  className={cn(
+                    "font-semibold transition-transform hover:scale-105 active:scale-95",
+                    "h-auto aspect-square flex flex-col items-center justify-center p-1",
+                    currentDieCount > 0 ? 'border-primary shadow-md' : 'border-input'
+                  )}
+                  variant="outline"
+                  disabled={isRolling}
+                >
+                  <span className="text-xs">{type.toUpperCase()}</span>
+                  {currentDieCount > 0 && (
+                    <span className="text-[10px] text-muted-foreground mt-0.5">
+                      x{currentDieCount}
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
             <Button
               key="coin"
               onClick={handleCoinFlip}
-              className="h-10 text-sm font-semibold transition-transform hover:scale-105 active:scale-95 border-primary" // Added black border
-              size="default"
+              className={cn(
+                "font-semibold transition-transform hover:scale-105 active:scale-95 border-primary",
+                "h-auto aspect-square flex items-center justify-center p-1 text-xs"
+              )}
               variant="outline"
               disabled={isRolling}
             >
@@ -393,14 +406,14 @@ export function DiceRollerTool() {
               </Button>
             </div>
           </div>
-
+          
           <Button onClick={executeDiceChainRoll} className="w-full" disabled={isRolling}>
             {isRolling ? <Dices className="mr-2 h-4 w-4 animate-spin" /> : <Dices className="mr-2 h-4 w-4" />}
             Roll Dice
           </Button>
           
           <div className="mt-3 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
-            {isRolling && <Dices className="h-10 w-10 animate-spin text-accent" />}
+            {isRolling && !lastRollOutput && <Dices className="h-10 w-10 animate-spin text-accent" />}
             {!isRolling && lastRollOutput ? (
               <>
                 <span className="text-4xl font-bold">{lastRollOutput.total}</span>
@@ -433,7 +446,7 @@ export function DiceRollerTool() {
                   <div className="flex justify-between items-center p-1.5">
                     {entry.type === 'coin' ? (
                        <span className="whitespace-pre-wrap break-words text-left"> 
-                         Coin Flip: <span className="font-semibold text-primary">{entry.result}</span>
+                         {entry.formula}: <span className="font-semibold text-primary">{entry.result}</span>
                        </span>
                     ) : (
                        <span className="whitespace-pre-wrap break-words text-left"> 
