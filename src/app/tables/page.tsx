@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { PREDEFINED_TABLES, type RandomTable, type TableItem } from '@/lib/random-tables-data';
 import { useToast } from '@/hooks/use-toast';
-import { Dices, ListChecks, PlusCircle, Rows, Columns, MessageSquare, Sparkles } from 'lucide-react'; // Added more icons
+import { Dices, ListChecks, PlusCircle, Rows, Columns, MessageSquare, Sparkles, Users } from 'lucide-react'; // Added Users icon
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function RandomTablesPage() {
