@@ -84,7 +84,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </header>
           
           {/* Desktop Breadcrumbs Header */}
-          <header className="sticky top-0 z-10 hidden h-12 shrink-0 items-center border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
+          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
             {mounted && <Breadcrumbs activeCampaign={activeCampaign} />}
           </header>
 
