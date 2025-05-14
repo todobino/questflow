@@ -38,7 +38,7 @@ interface RollSegment {
 
 
 interface RollResultDetails {
-  id: string; // Added for keying animations
+  id: string; 
   total: number | string; 
   breakdown: string; 
   isCritical?: 'success' | 'failure';
@@ -76,7 +76,7 @@ export function DiceRollerTool() {
   const [modifier, setModifier] = useState(0);
   const [advantageState, setAdvantageState] = useState<AdvantageStateType>(null);
   
-  const [activeRollFormulaDisplay, setActiveRollFormulaDisplay] = useState<React.ReactNode>(<span className="text-muted-foreground">Build your roll</span>);
+  const [activeRollFormulaDisplay, setActiveRollFormulaDisplay] = useState<React.ReactNode>(<span className="text-muted-foreground text-lg">Build your roll</span>);
   const [lastRollOutput, setLastRollOutput] = useState<RollResultDetails | null>(null);
   
   const [rollHistory, setRollHistory] = useState<HistoryEntry[]>([]);
@@ -162,8 +162,8 @@ export function DiceRollerTool() {
 
 
   const handleModifierValueChange = (delta: number) => {
-    setModifier(prev => prev + delta);
     setLastRollOutput(null); 
+    setModifier(prev => prev + delta);
   };
 
   const handleModifierInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,12 +171,12 @@ export function DiceRollerTool() {
   };
 
   const handleModifierInputBlur = () => {
+    setLastRollOutput(null); 
     const newModifier = parseInt(modifierInput, 10);
     if (!isNaN(newModifier)) {
       setModifier(newModifier);
     }
     setIsEditingModifier(false);
-    setLastRollOutput(null); 
   };
   
   const handleModifierInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -186,12 +186,13 @@ export function DiceRollerTool() {
   };
 
   const handleAdvantageToggle = (clickedState: 'advantage' | 'disadvantage') => {
-    setAdvantageState(prevState => prevState === clickedState ? null : clickedState);
     setLastRollOutput(null); 
+    setAdvantageState(prevState => prevState === clickedState ? null : clickedState);
   };
 
 
   const addDieToChain = (dieToAdd: DiceType) => {
+    setLastRollOutput(null); 
     setDiceChain(prevChain => {
       const existingEntryIndex = prevChain.findIndex(item => item.die === dieToAdd);
       if (existingEntryIndex > -1) {
@@ -202,10 +203,10 @@ export function DiceRollerTool() {
         return [...prevChain, { die: dieToAdd, count: 1 }];
       }
     });
-    setLastRollOutput(null); 
   };
 
   const handleRemoveChainPart = (part: { type: 'die'; die: DiceType } | { type: 'modifier' }) => {
+    setLastRollOutput(null); 
     if (part.type === 'modifier') {
       setModifier(0);
     } else {
@@ -224,7 +225,6 @@ export function DiceRollerTool() {
         return prevChain;
       });
     }
-    setLastRollOutput(null); 
   };
 
   const rollSingleDie = (sides: number): number => Math.floor(Math.random() * sides) + 1;
@@ -297,6 +297,7 @@ export function DiceRollerTool() {
       
       const finalTotalWithModifier = currentTotalSum + modifier;
       
+      // Construct the history breakdown string
       const historyBreakdownParts: string[] = [];
       outputRollSegments.forEach(segment => {
         const rolls = segment.results.map(r => r.chosenRoll).join('+');
@@ -305,16 +306,13 @@ export function DiceRollerTool() {
 
       let historyBreakdownString = historyBreakdownParts.join(' + ');
 
-      if (outputRollSegments.length === 0 && modifier !== 0) { // Only modifier
+      if (outputRollSegments.length === 0 && modifier !== 0) { 
         historyBreakdownString = `${modifier > 0 ? '+' : ''}${Math.abs(modifier)}`;
-      } else if (modifier !== 0) { // Dice and modifier
+      } else if (modifier !== 0) { 
         historyBreakdownString += ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}`;
-      } else if (outputRollSegments.length === 0 && modifier === 0) { // No dice, no modifier
+      } else if (outputRollSegments.length === 0 && modifier === 0) { 
         historyBreakdownString = "0"; 
       }
-      // If only dice and modifier is 0, historyBreakdownString is already just the dice part
-
-
       historyBreakdownString += ` = ${finalTotalWithModifier}`;
 
 
@@ -323,7 +321,7 @@ export function DiceRollerTool() {
         total: finalTotalWithModifier,
         breakdown: historyBreakdownString,
         isCritical: overallIsCritical, 
-        diceType: firstDiceTypeForOutput || (diceChain.length > 0 ? diceChain[0].die : 'd6'),
+        diceType: firstDiceTypeForOutput || (diceChain.length > 0 ? diceChain[0].die : 'd6'), // Fallback for display
         rollSegments: outputRollSegments,
         modifier: modifier,
         formula: formulaStringForLog,
@@ -332,7 +330,7 @@ export function DiceRollerTool() {
       setLastRollOutput(resultDetails);
 
       const historyEntry: HistoryEntry = {
-        id: resultDetails.id,
+        id: resultDetails.id, // Use the same ID for history key
         timestamp: new Date(),
         ...resultDetails,
       };
@@ -345,18 +343,19 @@ export function DiceRollerTool() {
       }
       
       setDiceChain([]);
-      setLastRollOutput(null); // Clear the formula display, ready for next build
-      setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>); // Reset formula display
-      // setModifier(0); // Keep modifier for subsequent rolls or let user clear
+      // setLastRollOutput(null); // Keep last roll output until new interaction
+      // setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>); // Keep last roll output
+      setModifier(0); 
+      setAdvantageState(null); // Reset advantage state after roll
       setIsRolling(false);
     }, 300);
   };
 
   const handleCoinFlip = () => {
     setIsRolling(true);
-    setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>); // Clear dice formula if any
-    setDiceChain([]); // Clear dice chain
-    // setModifier(0); // Optionally clear modifier
+    setDiceChain([]); 
+    setModifier(0); 
+    setAdvantageState(null);
     setLastRollOutput(null); 
     
     setTimeout(() => {
@@ -472,8 +471,8 @@ export function DiceRollerTool() {
                 onClick={() => handleAdvantageToggle('advantage')}
                 disabled={isRolling}
                 className={cn(
-                  "text-xs px-2 py-1 h-auto transition-colors duration-150", 
-                   advantageState === 'advantage' 
+                  "text-xs px-2 py-1 h-auto transition-colors duration-150",
+                  advantageState === 'advantage' 
                     ? "border border-success" 
                     : "hover:bg-success hover:text-success-foreground hover:border-success border-input"
                 )}
@@ -486,8 +485,8 @@ export function DiceRollerTool() {
                 onClick={() => handleAdvantageToggle('disadvantage')}
                 disabled={isRolling}
                 className={cn(
-                  "text-xs px-2 py-1 h-auto transition-colors duration-150", 
-                   advantageState === 'disadvantage' 
+                  "text-xs px-2 py-1 h-auto transition-colors duration-150",
+                  advantageState === 'disadvantage' 
                     ? "border border-destructive" 
                     : "hover:bg-destructive hover:text-destructive-foreground hover:border-destructive border-input"
                 )}
@@ -509,7 +508,7 @@ export function DiceRollerTool() {
             ) : lastRollOutput ? (
               <span
                 key={lastRollOutput.id} 
-                className="text-5xl font-bold animate-roll-burst"
+                className="text-5xl font-bold text-foreground animate-roll-burst"
               >
                 {lastRollOutput.total}
               </span>
@@ -541,7 +540,7 @@ export function DiceRollerTool() {
                      </span>
                     {mounted && (
                          <span className="text-muted-foreground ml-2 flex-shrink-0">
-                            {entry.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            {entry.timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
                         </span>
                     )}
                   </div>
