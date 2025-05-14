@@ -175,26 +175,6 @@ export function CharacterForm({ currentCharacter, onSave, onRandomize, isRandomi
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
-                name="subclass"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Subclass</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={!selectedClass || availableSubclasses.length === 0}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={selectedClass ? "Select a subclass" : "Select class first"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availableSubclasses.map(subclass => <SelectItem key={subclass} value={subclass}>{subclass}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="background"
                 render={({ field }) => (
                   <FormItem>
@@ -207,6 +187,26 @@ export function CharacterForm({ currentCharacter, onSave, onRandomize, isRandomi
                       </FormControl>
                       <SelectContent>
                         {BACKGROUNDS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="subclass"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subclass</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={!selectedClass || availableSubclasses.length === 0}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={selectedClass ? "Select a subclass" : "Select class first"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {availableSubclasses.map(subclass => <SelectItem key={subclass} value={subclass}>{subclass}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <FormMessage />
