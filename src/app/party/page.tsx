@@ -58,7 +58,7 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
           {character.subclass ? ` (${character.subclass})` : ''}
         </CardDescription>
         
-        <div className="mt-1.5 space-y-1 text-xs">
+        <div className="mt-1.5 space-y-1 text-xs flex-grow"> {/* Added flex-grow here */}
           <div className="flex items-center">
             <Heart className="h-3.5 w-3.5 mr-1.5 text-red-500 flex-shrink-0" />
             <span>HP: {character.currentHp ?? 'N/A'} / {character.maxHp ?? 'N/A'}</span>
@@ -73,9 +73,7 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
           </div>
         </div>
 
-        {character.backstory && (
-          <p className="line-clamp-2 text-xs text-muted-foreground mt-2 flex-grow">{character.backstory}</p>
-        )}
+        {/* Removed backstory display from here */}
       </div>
       <div className="absolute right-2 top-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
         <Button variant="outline" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(character); }}>
@@ -118,7 +116,7 @@ export default function PartyManagerPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Partial<Character> | null>(null);
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
-  const [isRandomizing, setIsRandomizing] = useState(false); // Kept for potential brief UI feedback
+  const [isRandomizing, setIsRandomizing] = useState(false); 
   const [randomizedData, setRandomizedData] = useState<Partial<Character>>({});
   
   const { toast } = useToast();
@@ -300,7 +298,7 @@ export default function PartyManagerPage() {
             setEditingCharacter(null);
             setRandomizedData({});
           }}
-          onRandomize={handleLocalRandomizeCharacter} // Updated to local function
+          onRandomize={handleLocalRandomizeCharacter} 
           isRandomizing={isRandomizing}
         />
       </Dialog>
