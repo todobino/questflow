@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { PREDEFINED_TABLES, type RandomTable, type TableItem } from '@/lib/random-tables-data';
 import { useToast } from '@/hooks/use-toast';
-import { Dices, ListChecks, PlusCircle, Rows, Columns, MessageSquare, Sparkles, Users } from 'lucide-react'; // Added Users icon
+import { Dices, ListChecks, PlusCircle, Rows, Columns, MessageSquare, Sparkles, Users } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function RandomTablesPage() {
@@ -63,10 +63,10 @@ export default function RandomTablesPage() {
   const getIconForTable = (tableId: string) => {
     if (tableId.includes('weather')) return <Sparkles className="mr-2 h-4 w-4" />;
     if (tableId.includes('tavern')) return <MessageSquare className="mr-2 h-4 w-4" />;
-    if (tableId.includes('magic')) return <Sparkles className="mr-2 h-4 w-4" />; // Could use Wand or similar if available
+    if (tableId.includes('magic')) return <Sparkles className="mr-2 h-4 w-4" />;
     if (tableId.includes('npc') || tableId.includes('quirks')) return <Users className="mr-2 h-4 w-4" />;
-    if (tableId.includes('loot') || tableId.includes('trinkets')) return <Rows className="mr-2 h-4 w-4" />; // Using Rows as a generic "item" icon
-    if (tableId.includes('plot') || tableId.includes('rumors')) return <Columns className="mr-2 h-4 w-4" />; // Using Columns for story threads
+    if (tableId.includes('loot') || tableId.includes('trinkets')) return <Rows className="mr-2 h-4 w-4" />;
+    if (tableId.includes('plot') || tableId.includes('rumors')) return <Columns className="mr-2 h-4 w-4" />;
     return <ListChecks className="mr-2 h-4 w-4" />;
   };
 
@@ -77,23 +77,23 @@ export default function RandomTablesPage() {
         title="Random Tables"
         description="Generate unexpected twists, mundane details, or crucial plot hooks for your campaigns."
       />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6"> {/* Changed to single column layout */}
         {/* Roll on Table Section */}
-        <div className="lg:col-span-2">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center"><Dices className="mr-2 h-5 w-5 text-primary" /> Roll on a Table</CardTitle>
-              <CardDescription>Select a table from the dropdown and click "Roll" to get a random result.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center"><Dices className="mr-2 h-5 w-5 text-primary" /> Roll on a Table</CardTitle>
+            <CardDescription>Select a table from the dropdown and click "Roll" to get a random result.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Internal grid for controls and result */}
+            <div className="space-y-4"> {/* Column for controls */}
               <Select
                 value={selectedTableId}
                 onValueChange={(value) => {
                   setSelectedTableId(value);
-                  setRolledResult(null); // Clear previous result when table changes
+                  setRolledResult(null); 
                 }}
               >
-                <SelectTrigger className="w-full md:w-[320px]">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a table" />
                 </SelectTrigger>
                 <SelectContent>
@@ -108,9 +108,11 @@ export default function RandomTablesPage() {
               <Button onClick={handleRollTable} disabled={isRolling || !selectedTableId} className="w-full md:w-auto">
                 {isRolling ? 'Rolling...' : 'Roll Table'}
               </Button>
+            </div>
 
+            <div className="min-h-[100px]"> {/* Column for result */}
               {mounted && rolledResult && (
-                <Card className="mt-4 bg-muted/50 p-4 shadow-inner">
+                <Card className="bg-muted/50 p-4 shadow-inner h-full">
                   <CardHeader className="p-0 pb-2">
                     <CardTitle className="text-lg">Result:</CardTitle>
                   </CardHeader>
@@ -119,59 +121,63 @@ export default function RandomTablesPage() {
                   </CardContent>
                 </Card>
               )}
-               {mounted && isRolling && (
-                 <Card className="mt-4 bg-muted/50 p-4 shadow-inner min-h-[80px] flex items-center justify-center">
-                    <Dices className="h-8 w-8 animate-spin text-primary" />
-                 </Card>
-               )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Available Tables Section */}
-        <div className="lg:col-span-1">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center"><ListChecks className="mr-2 h-5 w-5 text-primary" /> Available Tables</CardTitle>
-              <CardDescription>Browse the collection of pre-defined random tables.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {availableTables.length === 0 ? (
-                <p className="text-center text-muted-foreground">No tables available.</p>
-              ) : (
-                <ScrollArea className="h-[300px] pr-3">
-                  <ul className="space-y-3">
-                    {availableTables.map(table => (
-                      <li 
-                        key={table.id} 
-                        className={`rounded-md border p-3 transition-all duration-150 hover:shadow-md ${selectedTableId === table.id ? 'bg-primary/10 border-primary ring-1 ring-primary' : 'hover:bg-muted/50'}`}
-                        onClick={() => {
-                            setSelectedTableId(table.id);
-                            setRolledResult(null);
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelectedTableId(table.id)}
-                      >
-                        <h4 className="font-semibold flex items-center">
-                            {getIconForTable(table.id)}
-                            {table.name}
-                        </h4>
-                        <p className="text-xs text-muted-foreground">{table.description}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
+              {mounted && isRolling && (
+                <Card className="bg-muted/50 p-4 shadow-inner h-full flex items-center justify-center">
+                  <Dices className="h-8 w-8 animate-spin text-primary" />
+                </Card>
               )}
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleAddNewTable} variant="outline" className="w-full">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Table (Soon)
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
+              {mounted && !rolledResult && !isRolling && (
+                 <Card className="bg-muted/30 border-dashed p-4 shadow-inner h-full flex items-center justify-center">
+                    <p className="text-muted-foreground text-center">Your rolled result will appear here.</p>
+                 </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Available Tables Section - Now below */}
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center"><ListChecks className="mr-2 h-5 w-5 text-primary" /> Available Tables</CardTitle>
+            <CardDescription>Browse the collection of pre-defined random tables.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {availableTables.length === 0 ? (
+              <p className="text-center text-muted-foreground">No tables available.</p>
+            ) : (
+              <ScrollArea className="h-[300px] pr-3">
+                <ul className="space-y-3">
+                  {availableTables.map(table => (
+                    <li 
+                      key={table.id} 
+                      className={`rounded-md border p-3 transition-all duration-150 hover:shadow-md ${selectedTableId === table.id ? 'bg-primary/10 border-primary ring-1 ring-primary' : 'hover:bg-muted/50'}`}
+                      onClick={() => {
+                          setSelectedTableId(table.id);
+                          setRolledResult(null);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelectedTableId(table.id)}
+                    >
+                      <h4 className="font-semibold flex items-center">
+                          {getIconForTable(table.id)}
+                          {table.name}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">{table.description}</p>
+                    </li>
+                  ))}
+                </ul>
+              </ScrollArea>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleAddNewTable} variant="outline" className="w-full">
+              <PlusCircle className="mr-2 h-4 w-4" /> Add New Table (Soon)
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </>
   );
 }
+
