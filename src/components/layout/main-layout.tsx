@@ -13,9 +13,8 @@ import { PartySheet } from '@/components/party/party-sheet';
 import { Dices, Shield, Users } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Added import
+import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 
-// Moved from sidebar-nav.tsx for shared state
 const initialCampaignsData: Campaign[] = [
   { id: '1', name: 'The Whispering Peaks', description: 'An adventure into the mysterious mountains where ancient secrets lie.', isActive: true, bannerImageUrl: `https://picsum.photos/seed/peakbanner/400/400` },
   { id: '2', name: 'Curse of the Sunken City: A Tale of Underwater Woe and Barnacles', description: 'Explore the ruins of a city lost beneath the waves.', isActive: false, bannerImageUrl: `https://picsum.photos/seed/sunkenbanner/400/400` },
@@ -41,6 +40,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     } else {
        setCampaigns(initialCampaignsData);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -80,12 +80,12 @@ export function MainLayout({ children }: MainLayoutProps) {
           {/* Mobile Header */}
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
             <SidebarTrigger />
-            <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>
+            {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>}
           </header>
           
           {/* Desktop Breadcrumbs Header */}
           <header className="sticky top-0 z-10 hidden h-14 shrink-0 items-center border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
-            <Breadcrumbs activeCampaign={activeCampaign} />
+            {mounted && <Breadcrumbs activeCampaign={activeCampaign} />}
           </header>
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
@@ -108,7 +108,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="party" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
-              <PartySheet activeCampaignId={activeCampaign?.id} />
+              {mounted && <PartySheet activeCampaignId={activeCampaign?.id} />}
             </TabsContent>
             <TabsContent value="dice" className="flex-1 overflow-y-auto mt-3 focus-visible:ring-0 focus-visible:ring-offset-0">
               <DiceRollerTool />
