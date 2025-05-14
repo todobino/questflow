@@ -22,9 +22,16 @@ import { Tooltip, TooltipContent, TooltipTrigger as RadixTooltipTrigger, Tooltip
 import {
   Briefcase,
   Settings,
+  ChevronDown,
+  Search as SearchIcon,
 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { ThemeToggleButton } from '@/components/shared/theme-toggle-button';
 
 
 interface SidebarNavProps {
@@ -44,13 +51,13 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
     setMounted(true);
   }, []);
   
-  const campaignNavItems = getFilteredCampaignNavItems(); // Use filtered items
+  const campaignNavItems = getFilteredCampaignNavItems(); 
 
   const AppLogoComponent = APP_LOGO_ICON;
 
   const filteredCampaigns = campaigns.filter(campaign =>
     campaign.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ).sort((a, b) => { // Assuming you want to sort by name or a date property if available
+  ).sort((a, b) => { 
     return a.name.localeCompare(b.name);
   });
 
@@ -100,7 +107,7 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
                       "block rounded-md p-2 bg-sidebar-accent border border-transparent hover:border-primary transition-colors group",
                       (sidebarState !== 'expanded' && !isMobile) && "flex justify-center items-center h-12"
                   )}
-                  aria-label={activeCampaign ? `Manage campaigns. Active: ${activeCampaign.name}` : "Manage campaigns"}
+                  aria-label={activeCampaign ? `Manage campaigns. Active: ${activeCampaign.name}` : "Manage Campaigns"}
               >
               {(sidebarState === 'expanded' || isMobile) ? (
                 <>
@@ -156,6 +163,7 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
 
       <SidebarFooter className="mt-auto p-2 border-t border-sidebar-border">
         <SidebarMenu className="px-0">
+           <ThemeToggleButton />
             <SidebarMenuItem>
                 <TooltipProvider>
                     <SidebarMenuButton

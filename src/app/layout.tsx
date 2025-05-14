@@ -3,12 +3,13 @@ import { DM_Sans } from 'next/font/google'; // Import DM_Sans
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { CampaignProvider } from '@/contexts/campaign-context';
+import { ThemeProvider } from 'next-themes';
 
-const dmSans = DM_Sans({ // Changed from manrope to dmSans
+const dmSans = DM_Sans({ 
   subsets: ['latin'],
-  weight: ['400', '500', '700'], // Adjusted weights for DM Sans
+  weight: ['400', '500', '700'], 
   display: 'swap',
-  variable: '--font-dm-sans', // Optional: if you want to use it as a CSS variable
+  variable: '--font-dm-sans', 
 });
 
 export const metadata: Metadata = {
@@ -23,10 +24,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.className} antialiased`}> {/* Apply DM_Sans className */}
-        <CampaignProvider>
-          <MainLayout>{children}</MainLayout>
-        </CampaignProvider>
+      <body className={`${dmSans.className} antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <CampaignProvider>
+            <MainLayout>{children}</MainLayout>
+          </CampaignProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
