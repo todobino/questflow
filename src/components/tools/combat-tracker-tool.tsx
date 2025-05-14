@@ -394,18 +394,20 @@ export function CombatTrackerTool() {
                           )}
                           {combatStarted && <span className="text-xs font-medium text-muted-foreground">Init: {c.initiative ?? 'N/A'}</span>}
                         
-                        <ShadAlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive h-6 w-6">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </ShadAlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
+                        <AlertDialog>
+                          <ShadAlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive h-6 w-6">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </ShadAlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-xs">
@@ -435,3 +437,5 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
+
