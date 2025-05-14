@@ -44,6 +44,10 @@ export default {
           DEFAULT: 'hsl(var(--success))',
           foreground: 'hsl(var(--success-foreground))'
         },
+        alert: {
+          DEFAULT: 'hsl(var(--alert))',
+          foreground: 'hsl(var(--alert-foreground))'
+        },
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
