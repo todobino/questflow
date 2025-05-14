@@ -33,18 +33,23 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   useEffect(() => {
     setMounted(true);
+    // Load campaigns from local storage or API if available
+    // For now, using initialCampaignsData
     const currentActive = initialCampaignsData.find(c => c.isActive) || initialCampaignsData[0] || null;
     setActiveCampaign(currentActive);
+    
+    // Ensure active campaign is part of the list if it's not already
     if (currentActive && !initialCampaignsData.find(c => c.id === currentActive.id)) {
        setCampaigns(prev => [currentActive, ...prev.filter(c => c.id !== currentActive.id)]);
     } else {
        setCampaigns(initialCampaignsData);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // Run once on mount
 
   useEffect(() => {
     if (mounted) {
+        // This effect runs when `campaigns` changes or after mount
         const currentActiveCampaign = campaigns.find(c => c.isActive);
         setActiveCampaign(currentActiveCampaign || campaigns[0] || null);
     }
@@ -56,6 +61,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       setCampaigns(prevCampaigns =>
         prevCampaigns.map(c => ({ ...c, isActive: c.id === campaignId }))
       );
+      // setActiveCampaign(selectedCampaign); // This will be handled by the useEffect above
       toast({
         title: "Active Campaign Changed",
         description: `"${selectedCampaign.name}" is now the active campaign.`,
@@ -84,7 +90,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </header>
           
           {/* Desktop Breadcrumbs Header */}
-          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
+          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center bg-background/95 px-6 backdrop-blur-sm md:flex">
             {mounted && <Breadcrumbs activeCampaign={activeCampaign} />}
           </header>
 
