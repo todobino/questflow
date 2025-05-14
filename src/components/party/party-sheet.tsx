@@ -9,22 +9,40 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Mock data for party members
-const initialPartyMembers: PartyMember[] = [
-  { id: 'pm1', name: 'Elara', avatarUrl: 'https://picsum.photos/seed/elara/64/64', level: 5, race: 'Elf', class: 'Wizard', currentHp: 22, maxHp: 22, dataAiHint: "elf wizard" },
-  { id: 'pm2', name: 'Grom', avatarUrl: 'https://picsum.photos/seed/grom/64/64', level: 5, race: 'Orc', class: 'Barbarian', currentHp: 45, maxHp: 58, dataAiHint: "orc barbarian" },
-  { id: 'pm3', name: 'Seraphina', avatarUrl: 'https://picsum.photos/seed/seraphina/64/64', level: 4, race: 'Human', class: 'Cleric', currentHp: 30, maxHp: 30, dataAiHint: "human cleric" },
-  { id: 'pm4', name: 'Roric', avatarUrl: 'https://picsum.photos/seed/roric/64/64', level: 5, race: 'Dwarf', class: 'Fighter', currentHp: 38, maxHp: 42, dataAiHint: "dwarf fighter" },
-];
+// Mock data for party members - keyed by campaignId
+const campaignPartyMembers: Record<string, PartyMember[]> = {
+  '1': [ // The Whispering Peaks
+    { id: 'pm1', name: 'Elara', avatarUrl: 'https://picsum.photos/seed/elara/64/64', level: 5, race: 'Elf', class: 'Wizard', currentHp: 22, maxHp: 22, dataAiHint: "elf wizard" },
+    { id: 'pm2', name: 'Grom', avatarUrl: 'https://picsum.photos/seed/grom/64/64', level: 5, race: 'Orc', class: 'Barbarian', currentHp: 45, maxHp: 58, dataAiHint: "orc barbarian" },
+  ],
+  '2': [ // Curse of the Sunken City
+    { id: 'pm3', name: 'Seraphina', avatarUrl: 'https://picsum.photos/seed/seraphina/64/64', level: 4, race: 'Human', class: 'Cleric', currentHp: 30, maxHp: 30, dataAiHint: "human cleric" },
+    { id: 'pm4', name: 'Roric', avatarUrl: 'https://picsum.photos/seed/roric/64/64', level: 5, race: 'Dwarf', class: 'Fighter', currentHp: 38, maxHp: 42, dataAiHint: "dwarf fighter" },
+  ],
+  '3': [ // Shadows over Riverwood
+    // No party members yet for this campaign
+  ],
+};
 
-interface PartyMemberWithHint extends PartyMember {
-    dataAiHint?: string;
+
+interface PartySheetProps {
+  activeCampaignId?: string;
 }
 
+export function PartySheet({ activeCampaignId }: PartySheetProps) {
+  const [partyMembers, setPartyMembers] = useState<PartyMember[]>([]);
 
-export function PartySheet() {
-  const [partyMembers, setPartyMembers] = useState<PartyMemberWithHint[]>(initialPartyMembers);
-  // In a real app, this data would likely come from props or a global state/context
+  useEffect(() => {
+    if (activeCampaignId && campaignPartyMembers[activeCampaignId]) {
+      setPartyMembers(campaignPartyMembers[activeCampaignId]);
+    } else if (activeCampaignId) {
+      setPartyMembers([]); // Campaign exists but has no members in mock
+    }
+    else {
+      setPartyMembers([]); // No active campaign
+    }
+  }, [activeCampaignId]);
+
 
   return (
     <ScrollArea className="h-full">
@@ -54,8 +72,11 @@ export function PartySheet() {
             </CardContent>
           </Card>
         ))}
-         {partyMembers.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">No party members to display.</p>
+         {partyMembers.length === 0 && activeCampaignId && (
+            <p className="text-sm text-muted-foreground text-center py-4">No party members for this campaign.</p>
+        )}
+        {!activeCampaignId && (
+            <p className="text-sm text-muted-foreground text-center py-4">Select a campaign to view party.</p>
         )}
       </div>
     </ScrollArea>
