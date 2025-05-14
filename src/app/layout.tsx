@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
-import { DM_Sans } from 'next/font/google'; // Import DM_Sans
+import { Crimson_Text } from 'next/font/google'; // Import Crimson_Text
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { CampaignProvider } from '@/contexts/campaign-context';
 
-const dmSans = DM_Sans({
+const crimsonText = Crimson_Text({
   subsets: ['latin'],
+  weight: ['400', '600', '700'], // Include necessary weights
   display: 'swap',
-  variable: '--font-dm-sans', // Optional: if you want to use it as a CSS variable
+  variable: '--font-crimson-text', // Optional: if you want to use it as a CSS variable
 });
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.className} antialiased`}> {/* Apply DM_Sans className */}
+      <body className={`${crimsonText.className} antialiased`}> {/* Apply Crimson_Text className */}
         <CampaignProvider>
           <MainLayout>{children}</MainLayout>
         </CampaignProvider>
