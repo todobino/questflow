@@ -20,26 +20,23 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-
-const initialCampaigns: Campaign[] = [
-  { id: '1', name: 'The Whispering Peaks', description: 'An adventure into the mysterious mountains where ancient secrets lie.', isActive: true, bannerImageUrl: `https://picsum.photos/seed/peakbanner/800/200` },
-  { id: '2', name: 'Curse of the Sunken City', description: 'Explore the ruins of a city lost beneath the waves.', isActive: false, bannerImageUrl: `https://picsum.photos/seed/sunkenbanner/800/200` },
-  { id: '3', name: 'Shadows over Riverwood', description: 'A darkness looms over a quaint village, and heroes must rise.', isActive: false, bannerImageUrl: `https://picsum.photos/seed/riverwoodbanner/800/200` },
-];
+import { useCampaignContext } from '@/contexts/campaign-context'; // Import the context hook
 
 export default function CampaignsPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const { 
+    campaigns, 
+    activeCampaign, 
+    setCampaignActive, 
+    addCampaign, 
+    updateCampaign, 
+    deleteCampaign: deleteCampaignFromContext,
+    isLoading 
+  } = useCampaignContext();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Simulate fetching campaigns
-    setCampaigns(initialCampaigns);
-  }, []);
 
   const handleCreateCampaign = () => {
     setEditingCampaign(null);
@@ -52,43 +49,35 @@ export default function CampaignsPage() {
   };
 
   const handleDeleteCampaign = (campaignId: string) => {
-    // Simulate API call for deletion
-    setCampaigns(prev => prev.filter(c => c.id !== campaignId));
-    toast({
-      title: "Campaign Deleted",
-      description: "The campaign has been successfully deleted.",
-      variant: "destructive",
-    });
+    deleteCampaignFromContext(campaignId);
   };
 
-  const handleSaveCampaign = (campaign: Campaign) => {
+  const handleSaveCampaign = (campaignData: Campaign) => { // campaignData from form doesn't have full ID if new
     if (editingCampaign) {
-      // Simulate API call for update
-      setCampaigns(prev => prev.map(c => c.id === campaign.id ? campaign : c));
-      toast({
-        title: "Campaign Updated",
-        description: `${campaign.name} has been updated.`,
-      });
+      updateCampaign({ ...campaignData, id: editingCampaign.id }); // Ensure ID is correct for update
     } else {
-      // Simulate API call for creation
-      const newCampaign = { ...campaign, id: String(Date.now()), bannerImageUrl: campaign.bannerImageUrl || `https://picsum.photos/seed/${Date.now()}banner/800/200` }; // Simple ID generation
-      setCampaigns(prev => [newCampaign, ...prev]);
-      toast({
-        title: "Campaign Created",
-        description: `${campaign.name} has been created.`,
-      });
+      // For new campaigns, addCampaign in context will assign ID and banner
+      const { id, bannerImageUrl, ...dataToSave } = campaignData; // Exclude dummy id/banner from form
+      addCampaign(dataToSave);
     }
     setIsFormOpen(false);
     setEditingCampaign(null);
   };
 
-  const handleSetActive = (campaignId: string) => {
-    setCampaigns(prev => prev.map(c => ({ ...c, isActive: c.id === campaignId })));
-     toast({
-      title: "Active Campaign Set",
-      description: "The active campaign has been updated.",
-    });
+  const handleSetActiveSwitch = (campaignId: string) => {
+    setCampaignActive(campaignId);
   };
+
+  if (isLoading) {
+    return (
+      <PageHeader
+        title="Campaign Manager"
+        description="Oversee all your adventures. Create new campaigns, edit existing ones, or set your active focus."
+      >
+        <div className="text-center py-12">Loading campaigns...</div>
+      </PageHeader>
+    );
+  }
 
   return (
     <>
@@ -178,8 +167,8 @@ export default function CampaignsPage() {
                   </Label>
                   <Switch
                     id={`active-switch-${campaign.id}`}
-                    checked={campaign.isActive}
-                    onCheckedChange={() => handleSetActive(campaign.id)}
+                    checked={campaign.id === activeCampaign?.id}
+                    onCheckedChange={() => handleSetActiveSwitch(campaign.id)}
                     aria-label={`Set ${campaign.name} as active campaign`}
                   />
               </CardFooter>

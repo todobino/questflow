@@ -8,9 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCampaignContext } from '@/contexts/campaign-context';
 
 // Mock data for party members - keyed by campaignId
-const campaignPartyMembers: Record<string, PartyMember[]> = {
+const campaignPartyMembersData: Record<string, PartyMember[]> = {
   '1': [ // The Whispering Peaks
     { id: 'pm1', name: 'Elara', avatarUrl: 'https://picsum.photos/seed/elara/64/64', level: 5, race: 'Elf', class: 'Wizard', currentHp: 22, maxHp: 22, dataAiHint: "elf wizard" },
     { id: 'pm2', name: 'Grom', avatarUrl: 'https://picsum.photos/seed/grom/64/64', level: 5, race: 'Orc', class: 'Barbarian', currentHp: 45, maxHp: 58, dataAiHint: "orc barbarian" },
@@ -25,24 +26,24 @@ const campaignPartyMembers: Record<string, PartyMember[]> = {
 };
 
 
-interface PartySheetProps {
-  activeCampaignId?: string;
-}
-
-export function PartySheet({ activeCampaignId }: PartySheetProps) {
+export function PartySheet() {
+  const { activeCampaign, isLoading: isCampaignLoading } = useCampaignContext();
   const [partyMembers, setPartyMembers] = useState<PartyMember[]>([]);
 
   useEffect(() => {
-    if (activeCampaignId && campaignPartyMembers[activeCampaignId]) {
-      setPartyMembers(campaignPartyMembers[activeCampaignId]);
-    } else if (activeCampaignId) {
+    if (activeCampaign?.id && campaignPartyMembersData[activeCampaign.id]) {
+      setPartyMembers(campaignPartyMembersData[activeCampaign.id]);
+    } else if (activeCampaign?.id) {
       setPartyMembers([]); // Campaign exists but has no members in mock
     }
     else {
       setPartyMembers([]); // No active campaign
     }
-  }, [activeCampaignId]);
+  }, [activeCampaign]);
 
+  if (isCampaignLoading) {
+    return <p className="text-sm text-muted-foreground text-center py-4">Loading party...</p>;
+  }
 
   return (
     <ScrollArea className="h-full">
@@ -72,10 +73,10 @@ export function PartySheet({ activeCampaignId }: PartySheetProps) {
             </CardContent>
           </Card>
         ))}
-         {partyMembers.length === 0 && activeCampaignId && (
+         {partyMembers.length === 0 && activeCampaign && (
             <p className="text-sm text-muted-foreground text-center py-4">No party members for this campaign.</p>
         )}
-        {!activeCampaignId && (
+        {!activeCampaign && (
             <p className="text-sm text-muted-foreground text-center py-4">Select a campaign to view party.</p>
         )}
       </div>
