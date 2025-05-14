@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
-// Removed Geist font imports
+import { DM_Sans } from 'next/font/google'; // Import DM_Sans
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { CampaignProvider } from '@/contexts/campaign-context';
 
-// Removed geistSans and geistMono constants
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-dm-sans', // Optional: if you want to use it as a CSS variable
+});
 
 export const metadata: Metadata = {
   title: 'QuestFlow',
@@ -18,8 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* Removed font variables from className */}
-      <body className="antialiased">
+      <body className={`${dmSans.className} antialiased`}> {/* Apply DM_Sans className */}
         <CampaignProvider>
           <MainLayout>{children}</MainLayout>
         </CampaignProvider>

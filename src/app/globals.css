@@ -3,8 +3,7 @@
 @tailwind utilities;
 
 body {
-  /* Updated font-family to Proxima Nova */
-  font-family: "Proxima Nova", Arial, Helvetica, sans-serif;
+  /* Removed Proxima Nova font-family rule, DM Sans will be applied via layout.tsx */
 }
 
 @layer base {
