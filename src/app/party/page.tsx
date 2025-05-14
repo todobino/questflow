@@ -8,14 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog'; 
 import { CharacterForm } from '@/components/character-creator/character-form';
-// import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; // Removed: Now handled globally
 import type { Character } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
 import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { generateRandomCharacter } from '@/ai/flows/generate-random-character';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +25,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS, type DndClass } from '@/lib/dnd-data';
+import { DND_NAMES } from '@/lib/dnd-names';
 
 
 interface CharacterCardProps {
@@ -112,13 +112,13 @@ export default function PartyManagerPage() {
     updateCharacter, 
     deleteCharacter: deleteCharacterFromContext, 
     isLoading: isCampaignLoading,
-    openProfileDialog // Get from context
+    openProfileDialog 
   } = useCampaignContext();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Partial<Character> | null>(null);
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
-  const [isRandomizing, setIsRandomizing] = useState(false);
+  const [isRandomizing, setIsRandomizing] = useState(false); // Kept for potential brief UI feedback
   const [randomizedData, setRandomizedData] = useState<Partial<Character>>({});
   
   const { toast } = useToast();
@@ -157,36 +157,43 @@ export default function PartyManagerPage() {
     setRandomizedData({});
   };
 
-  const handleRandomizeCharacter = async () => {
+  const handleLocalRandomizeCharacter = () => {
     setIsRandomizing(true);
-    setRandomizedData({}); 
-    try {
-      const result = await generateRandomCharacter();
-      const newCharacterData: Partial<Character> = {
-        name: result.name, 
-        race: result.race,
-        class: result.characterClass,
-        subclass: result.subclass,
-        background: result.background,
-        backstory: result.backstory,
-        imageUrl: result.imageUrl,
-        level: 1, 
-        currentHp: 10, 
-        maxHp: 10,     
-        armorClass: 10, 
-        initiativeModifier: 0, 
-      };
-      setRandomizedData(newCharacterData); 
-      
-      if (isFormOpen && !editingCharacter?.id) {
-         setEditingCharacter(prev => ({ ...prev, ...newCharacterData }));
-      }
+    setRandomizedData({});
 
-      toast({ title: 'Character Randomized!', description: `A new ${result.race} ${result.characterClass} named ${result.name} has been conceptualized.` });
-    } catch (error) {
-      console.error('Error randomizing character:', error);
-      toast({ title: 'Randomization Failed', description: (error as Error).message || 'Could not randomize character.', variant: 'destructive' });
+    const randomRace = RACES[Math.floor(Math.random() * RACES.length)];
+    const randomClass = CLASSES[Math.floor(Math.random() * CLASSES.length)];
+    const availableSubclasses = SUBCLASSES[randomClass as DndClass] || [];
+    const randomSubclass = availableSubclasses.length > 0 ? availableSubclasses[Math.floor(Math.random() * availableSubclasses.length)] : '';
+    const randomBackground = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
+
+    const raceNames = DND_NAMES[randomRace as keyof typeof DND_NAMES];
+    const randomFirstName = raceNames.firstNames[Math.floor(Math.random() * raceNames.firstNames.length)];
+    const randomLastName = raceNames.lastNames[Math.floor(Math.random() * raceNames.lastNames.length)];
+    const randomName = `${randomFirstName} ${randomLastName}`;
+
+    const newCharacterData: Partial<Character> = {
+      name: randomName,
+      race: randomRace,
+      class: randomClass,
+      subclass: randomSubclass,
+      background: randomBackground,
+      backstory: '', // No AI backstory
+      imageUrl: 'https://placehold.co/400x400.png', // Default placeholder
+      level: 1,
+      currentHp: 10,
+      maxHp: 10,
+      armorClass: 10,
+      initiativeModifier: 0,
+    };
+
+    setRandomizedData(newCharacterData);
+    
+    if (isFormOpen && !editingCharacter?.id) {
+       setEditingCharacter(prev => ({ ...prev, ...newCharacterData }));
     }
+
+    toast({ title: 'Character Randomized!', description: `A new ${randomRace} ${randomClass} named ${randomName} has been conceptualized locally.` });
     setIsRandomizing(false);
   };
   
@@ -195,7 +202,7 @@ export default function PartyManagerPage() {
   };
 
   const handleViewProfile = (character: Character) => {
-    openProfileDialog(character); // Use context function
+    openProfileDialog(character); 
   };
 
   if (isCampaignLoading) {
@@ -293,11 +300,10 @@ export default function PartyManagerPage() {
             setEditingCharacter(null);
             setRandomizedData({});
           }}
-          onRandomize={handleRandomizeCharacter}
+          onRandomize={handleLocalRandomizeCharacter} // Updated to local function
           isRandomizing={isRandomizing}
         />
       </Dialog>
-      {/* CharacterProfileDialog is now rendered globally in MainLayoutContent */}
     </>
   );
 }

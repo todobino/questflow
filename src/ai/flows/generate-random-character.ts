@@ -2,6 +2,9 @@
 'use server';
 /**
  * @fileOverview Generates a random D&D 5e character concept including name, attributes, backstory, and image.
+ * THIS FILE IS NO LONGER USED FOR THE PRIMARY RANDOMIZE BUTTON.
+ * It is kept for potential future use or alternative AI-driven generation features.
+ * The primary "Randomize" button in the Party Manager now uses local programmatic randomization.
  *
  * - generateRandomCharacter - A function that handles the character randomization process.
  * - GenerateRandomCharacterOutput - The return type for the generateRandomCharacter function.
@@ -52,7 +55,7 @@ export async function generateRandomCharacter(_input?: GenerateRandomCharacterIn
 
 const characterDetailsPrompt = ai.definePrompt({
   name: 'generateRandomCharacterDetailsPrompt',
-  input: { schema: z.object({}) }, // No specific input needed for this part
+  input: { schema: z.object({}) }, 
   output: { schema: z.object({
     name: z.string().describe('A fitting and unique name for the character based on the generated attributes.'),
     race: z.string().describe(`Chosen from: ${raceOptions}`),
@@ -96,7 +99,7 @@ const generateRandomCharacterFlow = ai.defineFlow(
     // Step 2: Generate character image based on details
     const imagePromptText = `Generate a square (1:1 aspect ratio) Dungeons & Dragons character portrait. The character is a ${characterDetails.race} ${characterDetails.subclass} ${characterDetails.characterClass} named ${characterDetails.name}. Style: fantasy art, detailed portrait. Backstory hint: ${characterDetails.backstory.substring(0,100)}`;
     
-    let imageUrl = `https://placehold.co/400x400.png`; // Default placeholder
+    let imageUrl = `https://placehold.co/400x400.png`; 
     let imageDescription = `Placeholder for ${characterDetails.race} ${characterDetails.characterClass}`;
 
     try {
@@ -116,7 +119,6 @@ const generateRandomCharacterFlow = ai.defineFlow(
         }
     } catch (imgError) {
         console.error('Image generation failed, using placeholder:', imgError);
-        // Keep the default placeholder if image generation fails
     }
 
 
@@ -131,4 +133,3 @@ const generateRandomCharacterFlow = ai.defineFlow(
     };
   }
 );
-

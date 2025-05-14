@@ -25,8 +25,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap } from 'lucide-react'; // Removed X
-import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '../ui/dialog'; // Removed DialogClose
+import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap } from 'lucide-react'; 
+import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '../ui/dialog'; 
 
 const characterSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
@@ -40,7 +40,7 @@ const characterSchema = z.object({
   armorClass: z.coerce.number().int().optional().default(10),
   initiativeModifier: z.coerce.number().int().optional().default(0),
   backstory: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: z.string().url().optional().or(z.literal('')).default('https://placehold.co/400x400.png'),
 }).refine(data => data.currentHp === undefined || data.maxHp === undefined || data.currentHp <= data.maxHp, {
   message: "Current HP cannot exceed Max HP",
   path: ["currentHp"], 
@@ -53,7 +53,7 @@ interface CharacterFormProps {
   currentCharacter?: Partial<Character>; 
   onSave: (character: CharacterFormData) => void; 
   onClose: () => void; 
-  onRandomize: () => Promise<void>;
+  onRandomize: () => void; // Changed from Promise<void>
   isRandomizing: boolean;
   isDialog?: boolean; 
 }
@@ -80,7 +80,7 @@ export function CharacterForm({
       armorClass: 10,
       initiativeModifier: 0,
       backstory: '',
-      imageUrl: '',
+      imageUrl: 'https://placehold.co/400x400.png',
       ...currentCharacter, 
     },
   });
@@ -100,12 +100,15 @@ export function CharacterForm({
     const defaultValues = {
       name: '', race: '', class: '', subclass: '', background: '', 
       level: 1, currentHp: 10, maxHp: 10, armorClass: 10, initiativeModifier: 0,
-      backstory: '', imageUrl: ''
+      backstory: '', imageUrl: 'https://placehold.co/400x400.png'
     };
     if (currentCharacter) {
       form.reset({
         ...defaultValues,
         ...currentCharacter,
+         // Ensure backstory and imageUrl are explicitly set or cleared
+        backstory: currentCharacter.backstory || '',
+        imageUrl: currentCharacter.imageUrl || 'https://placehold.co/400x400.png',
       });
        if (currentCharacter.class && SUBCLASSES[currentCharacter.class as DndClass]) {
         setAvailableSubclasses(SUBCLASSES[currentCharacter.class as DndClass]);
@@ -123,7 +126,7 @@ export function CharacterForm({
   const FormContent = (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="space-y-4 py-4 max-h-[calc(80vh-12rem)] overflow-y-auto pr-2"> {/* Added max-height and overflow for scrollability */}
+        <div className="space-y-4 py-4 max-h-[calc(80vh-12rem)] overflow-y-auto pr-2"> 
           <FormField
             control={form.control}
             name="name"
@@ -331,7 +334,7 @@ export function CharacterForm({
           />
         </div>
         {isDialog && (
-          <DialogFooter className="pt-4 border-t"> {/* Added border-t */}
+          <DialogFooter className="pt-4 border-t"> 
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
@@ -346,16 +349,15 @@ export function CharacterForm({
 
   if (isDialog) {
     return (
-      <DialogContent className="sm:max-w-2xl"> {/* Increased width for better form layout */}
+      <DialogContent className="sm:max-w-2xl"> 
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{currentCharacter?.id ? 'Edit Character' : 'Create New Character'}</span>
-            <div className="flex items-center space-x-2"> {/* Group for buttons */}
+            <div className="flex items-center space-x-2"> 
               <Button onClick={onRandomize} disabled={isRandomizing} variant="default" size="sm">
                 {isRandomizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
                 {isRandomizing ? 'Randomizing...' : 'Randomize'}
               </Button>
-              {/* Removed custom X button here */}
             </div>
           </DialogTitle>
           <DialogDescription>
@@ -382,7 +384,7 @@ export function CharacterForm({
             <Button type="button" variant="outline" onClick={onClose} className="mr-2">
               Cancel
             </Button>
-            <Button form={form.formState.id} type="submit"> {/* Ensure button triggers form submission */}
+            <Button form={form.formState.id} type="submit"> 
               <Save className="mr-2 h-4 w-4" /> {currentCharacter?.id ? 'Save Changes' : 'Create Character'}
             </Button>
           </div>
