@@ -19,6 +19,10 @@ export interface Character {
   level?: number; // Added level
   backstory?: string;
   imageUrl?: string; // URL or data URI
+  currentHp?: number;
+  maxHp?: number;
+  armorClass?: number;
+  initiativeModifier?: number;
   // Optional: stats, inventory, notes
 }
 
@@ -58,3 +62,4 @@ export interface PartyMember { // This might be redundant if Character type now 
   maxHp: number;
   dataAiHint?: string;
 }
+

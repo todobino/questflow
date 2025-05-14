@@ -29,9 +29,54 @@ const initialMockCampaigns: Campaign[] = [
 
 // Mock characters, some linked to campaigns
 const initialMockCharacters: Character[] = [
-    { id: 'char1', campaignId: '1', name: 'Elara', race: 'Elf', class: 'Wizard', subclass: 'School of Evocation', background: 'Sage', level: 5, backstory: 'A curious elf seeking ancient lore.', imageUrl: `https://placehold.co/400x400.png` },
-    { id: 'char2', campaignId: '1', name: 'Grom', race: 'Orc', class: 'Barbarian', subclass: 'Path of the Totem Warrior', background: 'Outlander', level: 5, backstory: 'A fierce warrior from the wilds.', imageUrl: `https://placehold.co/400x400.png`},
-    { id: 'char3', campaignId: '2', name: 'Seraphina', race: 'Human', class: 'Cleric', subclass: 'Life Domain', background: 'Acolyte', level: 4, backstory: 'A devout healer on a holy mission.', imageUrl: `https://placehold.co/400x400.png`},
+    { 
+      id: 'char1', 
+      campaignId: '1', 
+      name: 'Elara', 
+      race: 'Elf', 
+      class: 'Wizard', 
+      subclass: 'School of Evocation', 
+      background: 'Sage', 
+      level: 5, 
+      backstory: 'A curious elf seeking ancient lore. She has a keen mind and a quicker wit, often finding herself in trouble due to her insatiable thirst for knowledge.', 
+      imageUrl: `https://placehold.co/400x400.png`,
+      currentHp: 28,
+      maxHp: 28,
+      armorClass: 12,
+      initiativeModifier: 2,
+    },
+    { 
+      id: 'char2', 
+      campaignId: '1', 
+      name: 'Grom', 
+      race: 'Orc', 
+      class: 'Barbarian', 
+      subclass: 'Path of the Totem Warrior', 
+      background: 'Outlander', 
+      level: 5, 
+      backstory: 'A fierce warrior from the wilds, driven by a primal connection to nature and a desire to protect his kin.', 
+      imageUrl: `https://placehold.co/400x400.png`,
+      currentHp: 52,
+      maxHp: 52,
+      armorClass: 15,
+      initiativeModifier: 1,
+    },
+    { 
+      id: 'char3', 
+      campaignId: '2', 
+      name: 'Seraphina', 
+      race: 'Human', 
+      class: 'Cleric', 
+      subclass: 'Life Domain', 
+      background: 'Acolyte', 
+      level: 4, 
+      backstory: 'A devout healer on a holy mission to bring light to the darkest corners of the world.', 
+      imageUrl: `https://placehold.co/400x400.png`,
+      currentHp: 30,
+      maxHp: 30,
+      armorClass: 16,
+      initiativeModifier: 0,
+    },
 ];
 
 
@@ -43,17 +88,38 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    setCampaignsState(initialMockCampaigns);
-    setCharactersState(initialMockCharacters); // Load mock characters
+    // Simulate loading from a persistent store
+    const storedCampaigns = localStorage.getItem('campaigns');
+    const storedCharacters = localStorage.getItem('characters');
+    
+    if (storedCampaigns) {
+      setCampaignsState(JSON.parse(storedCampaigns));
+    } else {
+      setCampaignsState(initialMockCampaigns);
+    }
+
+    if (storedCharacters) {
+      setCharactersState(JSON.parse(storedCharacters));
+    } else {
+      setCharactersState(initialMockCharacters);
+    }
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
     if (!isLoading) {
+      localStorage.setItem('campaigns', JSON.stringify(campaigns));
       const currentActive = campaigns.find(c => c.isActive) || campaigns[0] || null;
       setActiveCampaignState(currentActive);
     }
   }, [campaigns, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem('characters', JSON.stringify(characters));
+    }
+  }, [characters, isLoading]);
+
 
   const setCampaignActive = useCallback((campaignId: string) => {
     const selectedCampaign = campaigns.find(c => c.id === campaignId);
@@ -61,12 +127,9 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       setCampaignsState(prevCampaigns =>
         prevCampaigns.map(c => ({ ...c, isActive: c.id === campaignId }))
       );
-      toast({
-        title: "Active Campaign Set",
-        description: `"${selectedCampaign.name}" is now the active campaign.`,
-      });
+      // No toast here, page will reflect change
     }
-  }, [campaigns, toast]);
+  }, [campaigns]);
 
   const addCampaign = useCallback((campaignData: Omit<Campaign, 'id' | 'bannerImageUrl'> & { bannerImageUrl?: string }) => {
     const newCampaign: Campaign = {
@@ -103,9 +166,11 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteCampaign = useCallback((campaignId: string) => {
     setCampaignsState(prev => prev.filter(c => c.id !== campaignId));
+    // Also delete characters associated with this campaign
+    setCharactersState(prevChars => prevChars.filter(char => char.campaignId !== campaignId));
     toast({
       title: "Campaign Deleted",
-      description: "The campaign has been successfully deleted.",
+      description: "The campaign and its characters have been successfully deleted.",
       variant: "destructive",
     });
   }, [toast]);
@@ -121,6 +186,10 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       id: String(Date.now() + Math.random()), // Ensure unique ID
       campaignId: activeCampaign.id,
       level: characterData.level || 1, // Default level
+      currentHp: characterData.maxHp || characterData.currentHp || 10, // Default HP
+      maxHp: characterData.maxHp || 10,
+      armorClass: characterData.armorClass || 10,
+      initiativeModifier: characterData.initiativeModifier || 0,
     };
     setCharactersState(prev => [newCharacter, ...prev]);
     toast({ title: "Character Added", description: `${newCharacter.name} has joined the party.` });
@@ -137,9 +206,10 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
 
-  if (isLoading) {
+  if (isLoading && typeof window === 'undefined') { // Prevent SSR flash of loading if possible by checking window
     return null; 
   }
+
 
   return (
     <CampaignContext.Provider value={{ 
@@ -158,3 +228,4 @@ export const useCampaignContext = () => {
   }
   return context;
 };
+

@@ -25,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Save, Shuffle, Loader2 } from 'lucide-react';
+import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap } from 'lucide-react'; // Renamed Shield to ShieldIcon to avoid conflict
 import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '../ui/dialog'; // Assuming dialog parts are needed
 
 const characterSchema = z.object({
@@ -35,19 +35,27 @@ const characterSchema = z.object({
   subclass: z.string().optional(),
   background: z.string().optional(),
   level: z.coerce.number().min(1).max(20).optional().default(1),
+  currentHp: z.coerce.number().int().optional().default(10),
+  maxHp: z.coerce.number().int().min(1, "Max HP must be at least 1").optional().default(10),
+  armorClass: z.coerce.number().int().optional().default(10),
+  initiativeModifier: z.coerce.number().int().optional().default(0),
   backstory: z.string().optional(),
   imageUrl: z.string().url().optional().or(z.literal('')),
+}).refine(data => data.currentHp === undefined || data.maxHp === undefined || data.currentHp <= data.maxHp, {
+  message: "Current HP cannot exceed Max HP",
+  path: ["currentHp"], 
 });
+
 
 type CharacterFormData = z.infer<typeof characterSchema>;
 
 interface CharacterFormProps {
-  currentCharacter?: Partial<Character>; // Used for editing
-  onSave: (character: CharacterFormData) => void; // Adjusted for form data
-  onClose: () => void; // For closing the dialog
+  currentCharacter?: Partial<Character>; 
+  onSave: (character: CharacterFormData) => void; 
+  onClose: () => void; 
   onRandomize: () => Promise<void>;
   isRandomizing: boolean;
-  isDialog?: boolean; // To conditionally render dialog parts
+  isDialog?: boolean; 
 }
 
 export function CharacterForm({ 
@@ -56,7 +64,7 @@ export function CharacterForm({
   onClose, 
   onRandomize, 
   isRandomizing,
-  isDialog = false // Default to false if not in a dialog
+  isDialog = false 
 }: CharacterFormProps) {
   const form = useForm<CharacterFormData>({
     resolver: zodResolver(characterSchema),
@@ -67,9 +75,13 @@ export function CharacterForm({
       subclass: '',
       background: '',
       level: 1,
+      currentHp: 10,
+      maxHp: 10,
+      armorClass: 10,
+      initiativeModifier: 0,
       backstory: '',
       imageUrl: '',
-      ...currentCharacter, // Spread current character for editing
+      ...currentCharacter, 
     },
   });
 
@@ -82,33 +94,30 @@ export function CharacterForm({
     } else {
       setAvailableSubclasses([]);
     }
-  }, [selectedClass, form]);
+  }, [selectedClass]); // Removed form from dependency array as only selectedClass is needed.
 
   useEffect(() => {
+    const defaultValues = {
+      name: '', race: '', class: '', subclass: '', background: '', 
+      level: 1, currentHp: 10, maxHp: 10, armorClass: 10, initiativeModifier: 0,
+      backstory: '', imageUrl: ''
+    };
     if (currentCharacter) {
       form.reset({
-        name: currentCharacter.name || '',
-        race: currentCharacter.race || '',
-        class: currentCharacter.class || '',
-        subclass: currentCharacter.subclass || '',
-        background: currentCharacter.background || '',
-        level: currentCharacter.level || 1,
-        backstory: currentCharacter.backstory || '',
-        imageUrl: currentCharacter.imageUrl || '',
+        ...defaultValues,
+        ...currentCharacter,
       });
        if (currentCharacter.class && SUBCLASSES[currentCharacter.class as DndClass]) {
         setAvailableSubclasses(SUBCLASSES[currentCharacter.class as DndClass]);
       }
     } else {
-      // Reset to default if no currentCharacter (e.g., for new character)
-       form.reset({
-        name: '', race: '', class: '', subclass: '', background: '', level: 1, backstory: '', imageUrl: ''
-      });
+       form.reset(defaultValues);
     }
-  }, [currentCharacter, form, isDialog]); // Added isDialog to deps to ensure reset on open
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentCharacter, form.reset, isDialog]); // form.reset added to deps
 
   const onSubmit = (data: CharacterFormData) => {
-    onSave(data); // Parent component (dialog) will handle context update
+    onSave(data); 
   };
   
   const FormContent = (
@@ -231,6 +240,64 @@ export function CharacterForm({
             )}
           />
 
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="currentHp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Heart className="mr-1.5 h-4 w-4 text-red-500" /> Current HP</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="10" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="maxHp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Heart className="mr-1.5 h-4 w-4 text-red-700" /> Max HP</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="10" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 1)} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="armorClass"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Shield className="mr-1.5 h-4 w-4 text-sky-600" /> Armor Class</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="10" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="initiativeModifier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Zap className="mr-1.5 h-4 w-4 text-yellow-500" /> Initiative Mod</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+
           <FormField
             control={form.control}
             name="backstory"
@@ -319,3 +386,4 @@ export function CharacterForm({
      </div>
   );
 }
+

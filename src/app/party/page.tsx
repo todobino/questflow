@@ -6,11 +6,12 @@ import Image from 'next/image';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogTrigger, DialogContent as CharacterFormDialogContent } from '@/components/ui/dialog'; // Renamed to avoid conflict
 import { CharacterForm } from '@/components/character-creator/character-form';
+import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; // New component
 import type { Character } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2 } from 'lucide-react';
+import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -32,15 +33,19 @@ interface CharacterCardProps {
   character: Character;
   onEdit: (character: Character) => void;
   onDelete: (characterId: string) => void;
+  onViewProfile: (character: Character) => void;
 }
 
-function CharacterCard({ character, onEdit, onDelete }: CharacterCardProps) {
+function CharacterCard({ character, onEdit, onDelete, onViewProfile }: CharacterCardProps) {
   return (
-    <Card className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-shadow hover:shadow-xl h-36"> {/* Adjusted: flex-row and fixed height h-36 */}
+    <Card 
+      className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-shadow hover:shadow-xl h-auto min-h-[144px] cursor-pointer"
+      onClick={() => onViewProfile(character)}
+    >
       {/* Image on the left */}
-      <div className="w-32 flex-shrink-0 h-full bg-muted relative"> {/* Adjusted: Fixed width for image part */}
+      <div className="w-32 flex-shrink-0 h-full bg-muted relative">
         <Image
-          src={character.imageUrl || `https://placehold.co/128x144.png`} // Adjusted placeholder size
+          src={character.imageUrl || `https://placehold.co/128x160.png`} // Adjusted placeholder size for potentially taller card
           alt={character.name}
           layout="fill"
           objectFit="cover"
@@ -48,24 +53,40 @@ function CharacterCard({ character, onEdit, onDelete }: CharacterCardProps) {
         />
       </div>
       {/* Content on the right */}
-      <div className="flex-grow flex flex-col p-3 overflow-hidden"> {/* Adjusted: flex-grow and internal flex structure */}
+      <div className="flex-grow flex flex-col p-3 overflow-hidden">
         <CardTitle className="text-lg mb-0.5 truncate">{character.name}</CardTitle>
-        <CardDescription className="text-xs mb-1.5 truncate">
+        <CardDescription className="text-xs mb-1 truncate">
           Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
           {character.subclass ? ` (${character.subclass})` : ''}
         </CardDescription>
+        
+        <div className="mt-1.5 space-y-1 text-xs">
+          <div className="flex items-center">
+            <Heart className="h-3.5 w-3.5 mr-1.5 text-red-500 flex-shrink-0" />
+            <span>HP: {character.currentHp ?? 'N/A'} / {character.maxHp ?? 'N/A'}</span>
+          </div>
+          <div className="flex items-center">
+            <ShieldIcon className="h-3.5 w-3.5 mr-1.5 text-sky-600 flex-shrink-0" />
+            <span>AC: {character.armorClass ?? 'N/A'}</span>
+          </div>
+          <div className="flex items-center">
+            <Zap className="h-3.5 w-3.5 mr-1.5 text-yellow-500 flex-shrink-0" />
+            <span>Init: {character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'}</span>
+          </div>
+        </div>
+
         {character.backstory && (
-          <p className="line-clamp-3 text-xs text-muted-foreground overflow-hidden flex-grow">{character.backstory}</p>
+          <p className="line-clamp-2 text-xs text-muted-foreground mt-2 flex-grow">{character.backstory}</p>
         )}
       </div>
       {/* Edit/Delete buttons remain absolutely positioned relative to the card */}
       <div className="absolute right-2 top-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => onEdit(character)}>
+        <Button variant="outline" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(character); }}>
           <Edit3 className="h-3.5 w-3.5" />
         </Button>
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="icon" className="h-7 w-7">
+                <Button variant="destructive" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
                     <Trash2 className="h-3.5 w-3.5" />
                 </Button>
             </AlertDialogTrigger>
@@ -75,8 +96,8 @@ function CharacterCard({ character, onEdit, onDelete }: CharacterCardProps) {
                     <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete(character.id)}>Delete</AlertDialogAction>
+                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={(e) => { e.stopPropagation(); onDelete(character.id);}}>Delete</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -93,6 +114,9 @@ export default function PartyManagerPage() {
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [randomizedData, setRandomizedData] = useState<Partial<Character>>({});
+  
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [selectedCharacterForProfile, setSelectedCharacterForProfile] = useState<Character | null>(null);
 
 
   const { toast } = useToast();
@@ -101,13 +125,13 @@ export default function PartyManagerPage() {
 
   const handleAddCharacterClick = () => {
     setEditingCharacter(null);
-    setRandomizedData({}); // Clear any previous randomized data
+    setRandomizedData({}); 
     setIsFormOpen(true);
   };
 
   const handleEditCharacter = (character: Character) => {
     setEditingCharacter(character);
-    setRandomizedData({}); // Clear randomized data when editing
+    setRandomizedData({}); 
     setIsFormOpen(true);
   };
 
@@ -128,24 +152,25 @@ export default function PartyManagerPage() {
 
   const handleRandomizeCharacter = async () => {
     setIsRandomizing(true);
-    setRandomizedData({}); // Clear previous randomized data
+    setRandomizedData({}); 
     try {
       const result = await generateRandomCharacter();
-      // We don't directly set the form's character state here.
-      // Instead, we pass this data to the form when it opens or is already open.
-      const newCharacterData = {
-        name: result.characterClass || result.race || 'Random Hero', // Provide a default name
+      const newCharacterData: Partial<Character> = {
+        name: result.characterClass || result.race || 'Random Hero', 
         race: result.race,
         class: result.characterClass,
         subclass: result.subclass,
         background: result.background,
         backstory: result.backstory,
         imageUrl: result.imageUrl,
-        level: 1, // Default level for new random characters
+        level: 1, 
+        currentHp: 10, // Default for random
+        maxHp: 10,     // Default for random
+        armorClass: 10, // Default for random
+        initiativeModifier: 0, // Default for random
       };
-      setRandomizedData(newCharacterData); // Store for the form
+      setRandomizedData(newCharacterData); 
       
-      // If form is already open for a *new* character, update its values
       if (isFormOpen && !editingCharacter?.id) {
          setEditingCharacter(prev => ({ ...prev, ...newCharacterData }));
       }
@@ -161,6 +186,11 @@ export default function PartyManagerPage() {
   const handleLevelUpParty = () => {
     // Placeholder functionality
     toast({ title: 'Level Up!', description: 'Party level up functionality coming soon!' });
+  };
+
+  const handleViewProfile = (character: Character) => {
+    setSelectedCharacterForProfile(character);
+    setIsProfileOpen(true);
   };
 
   if (isCampaignLoading) {
@@ -220,13 +250,19 @@ export default function PartyManagerPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> {/* Adjusted grid cols for wider cards */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2"> 
           {partyMembers.map((character) => (
-            <CharacterCard key={character.id} character={character} onEdit={handleEditCharacter} onDelete={handleDeleteCharacter} />
+            <CharacterCard 
+              key={character.id} 
+              character={character} 
+              onEdit={handleEditCharacter} 
+              onDelete={handleDeleteCharacter}
+              onViewProfile={handleViewProfile}
+            />
           ))}
           <Card 
             onClick={handleAddCharacterClick}
-            className="flex h-36 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted" // Adjusted: height to h-36
+            className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted min-h-[144px] cursor-pointer"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleAddCharacterClick()}
@@ -240,13 +276,14 @@ export default function PartyManagerPage() {
       <Dialog open={isFormOpen} onOpenChange={(open) => {
         setIsFormOpen(open);
         if (!open) {
-          setEditingCharacter(null); // Clear editing state when dialog closes
+          setEditingCharacter(null); 
           setRandomizedData({});
         }
       }}>
+        {/* DialogContent for CharacterForm is now part of CharacterForm component itself */}
         <CharacterForm
           isDialog={true}
-          currentCharacter={editingCharacter || randomizedData} // Pass randomized data if available for new char
+          currentCharacter={editingCharacter || randomizedData} 
           onSave={handleSaveCharacter}
           onClose={() => {
             setIsFormOpen(false);
@@ -257,6 +294,15 @@ export default function PartyManagerPage() {
           isRandomizing={isRandomizing}
         />
       </Dialog>
+
+      {selectedCharacterForProfile && (
+        <CharacterProfileDialog
+          character={selectedCharacterForProfile}
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
+      )}
     </>
   );
 }
+
