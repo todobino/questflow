@@ -15,7 +15,7 @@ export function Breadcrumbs({ activeCampaign }: BreadcrumbsProps) {
   const pathname = usePathname();
 
   let pageTitle = '';
-  let pageHref = pathname;
+  let pageHref = pathname; // Default to current path for non-nav items
 
   const allNavItems = [...SITE_NAV_ITEMS, ...CAMPAIGN_MENU_NAV_ITEMS];
   const currentNavItem = allNavItems.find(
@@ -24,40 +24,37 @@ export function Breadcrumbs({ activeCampaign }: BreadcrumbsProps) {
 
   if (currentNavItem) {
     pageTitle = currentNavItem.title;
-    pageHref = currentNavItem.href;
+    pageHref = currentNavItem.href; // Use nav item's href for canonical link if it's a main nav page
   } else if (pathname === '/') {
-    pageTitle = 'Campaigns'; // Default for root, as it redirects to campaigns
+    // HomePage redirects to /campaigns, so breadcrumb should reflect that target
+    pageTitle = 'Campaigns';
     pageHref = '/campaigns';
   } else {
-    // Fallback for dynamic routes or pages not in nav items
+    // Fallback for dynamic routes or pages not explicitly in nav items
     const pathSegments = pathname.split('/').filter(Boolean);
+    // Make a more readable title from the last segment
     pageTitle = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : APP_NAME;
   }
 
   return (
     <nav aria-label="Breadcrumb">
-      <ol className="flex items-center space-x-1.5 text-sm text-muted-foreground">
+      <ol className="flex items-center space-x-1.5 text-sm">
         {activeCampaign && pathname !== '/campaigns' && (
           <>
             <li>
-              <span className="font-medium text-foreground truncate max-w-xs">
+              {/* Active campaign name is a preceding item, so muted. Still links to /campaigns for context. */}
+              <Link href="/campaigns" className="font-medium text-muted-foreground hover:text-foreground truncate max-w-xs">
                 {activeCampaign.name}
-              </span>
+              </Link>
             </li>
             <li>
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </li>
           </>
         )}
         <li>
-          {/* Check if current page is the one displayed, if so, not a link */}
-          {pathname === pageHref ? (
-            <span className="font-medium text-foreground">{pageTitle}</span>
-          ) : (
-            <Link href={pageHref} className="font-medium text-foreground hover:text-primary">
-              {pageTitle}
-            </Link>
-          )}
+          {/* The current page title is the last item, so it's more prominent. */}
+          <span className="font-medium text-foreground">{pageTitle}</span>
         </li>
       </ol>
     </nav>
