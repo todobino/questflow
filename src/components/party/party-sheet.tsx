@@ -3,13 +3,13 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import type { Character } from '@/lib/types'; // Changed from PartyMember to Character
+import type { Character } from '@/lib/types'; 
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Shield as ShieldIcon, Heart } from 'lucide-react'; // Added Heart for consistency
+import { Shield as ShieldIcon, Heart } from 'lucide-react'; 
 
 export function PartySheet() {
   const { activeCampaign, characters, isLoading: isCampaignLoading } = useCampaignContext();
@@ -38,7 +38,7 @@ export function PartySheet() {
                   <AvatarImage 
                     src={member.imageUrl || `https://placehold.co/64x64.png`} 
                     alt={member.name} 
-                    data-ai-hint={`${member.race || ''} ${member.class || ''} portrait`} 
+                    data-ai-hint={`${member.race || ''} ${member.class || ''} portrait`}
                   />
                   <AvatarFallback>{member.name.substring(0, 1).toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -50,13 +50,10 @@ export function PartySheet() {
                 </div>
               </div>
               
-              {/* AC Display in top right */}
               {member.armorClass !== undefined && (
-                <div className="absolute top-2 right-2 flex items-center justify-center bg-background/70 backdrop-blur-sm p-1 rounded-full shadow-sm w-8 h-8">
-                  <ShieldIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="absolute text-xs font-bold text-foreground" style={{ fontSize: '0.6rem', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                    {member.armorClass}
-                  </span>
+                <div className="absolute top-2 right-2 flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-1 rounded-md shadow-sm text-xs">
+                  <ShieldIcon className="h-3.5 w-3.5 mr-1 text-foreground" />
+                  <span className="font-semibold text-foreground">{member.armorClass}</span>
                 </div>
               )}
 
@@ -87,3 +84,4 @@ export function PartySheet() {
     </ScrollArea>
   );
 }
+

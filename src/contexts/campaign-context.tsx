@@ -32,7 +32,7 @@ const initialMockCharacters: Character[] = [
     { 
       id: 'char1', 
       campaignId: '1', 
-      name: 'Elara', 
+      name: 'Elara Meadowlight', 
       race: 'Elf', 
       class: 'Wizard', 
       subclass: 'School of Evocation', 
@@ -48,7 +48,7 @@ const initialMockCharacters: Character[] = [
     { 
       id: 'char2', 
       campaignId: '1', 
-      name: 'Grom', 
+      name: 'Grom Stonefist', 
       race: 'Orc', 
       class: 'Barbarian', 
       subclass: 'Path of the Totem Warrior', 
@@ -64,7 +64,7 @@ const initialMockCharacters: Character[] = [
     { 
       id: 'char3', 
       campaignId: '2', 
-      name: 'Seraphina', 
+      name: 'Seraphina Moonwhisper', // Added last name for consistency
       race: 'Human', 
       class: 'Cleric', 
       subclass: 'Life Domain', 
@@ -186,10 +186,11 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       id: String(Date.now() + Math.random()), // Ensure unique ID
       campaignId: activeCampaign.id,
       level: characterData.level || 1, // Default level
-      currentHp: characterData.maxHp || characterData.currentHp || 10, // Default HP
+      currentHp: characterData.currentHp !== undefined ? characterData.currentHp : (characterData.maxHp || 10), // Default HP current to max if available
       maxHp: characterData.maxHp || 10,
       armorClass: characterData.armorClass || 10,
       initiativeModifier: characterData.initiativeModifier || 0,
+      imageUrl: characterData.imageUrl || `https://placehold.co/400x400.png`, // Default placeholder
     };
     setCharactersState(prev => [newCharacter, ...prev]);
     toast({ title: "Character Added", description: `${newCharacter.name} has joined the party.` });
@@ -206,7 +207,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
 
-  if (isLoading && typeof window === 'undefined') { // Prevent SSR flash of loading if possible by checking window
+  if (isLoading && typeof window === 'undefined') { 
     return null; 
   }
 
@@ -214,7 +215,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   return (
     <CampaignContext.Provider value={{ 
       campaigns, activeCampaign, setCampaignActive, addCampaign, updateCampaign, deleteCampaign, isLoading,
-      characters, addCharacter, updateCharacter, deleteCharacter // Expose character functions
+      characters, addCharacter, updateCharacter, deleteCharacter 
     }}>
       {children}
     </CampaignContext.Provider>
