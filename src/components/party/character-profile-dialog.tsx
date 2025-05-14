@@ -112,7 +112,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                 ) : (
                   <Sparkles className="mr-2 h-4 w-4" />
                 )}
-                {isGeneratingImage ? 'Generating...' : 'Generate New Portrait'}
+                {isGeneratingImage ? 'Generating...' : 'New Portrait'}
               </Button>
             </div>
 
