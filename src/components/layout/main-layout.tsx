@@ -47,10 +47,10 @@ export function MainLayout({ children }: MainLayoutProps) {
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>}
           </header>
           
-          {/* Desktop Header - Breadcrumbs removed */}
-          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center bg-background/95 px-6 backdrop-blur-sm md:flex">
-             {/* Breadcrumb area removed as per request */}
-          </header>
+          {/* Desktop Header area removed/adjusted to remove top space */}
+          {/* <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center bg-background/95 px-6 backdrop-blur-sm md:flex">
+             Removed breadcrumb header content
+          </header> */}
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
             {children}

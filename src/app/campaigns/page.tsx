@@ -72,7 +72,6 @@ export default function CampaignsPage() {
     return (
       <PageHeader
         title="Campaign Manager"
-        description="Oversee all your adventures. Create new campaigns, edit existing ones, or set your active focus."
       >
         <div className="text-center py-12">Loading campaigns...</div>
       </PageHeader>
@@ -83,7 +82,6 @@ export default function CampaignsPage() {
     <>
       <PageHeader
         title="Campaign Manager"
-        description="Oversee all your adventures. Create new campaigns, edit existing ones, or set your active focus."
         actions={
           <Button onClick={handleCreateCampaign}>
             <PlusCircle className="mr-2 h-4 w-4" /> Create Campaign
