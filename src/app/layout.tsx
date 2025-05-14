@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
-import { Crimson_Text } from 'next/font/google'; // Import Crimson_Text
+import { Manrope } from 'next/font/google'; // Import Manrope
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { CampaignProvider } from '@/contexts/campaign-context';
 
-const crimsonText = Crimson_Text({
+const manrope = Manrope({
   subsets: ['latin'],
-  weight: ['400', '600', '700'], // Include necessary weights
+  weight: ['400', '600', '700'], // Include necessary weights, adjust as needed
   display: 'swap',
-  variable: '--font-crimson-text', // Optional: if you want to use it as a CSS variable
+  variable: '--font-manrope', // Optional: if you want to use it as a CSS variable
 });
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${crimsonText.className} antialiased`}> {/* Apply Crimson_Text className */}
+      <body className={`${manrope.className} antialiased`}> {/* Apply Manrope className */}
         <CampaignProvider>
           <MainLayout>{children}</MainLayout>
         </CampaignProvider>
