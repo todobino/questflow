@@ -20,7 +20,7 @@ body {
     --secondary-foreground: 0 0% 9%; /* Dark Gray */
     --muted: 0 0% 96.1%; /* Light Gray */
     --muted-foreground: 0 0% 45.1%; /* Medium Gray */
-    --accent: 210 100% 40%; /* Blue #0066cc */
+    --accent: 0 0% 9%; /* Dark Gray / Black */
     --accent-foreground: 0 0% 98%; /* White */
     --destructive: 0 84.2% 60.2%; /* Red */
     --destructive-foreground: 0 0% 98%; /* White */
@@ -30,7 +30,7 @@ body {
     --alert-foreground: 0 0% 10%; /* Dark Gray/Black for text on yellow */
     --border: 0 0% 89.8%; /* Light Gray Border */
     --input: 0 0% 89.8%; /* Light Gray Input Background */
-    --ring: 210 100% 40%; /* Blue for focus rings */
+    --ring: 0 0% 9%; /* Dark Gray / Black for focus rings */
     --radius: 0.5rem;
 
     --chart-1: 12 76% 61%;
@@ -41,12 +41,12 @@ body {
 
     --sidebar-background: 0 0% 98%; /* Very light gray */
     --sidebar-foreground: 0 0% 26.1%; /* Darker gray text */
-    --sidebar-primary: 210 100% 40%; /* Blue accent for active items */
+    --sidebar-primary: 0 0% 9%; /* Dark Gray / Black accent for active items */
     --sidebar-primary-foreground: 0 0% 98%; /* White */
     --sidebar-accent: 0 0% 92%; /* Light gray for hover */
     --sidebar-accent-foreground: 0 0% 9%; /* Dark text on hover */
     --sidebar-border: 0 0% 89.8%; /* Light gray border */
-    --sidebar-ring: 210 100% 40%; /* Blue for focus */
+    --sidebar-ring: 0 0% 9%; /* Dark Gray / Black for focus */
   }
 
   .dark {
@@ -56,14 +56,14 @@ body {
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 210 100% 70%; /* Lighter blue for dark mode primary */
-    --primary-foreground: 240 10% 3.9%;
+    --primary: 0 0% 9%; /* Dark Gray / Black */
+    --primary-foreground: 0 0% 98%; /* White */
     --secondary: 240 4% 14.9%; /* Darker gray */
     --secondary-foreground: 0 0% 98%;
     --muted: 240 4% 14.9%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 210 100% 60%; /* Slightly lighter blue for dark accent */
-    --accent-foreground: 0 0% 98%;
+    --accent: 0 0% 9%; /* Dark Gray / Black */
+    --accent-foreground: 0 0% 98%; /* White */
     --destructive: 0 70% 50%; /* Adjusted Red */
     --destructive-foreground: 0 0% 98%;
     --success: 145 63% 50%; /* Adjusted Green */
@@ -72,7 +72,7 @@ body {
     --alert-foreground: 0 0% 10%;
     --border: 240 4% 14.9%;
     --input: 240 4% 14.9%;
-    --ring: 210 100% 60%;
+    --ring: 0 0% 60%; /* Medium Gray for focus rings in dark mode */
 
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -82,12 +82,12 @@ body {
 
     --sidebar-background: 240 6% 10%; /* Darker than main dark bg */
     --sidebar-foreground: 0 0% 80%; /* Lighter text */
-    --sidebar-primary: 210 100% 60%; /* Blue accent */
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 9%; /* Dark Gray / Black accent */
+    --sidebar-primary-foreground: 0 0% 98%; /* White */
     --sidebar-accent: 240 6% 15%; /* Slightly lighter for hover */
     --sidebar-accent-foreground: 0 0% 90%;
     --sidebar-border: 240 4% 14.9%;
-    --sidebar-ring: 210 100% 60%;
+    --sidebar-ring: 0 0% 60%; /* Medium Gray for focus in dark mode */
   }
 }
 
