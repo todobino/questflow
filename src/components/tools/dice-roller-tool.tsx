@@ -45,7 +45,6 @@ const getRollDetailsDisplay = (roll: DiceRoll): React.ReactNode => {
     const [roll1, roll2] = roll.rawRolls;
     const isAdvantage = roll.advantageState === 'advantage';
     
-    // Determine which roll was chosen. If equal, style roll1 as chosen.
     const roll1IsChosen = roll.chosenRoll === roll1 || (roll1 === roll2 && isAdvantage && roll1 >= roll2) || (roll1 === roll2 && !isAdvantage && roll1 <= roll2) ;
     const roll2IsChosen = roll.chosenRoll === roll2 && roll1 !== roll2;
 
@@ -131,9 +130,9 @@ export function DiceRollerTool() {
   const handleAdvantageToggle = (clickedState: 'advantage' | 'disadvantage') => {
     if (isRolling) return;
     if (advantageState === clickedState) {
-      setAdvantageState(null); // Toggle off
+      setAdvantageState(null); 
     } else {
-      setAdvantageState(clickedState); // Toggle on, or switch
+      setAdvantageState(clickedState); 
     }
   };
 
@@ -203,11 +202,7 @@ export function DiceRollerTool() {
         </div>
       )}
       <Card className="shadow-md">
-        <CardHeader>
-          {/* Title removed */}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Dice Buttons First */}
+        <CardContent className="space-y-4 px-4 pt-2 pb-4">
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {DICE_CONFIG.map(({ type, sides }) => (
               <Button
@@ -225,75 +220,77 @@ export function DiceRollerTool() {
 
           <Separator />
 
-          {/* Modifier and Advantage/Disadvantage Controls in one row */}
-          <div className="flex flex-row items-center justify-between pt-2">
-            {/* Modifier Controls (aligned left) */}
-            <div className="flex items-center justify-center space-x-2">
-              <Button variant="outline" size="icon" onClick={() => handleModifierChange(-1)} disabled={isRolling} className="h-8 w-8">
-                <Minus className="h-4 w-4" />
-              </Button>
-              {isEditingModifier ? (
-                <Input
-                  ref={modifierInputRef}
-                  type="number"
-                  value={modifierInput}
-                  onChange={handleModifierInputChange}
-                  onBlur={handleModifierInputBlur}
-                  onKeyDown={handleModifierInputKeyDown}
-                  className="h-8 w-16 text-center px-1 text-sm"
-                  aria-label="Roll modifier"
-                />
-              ) : (
-                <Button 
-                  variant="outline" 
-                  onClick={() => { 
-                    setModifierInput(String(modifier)); 
-                    setIsEditingModifier(true);
-                  }} 
-                  className="h-8 w-16 text-sm"
-                  disabled={isRolling}
-                  aria-label={`Current modifier: ${modifier >= 0 ? `+${modifier}` : modifier}. Click to edit.`}
-                >
-                  {modifier >= 0 ? `+${modifier}` : modifier}
+          <div className="flex flex-row items-start justify-between pt-2">
+            <div className="flex flex-col items-start">
+              <Label htmlFor="modifier-display-button" className="text-xs text-muted-foreground mb-1 self-start">Modifiers</Label>
+              <div className="flex items-center justify-center space-x-2">
+                <Button variant="outline" size="icon" onClick={() => handleModifierChange(-1)} disabled={isRolling} className="h-8 w-8">
+                  <Minus className="h-4 w-4" />
                 </Button>
-              )}
-              <Button variant="outline" size="icon" onClick={() => handleModifierChange(1)} disabled={isRolling} className="h-8 w-8">
-                <Plus className="h-4 w-4" />
-              </Button>
+                {isEditingModifier ? (
+                  <Input
+                    ref={modifierInputRef}
+                    type="number"
+                    value={modifierInput}
+                    onChange={handleModifierInputChange}
+                    onBlur={handleModifierInputBlur}
+                    onKeyDown={handleModifierInputKeyDown}
+                    className="h-8 w-16 text-center px-1 text-sm"
+                    aria-label="Roll modifier"
+                  />
+                ) : (
+                  <Button 
+                    id="modifier-display-button"
+                    variant="outline" 
+                    onClick={() => { 
+                      setModifierInput(String(modifier)); 
+                      setIsEditingModifier(true);
+                    }} 
+                    className="h-8 w-16 text-sm"
+                    disabled={isRolling}
+                    aria-label={`Current modifier: ${modifier >= 0 ? `+${modifier}` : modifier}. Click to edit.`}
+                  >
+                    {modifier >= 0 ? `+${modifier}` : modifier}
+                  </Button>
+                )}
+                <Button variant="outline" size="icon" onClick={() => handleModifierChange(1)} disabled={isRolling} className="h-8 w-8">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
-            {/* Advantage/Disadvantage Column (aligned right) */}
             <div className="flex flex-col space-y-1">
               <Button
                 variant={advantageState === 'advantage' ? 'success' : 'outline'}
                 onClick={() => handleAdvantageToggle('advantage')}
                 disabled={isRolling}
                 className={cn(
-                  "text-xs px-2 py-1 h-auto w-16", 
-                  advantageState !== 'advantage' && "hover:border-success hover:bg-background"
+                  "text-xs px-2 py-1 h-auto", 
+                  advantageState !== 'advantage' && "hover:bg-success/10 hover:text-success-foreground hover:border-success",
+                  advantageState === 'advantage' && "text-success-foreground"
                 )}
                 aria-pressed={advantageState === 'advantage'}
               >
-                ADV
+                Advantage
               </Button>
               <Button
                 variant={advantageState === 'disadvantage' ? 'destructive' : 'outline'}
                 onClick={() => handleAdvantageToggle('disadvantage')}
                 disabled={isRolling}
                 className={cn(
-                  "text-xs px-2 py-1 h-auto w-16", 
-                  advantageState !== 'disadvantage' && "hover:border-destructive hover:bg-background"
+                  "text-xs px-2 py-1 h-auto", 
+                  advantageState !== 'disadvantage' && "hover:bg-destructive/10 hover:text-destructive-foreground hover:border-destructive",
+                  advantageState === 'disadvantage' && "text-destructive-foreground"
                 )}
                 aria-pressed={advantageState === 'disadvantage'}
               >
-                DIS
+                Disadvantage
               </Button>
             </div>
           </div>
           
-          <Separator />
+          {/* Separator removed from here */}
           
-          {/* Roll Result Display Box */}
           <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
             {isRolling && <Dices className="h-10 w-10 animate-spin text-accent" />}
             {!isRolling && currentRoll ? (
