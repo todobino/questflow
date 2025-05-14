@@ -12,7 +12,7 @@ import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
 import { PartySheet } from '@/components/party/party-sheet';
 import { Dices, Shield, Users } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
-import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; // Import the dialog
+import { CharacterProfileDialog } from '@/components/party/character-profile-dialog'; 
 
 
 interface MainLayoutProps {
@@ -25,9 +25,9 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     activeCampaign, 
     setCampaignActive: handleSetCampaignActive, 
     isLoading,
-    selectedCharacterForProfile, // Get from context
-    isProfileOpen,             // Get from context
-    closeProfileDialog         // Get from context
+    selectedCharacterForProfile, 
+    isProfileOpen,             
+    closeProfileDialog         
   } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
 
@@ -39,7 +39,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     <SidebarProvider defaultOpen>
       <div className="flex h-screen w-full bg-background text-foreground">
 
-        {!isLoading && mounted && (
+        {mounted && !isLoading && (
           <SidebarNav 
             campaigns={campaigns}
             activeCampaign={activeCampaign}
@@ -89,7 +89,6 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
       </div>
       <Toaster />
-      {/* Render the global CharacterProfileDialog */}
       {mounted && selectedCharacterForProfile && (
         <CharacterProfileDialog
           character={selectedCharacterForProfile}
@@ -103,6 +102,16 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; // Or a loading skeleton if preferred
+  }
+
   return (
     <CampaignProvider>
       <MainLayoutContent>{children}</MainLayoutContent>
