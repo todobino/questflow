@@ -43,6 +43,9 @@ export interface Combatant {
   maxHp: number;
   initiative?: number;
   conditions: string[]; // e.g., "poisoned", "stunned"
+  initiativeModifier?: number; // For players, from character sheet
+  isPlayerCharacter?: boolean; // True if this combatant represents a Character from the party
+  originalCharacterId?: string; // ID of the Character if isPlayerCharacter is true
   // Optional: armorClass, attackBonus, damage
 }
 
