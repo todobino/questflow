@@ -61,7 +61,7 @@ export function DiceRollerTool() {
   const [modifier, setModifier] = useState(0);
   const [advantageState, setAdvantageState] = useState<AdvantageStateType>(null);
   
-  const [activeRollFormulaDisplay, setActiveRollFormulaDisplay] = useState<React.ReactNode>(null);
+  const [activeRollFormulaDisplay, setActiveRollFormulaDisplay] = useState<React.ReactNode>(<span className="text-muted-foreground">Build your roll</span>);
   const [lastRollOutput, setLastRollOutput] = useState<RollResultDetails | null>(null);
   
   const [rollHistory, setRollHistory] = useState<HistoryEntry[]>([]);
@@ -118,7 +118,7 @@ export function DiceRollerTool() {
   useEffect(() => {
     if (diceChain.length === 0 && modifier === 0) {
       setActiveRollFormulaDisplay(<span className="text-muted-foreground">Build your roll</span>);
-      setLastRollOutput(null);
+      // setLastRollOutput(null); // Keep last roll output until new roll or modification
       return;
     }
 
@@ -167,7 +167,6 @@ export function DiceRollerTool() {
     }
     
     setActiveRollFormulaDisplay(<div className="flex flex-wrap items-center justify-center gap-x-0.5">{parts}</div>);
-    // setLastRollOutput(null); // Intentionally removed: keep last result if formula is just being displayed
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [diceChain, modifier]);
 
@@ -196,7 +195,7 @@ export function DiceRollerTool() {
     }
   };
 
- const handleAdvantageToggle = (clickedState: 'advantage' | 'disadvantage') => {
+  const handleAdvantageToggle = (clickedState: 'advantage' | 'disadvantage') => {
     setAdvantageState(prevState => prevState === clickedState ? null : clickedState);
     setLastRollOutput(null); 
   };
@@ -255,11 +254,13 @@ export function DiceRollerTool() {
       let finalCriticalEncountered: 'success' | 'failure' | undefined = undefined;
       let formulaStringParts: string[] = [];
       const allRawRollsCollected: (number|string)[] = [];
+      let firstDiceTypeForOutput : DiceType | null = null;
 
 
       diceChain.forEach((item) => {
         const dieConfig = DICE_CONFIG.find(d => d.type === item.die);
         if (!dieConfig) return;
+        if (!firstDiceTypeForOutput) firstDiceTypeForOutput = item.die;
 
         formulaStringParts.push(`${item.count > 1 ? item.count : ''}${item.die}`);
         
@@ -299,17 +300,19 @@ export function DiceRollerTool() {
       currentTotal += modifier;
       let finalFormula = formulaStringParts.join(' + ');
       if (modifier !== 0) {
-        finalFormula += ` ${modifier > 0 ? '+' : ''} ${Math.abs(modifier)}`;
+        finalFormula += ` ${modifier > 0 ? '+' : ''} ${Math.abs(modifier)}`; // Use Math.abs for the displayed number
         breakdownParts.push(`Mod:${modifier > 0 ? '+' : ''}${modifier}`);
       }
-      if (finalFormula === "") finalFormula = "0"; // Handle case where only modifier was "rolled" but it was 0
+      
+      if (finalFormula === "" && modifier !== 0) finalFormula = String(modifier);
+      else if (finalFormula === "") finalFormula = "0";
 
 
       const resultDetails: RollResultDetails = {
         total: currentTotal,
         breakdown: `${finalFormula} = ${currentTotal} (Rolls: ${breakdownParts.join('; ')})`,
         isCritical: finalCriticalEncountered, 
-        diceType: diceChain[0]?.die || 'd6', 
+        diceType: firstDiceTypeForOutput || 'd6', 
         rawRolls: allRawRollsCollected, 
         chosenRoll: currentTotal - modifier, 
         advantageState: advantageState,
@@ -399,7 +402,7 @@ export function DiceRollerTool() {
               onClick={handleCoinFlip}
               className={cn(
                 "font-semibold transition-transform hover:scale-105 active:scale-95 border-primary",
-                "h-auto aspect-square flex items-center justify-center p-1 text-xs"
+                "h-auto aspect-square flex flex-col items-center justify-center p-1 text-xs"
               )}
               variant="outline"
               disabled={isRolling}
@@ -487,28 +490,31 @@ export function DiceRollerTool() {
                 <span className="text-4xl font-bold">{lastRollOutput.total}</span>
                  {mounted && lastRollOutput.diceType !== 'coin' && lastRollOutput.formula && (
                   <p className="text-muted-foreground text-xs mt-1 text-center whitespace-pre-wrap">
-                    {lastRollOutput.formula.replace(/(\d*d\d+)/g, (match) => {
+                    {lastRollOutput.formula.replace(/(\d*d\d+)/g, (match, _p1, _offset, _string, _groups) => {
                         const dieType = match.includes('d') ? (match.substring(match.indexOf('d')) as DiceType) : 'd20'; // Default for safety
-                        const rollsForThisSegment = lastRollOutput.rawRolls?.filter(r => 
-                            (typeof r === 'string' && r.includes(dieType.substring(1))) || // e.g., "5 (3,5)" contains "5"
-                            (typeof r === 'number' && dieConfig?.type === dieType) // Less precise, best effort
-                        ) || [];
-
+                        
+                        // Correctly declare dieConfig before using it in the filter
                         let dieConfig = DICE_CONFIG.find(dc => dc.type === dieType);
-                        if (!dieConfig && match.includes('d')) { // Attempt to infer if not directly matched
+                        if (!dieConfig && match.includes('d')) { 
                            const sides = parseInt(match.substring(match.indexOf('d') + 1));
                            if(!isNaN(sides)) dieConfig = {type: match as DiceType, sides: sides};
                         }
+
+                        const rollsForThisSegment = lastRollOutput.rawRolls?.filter(r => 
+                            (typeof r === 'string' && r.includes(dieType.substring(1))) || 
+                            (typeof r === 'number' && dieConfig?.type === dieType) 
+                        ) || [];
                         
                         const displayDetails = dieConfig ? getRollDetailsDisplay({
-                            rawRolls: rollsForThisSegment.map(r => typeof r === 'string' ? parseInt(r.split(' ')[0]) : r), // simplify for this display
-                            chosenRoll: typeof lastRollOutput.chosenRoll === 'number' ? lastRollOutput.chosenRoll : undefined, // Needs refinement for multi-die rolls
+                            rawRolls: rollsForThisSegment.map(r => typeof r === 'string' ? parseInt(r.split(' ')[0]) : r),
+                            chosenRoll: typeof lastRollOutput.chosenRoll === 'number' ? lastRollOutput.chosenRoll : undefined, 
                             diceType: dieConfig.type,
                             advantageState: lastRollOutput.advantageState
                         }) : `(${rollsForThisSegment.join(',')})`;
 
                         const countPrefix = match.startsWith('d') ? '1' : match.substring(0, match.indexOf('d'));
-                        return <>{countPrefix > '1' ? countPrefix : ''}{dieType}{displayDetails}</>;
+                        const numCount = parseInt(countPrefix);
+                        return <>{numCount > 1 ? numCount : ''}{dieType}{displayDetails}</>;
                     })}
                     {lastRollOutput.modifier !== 0 ? ` ${lastRollOutput.modifier! > 0 ? '+' : ''} ${Math.abs(lastRollOutput.modifier ?? 0)}` : ''}
                     {` = ${lastRollOutput.total}`}
@@ -522,7 +528,7 @@ export function DiceRollerTool() {
               </>
             ) : (
                 <TooltipProvider>
-                  <div className="flex flex-wrap items-center justify-center gap-x-0.5"> {/* Removed text-lg font-medium */}
+                  <div className="flex flex-wrap items-center justify-center gap-x-0.5">
                       {activeRollFormulaDisplay}
                   </div>
                 </TooltipProvider>
