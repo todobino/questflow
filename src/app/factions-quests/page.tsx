@@ -7,7 +7,13 @@ import { useCampaignContext } from '@/contexts/campaign-context';
 import type { Faction, FactionReputation } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Users, Info } from 'lucide-react';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'; 
+import { Breadcrumbs } from '@/components/shared/breadcrumbs';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const getReputationMilestone = (score: number): {milestone: string, color: string, description: string} => {
   if (score <= -11) return { milestone: 'Hated', color: 'bg-red-700 hover:bg-red-700', description: 'Actively seeks to harm the party; attacks on sight.' };
@@ -47,30 +53,42 @@ export default function FactionsQuestsPage() {
         description={activeCampaign ? `Manage faction reputations and track quests for "${activeCampaign.name}".` : "Please select an active campaign."}
       />
 
-      <Card className="mb-6 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center"><Info className="mr-2 h-5 w-5 text-primary" />Understanding Faction Reputation</CardTitle>
-          <CardDescription>
-            Faction reputation ranges from -20 (Hated) to +20 (Exalted). Your party's actions and choices can influence these scores, impacting interactions, quest availability, and more.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-1 text-sm">
-            {reputationMilestones.map(milestone => {
-              const { color } = getReputationMilestone(milestone.score);
-              return (
-                <li key={milestone.name} className="flex items-start">
-                  <Badge variant="secondary" className={`mr-2 mt-0.5 text-xs ${color} text-white shrink-0`}>{milestone.name}</Badge>
-                  <span className="text-muted-foreground">{milestone.description}</span>
-                </li>
-              );
-            })}
-          </ul>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Higher reputation can unlock new quests, better prices from merchants aligned with the faction, and access to restricted areas or resources. Conversely, low reputation can lead to hostility, higher prices, or even outright conflict.
-          </p>
-        </CardContent>
-      </Card>
+      <Accordion type="single" collapsible className="w-full mb-6 shadow-lg rounded-lg border">
+        <AccordionItem value="item-1" className="border-b-0">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex flex-col items-start text-left">
+                <CardTitle className="flex items-center text-lg"> 
+                    {/* text-lg instead of text-2xl from CardTitle default */}
+                    <Info className="mr-2 h-5 w-5 text-primary" />
+                    Understanding Faction Reputation
+                </CardTitle>
+                <CardDescription className="mt-1 text-sm">
+                    Faction reputation ranges from -20 (Hated) to +20 (Exalted). Click to learn more.
+                </CardDescription>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <p className="text-sm text-muted-foreground mb-3">
+                Your party's actions and choices can influence these scores, impacting interactions, quest availability, and more.
+            </p>
+            <ul className="space-y-1 text-sm">
+              {reputationMilestones.map(milestone => {
+                const { color } = getReputationMilestone(milestone.score);
+                return (
+                  <li key={milestone.name} className="flex items-start">
+                    <Badge variant="secondary" className={`mr-2 mt-0.5 text-xs ${color} text-white shrink-0`}>{milestone.name}</Badge>
+                    <span className="text-muted-foreground">{milestone.description}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Higher reputation can unlock new quests, better prices from merchants aligned with the faction, and access to restricted areas or resources. Conversely, low reputation can lead to hostility, higher prices, or even outright conflict.
+            </p>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
 
       {!activeCampaign ? (
          <Card className="text-center py-12">
