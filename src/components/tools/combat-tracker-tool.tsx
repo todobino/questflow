@@ -46,14 +46,14 @@ import { cn } from '@/lib/utils';
 const initialCombatants: Combatant[] = [];
 
 const playerColorClasses = [
-  'bg-sky-100 dark:bg-sky-800',
-  'bg-emerald-100 dark:bg-emerald-800',
-  'bg-rose-100 dark:bg-rose-800',
-  'bg-amber-100 dark:bg-amber-800',
-  'bg-violet-100 dark:bg-violet-800',
-  'bg-pink-100 dark:bg-pink-800',
-  'bg-teal-100 dark:bg-teal-800',
-  'bg-fuchsia-100 dark:bg-fuchsia-800',
+  'bg-sky-100 dark:bg-sky-800/70',
+  'bg-emerald-100 dark:bg-emerald-800/70',
+  'bg-rose-100 dark:bg-rose-800/70',
+  'bg-amber-100 dark:bg-amber-800/70',
+  'bg-violet-100 dark:bg-violet-800/70',
+  'bg-pink-100 dark:bg-pink-800/70',
+  'bg-teal-100 dark:bg-teal-800/70',
+  'bg-fuchsia-100 dark:bg-fuchsia-800/70',
 ];
 
 
@@ -175,25 +175,38 @@ export function CombatTrackerTool() {
     if (!activeCampaign || !partyCharacters) {
       return;
     }
-
-    let newCombatantsList = [...combatants];
-    let changed = false;
-
+  
+    let updatedCombatants = [...combatants];
+    const partyCombatantIds = new Set(updatedCombatants.filter(c => c.isPlayerCharacter).map(c => c.originalCharacterId));
+  
     partyCharacters
       .filter(char => char.campaignId === activeCampaign.id)
       .forEach((char, index) => {
-        const existingCombatantIndex = newCombatantsList.findIndex(c => c.originalCharacterId === char.id);
-        const displayColor = playerColorClasses[index % playerColorClasses.length];
-
-        if (existingCombatantIndex === -1) {
-          const initiativeRoll = roll1d20() + (char.initiativeModifier ?? 0);
-          newCombatantsList.push({
+        const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
+        const existingCombatantIndex = updatedCombatants.findIndex(c => c.originalCharacterId === char.id);
+        
+        const displayColor = playerColorClasses[partyCharacters.findIndex(pc => pc.id === char.id) % playerColorClasses.length];
+  
+        if (existingCombatantIndex !== -1) {
+          // Update existing player combatant
+          updatedCombatants[existingCombatantIndex] = {
+            ...updatedCombatants[existingCombatantIndex],
+            initiative: newInitiative,
+            hp: char.currentHp ?? char.maxHp ?? updatedCombatants[existingCombatantIndex].hp,
+            maxHp: char.maxHp ?? updatedCombatants[existingCombatantIndex].maxHp,
+            armorClass: char.armorClass,
+            // ensure displayColor is set if it wasn't before
+            displayColor: updatedCombatants[existingCombatantIndex].displayColor || displayColor, 
+          };
+        } else {
+          // Add new player combatant
+          updatedCombatants.push({
             id: String(Date.now() + Math.random() + index),
             name: char.name,
             type: 'player',
             hp: char.currentHp ?? char.maxHp ?? 10,
             maxHp: char.maxHp ?? 10,
-            initiative: initiativeRoll,
+            initiative: newInitiative,
             conditions: [],
             initiativeModifier: char.initiativeModifier ?? 0,
             isPlayerCharacter: true,
@@ -201,29 +214,10 @@ export function CombatTrackerTool() {
             armorClass: char.armorClass,
             displayColor: displayColor,
           });
-          changed = true;
-        } else if (newCombatantsList[existingCombatantIndex].initiative === undefined) {
-          newCombatantsList[existingCombatantIndex] = {
-            ...newCombatantsList[existingCombatantIndex],
-            initiative: roll1d20() + (newCombatantsList[existingCombatantIndex].initiativeModifier ?? 0),
-            armorClass: char.armorClass,
-            displayColor: displayColor,
-            hp: char.currentHp ?? char.maxHp ?? newCombatantsList[existingCombatantIndex].hp,
-            maxHp: char.maxHp ?? newCombatantsList[existingCombatantIndex].maxHp,
-          };
-          changed = true;
-        } else if (!newCombatantsList[existingCombatantIndex].displayColor) {
-           newCombatantsList[existingCombatantIndex] = {
-            ...newCombatantsList[existingCombatantIndex],
-            displayColor: displayColor,
-          };
-          changed = true;
         }
       });
-
-    if (changed) {
-      setCombatants(newCombatantsList);
-    }
+  
+    setCombatants(updatedCombatants);
   };
 
 
@@ -303,11 +297,9 @@ export function CombatTrackerTool() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {!combatStarted && (
-            <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default">
-              <Users className="mr-2 h-4 w-4" /> Add Party
-            </Button>
-          )}
+          <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default">
+            <Users className="mr-2 h-4 w-4" /> Add Party
+          </Button>
         </div>
       </div>
 
@@ -430,8 +422,7 @@ export function CombatTrackerTool() {
                   <div className="flex-grow flex flex-col">
                     <h4 className={cn(
                         "font-semibold text-md",
-                        c.type === 'player' ? 'text-primary-darker' : 'text-destructive-darker',
-                        'dark:text-foreground'
+                         c.type === 'player' ? 'text-primary-darker dark:text-foreground' : 'text-destructive-darker dark:text-foreground'
                       )}
                     >
                       {c.name}
@@ -506,3 +497,4 @@ export function CombatTrackerTool() {
   );
 }
 
+      
