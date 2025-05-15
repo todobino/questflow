@@ -67,7 +67,7 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     disabled: true,
   },
   {
-    title: 'Maps',
+    title: 'Maps & Boards', // Changed from 'Maps'
     href: '/maps',
     icon: MapIcon,
   },
@@ -77,7 +77,7 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     icon: ListOrdered,
   },
   {
-    title: 'Quests',
+    title: 'Questing', // Changed from 'Quests'
     href: '/quests',
     icon: ScrollIconEntry, // Use the alias
     disabled: true,
@@ -97,4 +97,5 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
 
 // Filter out the disabled "Characters" link for actual rendering if it's truly removed
 export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
+
 
