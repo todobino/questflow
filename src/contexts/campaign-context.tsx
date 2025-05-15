@@ -47,7 +47,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 28,
       armorClass: 12,
       initiativeModifier: 2,
-      currentExp: 7200, // EXP towards level 6 (level 5 starts at 6500, level 6 at 14000)
+      currentExp: 7200, 
       nextLevelExp: 14000,
     },
     {
@@ -65,7 +65,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 52,
       armorClass: 15,
       initiativeModifier: 1,
-      currentExp: 8500, // EXP towards level 6
+      currentExp: 8500, 
       nextLevelExp: 14000,
     },
     {
@@ -83,7 +83,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 30,
       armorClass: 16,
       initiativeModifier: 0,
-      currentExp: 3000, // EXP towards level 5 (level 4 starts at 2700, level 5 at 6500)
+      currentExp: 3000, 
       nextLevelExp: 6500,
     },
 ];
@@ -153,7 +153,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       }
       return newCampaigns;
     });
-    // Removed informational toast
+    
   }, []);
 
   const updateCampaign = useCallback((updatedCampaign: Campaign) => {
@@ -164,7 +164,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       }
       return newCampaigns;
     });
-    // Removed informational toast
+    
   }, []);
 
   const deleteCampaign = useCallback((campaignId: string) => {
@@ -192,16 +192,16 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       armorClass: characterData.armorClass || 10,
       initiativeModifier: characterData.initiativeModifier || 0,
       currentExp: characterData.currentExp || 0,
-      nextLevelExp: characterData.nextLevelExp || 1000, // Default to 1000 for next level
+      nextLevelExp: characterData.nextLevelExp || 1000, 
       imageUrl: characterData.imageUrl || `https://placehold.co/400x400.png`,
     };
     setCharactersState(prev => [newCharacter, ...prev]);
-    // Removed informational toast
+    
   }, [activeCampaign, toast]);
 
   const updateCharacter = useCallback((updatedCharacter: Character) => {
     setCharactersState(prev => prev.map(c => c.id === updatedCharacter.id ? updatedCharacter : c));
-    // Removed informational toast
+    
   }, []);
 
   const deleteCharacter = useCallback((characterId: string) => {

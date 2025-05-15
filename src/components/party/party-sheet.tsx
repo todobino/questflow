@@ -31,7 +31,7 @@ export function PartySheet() {
   }, [activeCampaign, characters]);
 
   const totalCurrentHp = partyMembers.reduce((sum, member) => sum + (member.currentHp ?? 0), 0);
-  const totalMaxHp = partyMembers.reduce((sum, member) => sum + (member.maxHp ?? 1), 0); // Use 1 as min to avoid div by zero
+  const totalMaxHp = partyMembers.reduce((sum, member) => sum + (member.maxHp ?? 1), 0); 
   const partyStrengthPercentage = totalMaxHp > 0 ? (totalCurrentHp / totalMaxHp) * 100 : 0;
 
   if (isCampaignLoading) {
@@ -50,7 +50,7 @@ export function PartySheet() {
             <p className="text-xs text-muted-foreground">{Math.round(partyStrengthPercentage)}%</p>
           </div>
           <Progress value={partyStrengthPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
-           {/* Removed HP text display below progress bar */}
+           
         </div>
       )}
 
@@ -125,3 +125,4 @@ export function PartySheet() {
     </div>
   );
 }
+
