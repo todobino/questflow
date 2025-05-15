@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { Outfit } from 'next/font/google'; // Import Outfit
+// Removed Outfit import
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { ThemeProvider } from 'next-themes';
 
-const outfit = Outfit({ subsets: ['latin'], display: 'swap' }); // Instantiate Outfit
+// Removed Outfit instantiation
 
 export const metadata: Metadata = {
   title: 'QuestFlow',
@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${outfit.className} antialiased`}> {/* Apply Outfit className */}
+      <body className="antialiased"> {/* Removed Outfit className */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

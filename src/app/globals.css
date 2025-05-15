@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Remove previous global font-family rule if it exists */
-/* body {
+/* Add global font-family rule for Funnel Sans */
+body {
   font-family: "Funnel Sans", sans-serif; 
-} */
+}
 
 @layer base {
   :root {
