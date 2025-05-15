@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Save, Layers } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 export default function MapsPage() {
   const { activeCampaign } = useCampaignContext();
@@ -52,7 +51,6 @@ export default function MapsPage() {
 
   return (
     <>
-      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="D&amp;D Battle Map Generator"
         description="Create unique, grid-based battle maps for your Dungeons & Dragons sessions using AI. Select a terrain and describe your scene."

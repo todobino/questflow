@@ -30,7 +30,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 const mockSessionNotes: SessionNote[] = [
   { id: 's1', campaignId: '1', date: new Date().toISOString(), title: 'First Steps into Gloomwood', notes: 'The party ventured into Gloomwood forest, encountered goblins, and found a mysterious amulet.', summary: 'Party explored Gloomwood, fought goblins, found an amulet.' },
@@ -116,7 +115,6 @@ export default function JournalPage() {
 
   return (
     <>
-      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Session Log"
         description="Log your session notes, track plot developments, and generate AI-powered summaries."

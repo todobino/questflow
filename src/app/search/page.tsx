@@ -4,13 +4,11 @@
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 
 export default function SearchPage() {
   const { activeCampaign } = useCampaignContext();
   return (
     <>
-      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Search"
         description="This feature is coming soon. Find anything across your campaigns."

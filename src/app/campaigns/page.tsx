@@ -23,7 +23,6 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 export default function CampaignsPage() {
   const { 
@@ -82,7 +81,6 @@ export default function CampaignsPage() {
 
   return (
     <>
-      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Campaign Manager"
         actions={

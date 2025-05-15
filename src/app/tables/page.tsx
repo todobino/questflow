@@ -17,7 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Dices, ListChecks, PlusCircle, Rows, Columns, MessageSquare, Sparkles, Users } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 export default function RandomTablesPage() {
   const { activeCampaign } = useCampaignContext();
@@ -71,7 +70,6 @@ export default function RandomTablesPage() {
 
   return (
     <>
-      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Random Tables"
         description="Generate unexpected twists, mundane details, or crucial plot hooks for your campaigns."

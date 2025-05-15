@@ -7,7 +7,6 @@ import { useCampaignContext } from '@/contexts/campaign-context';
 import type { Faction, FactionReputation } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Users, Info } from 'lucide-react';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import {
   Accordion,
   AccordionContent,
@@ -47,7 +46,6 @@ export default function FactionsQuestsPage() {
 
   return (
     <>
-      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Factions & Quests"
         description={activeCampaign ? `Manage faction reputations and track quests for "${activeCampaign.name}".` : "Please select an active campaign."}

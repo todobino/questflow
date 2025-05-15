@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS, type DndClass } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 
 interface CharacterCardProps {
@@ -209,7 +208,6 @@ export default function PartyManagerPage() {
   
   return (
     <>
-      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Party Roster"
         actions={
