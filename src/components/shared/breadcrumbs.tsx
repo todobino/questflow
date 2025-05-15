@@ -25,7 +25,20 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
 
   const allNavItems = [...CAMPAIGN_MENU_NAV_ITEMS, ...SITE_NAV_ITEMS];
   const currentPage = allNavItems.find(item => item.href === pathname);
-  const pageTitle = currentPage?.title || pathname.split('/').pop()?.replace(/-/g, ' ') || 'Page';
+  let pageTitle = 'Page'; // Default
+  if (currentPage) {
+    pageTitle = currentPage.title;
+  } else if (pathname === '/campaigns') {
+    pageTitle = 'Campaign Manager';
+  } else {
+    // Fallback for dynamic or unmatched paths if needed
+    const pathSegments = pathname.split('/');
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    if (lastSegment) {
+      pageTitle = lastSegment.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+  }
+
 
   const handleCampaignSelect = (campaignId: string) => {
     setCampaignActive(campaignId);
@@ -41,12 +54,16 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
               <PopoverTrigger asChild>
                 <Button
                   size="sm"
-                  className="group flex items-center gap-1 px-2 py-1 h-auto font-semibold bg-muted text-muted-foreground hover:bg-border hover:text-foreground"
+                  className={cn(
+                    "group flex items-center gap-1 px-2 py-1 h-auto font-semibold",
+                    "bg-muted text-foreground border border-border", // Default: light gray bg, black text, gray border
+                    "hover:bg-muted hover:text-foreground hover:border-primary" // Hover: light gray bg, black text, black border
+                  )}
                 >
                   <span>{activeCampaign.name}</span>
                   <ChevronDown
                     className={cn(
-                      "h-4 w-4 text-muted-foreground transition-opacity group-hover:text-foreground"
+                      "h-4 w-4 text-foreground opacity-0 group-hover:opacity-100 transition-opacity" // Black icon, visible on hover
                     )}
                   />
                 </Button>
@@ -102,4 +119,3 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
     </nav>
   );
 }
-
