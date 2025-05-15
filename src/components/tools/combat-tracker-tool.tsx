@@ -127,7 +127,7 @@ export function CombatTrackerTool() {
     }
 
     const maxHpValue = enemyMaxHp !== '' ? parseInt(enemyMaxHp, 10) : currentHpValue;
-    if (isNaN(maxHpValue)) {
+    if (enemyMaxHp !== '' && isNaN(maxHpValue)) {
         toast({ title: 'Invalid Max HP', description: 'Max HP must be a number or empty (will default to Current HP).', variant: 'destructive' });
         return;
     }
@@ -137,8 +137,8 @@ export function CombatTrackerTool() {
     }
 
     const acValue = enemyAC !== '' ? parseInt(enemyAC, 10) : undefined;
-    if (enemyAC !== '' && isNaN(acValue!)) {
-        toast({ title: 'Invalid AC', description: 'Armor Class must be a number or empty.', variant: 'destructive' });
+    if (enemyAC !== '' && (isNaN(acValue!) || acValue! < 0) ) {
+        toast({ title: 'Invalid AC', description: 'Armor Class must be a non-negative number or empty.', variant: 'destructive' });
         return;
     }
 
@@ -149,7 +149,7 @@ export function CombatTrackerTool() {
       const newCombatant: Combatant = {
         id: String(Date.now() + Math.random() + i),
         name: combatantName,
-        type: newCombatantTypeForDialog === 'ally' ? 'player' : 'enemy', // Allies are 'player' type for color, distinguished by isPlayerCharacter
+        type: newCombatantTypeForDialog === 'ally' ? 'player' : 'enemy', 
         hp: currentHpValue,
         maxHp: maxHpValue,
         armorClass: acValue,
@@ -205,8 +205,8 @@ export function CombatTrackerTool() {
         return;
     }
 
-    const pcIndex = partyCharacters.findIndex(pc => pc.id === characterToAdd.id);
-    const displayColor = playerColorClasses[pcIndex % playerColorClasses.length];
+    const pcIndexInParty = partyCharacters.filter(pc => pc.campaignId === activeCampaign?.id).findIndex(pc => pc.id === characterToAdd.id); 
+    const displayColor = playerColorClasses[pcIndexInParty % playerColorClasses.length];
 
 
     const newPlayerCombatant: Combatant = {
@@ -245,6 +245,7 @@ export function CombatTrackerTool() {
         const displayColor = playerColorClasses[pcIndexInParty % playerColorClasses.length];
 
         if (existingCombatantIndex !== -1) {
+          // Update existing combatant
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -255,6 +256,7 @@ export function CombatTrackerTool() {
             displayColor: updatedCombatantsList[existingCombatantIndex].displayColor || displayColor, 
           };
         } else {
+          // Add new combatant
           updatedCombatantsList.push({
             id: String(Date.now() + Math.random() + index),
             name: char.name,
@@ -496,7 +498,7 @@ export function CombatTrackerTool() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddEnemyDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddEnemyOrAlly}>Add {quantity > 1 && newCombatantTypeForDialog === 'enemy' ? 'Enemies' : newCombatantTypeForDialog.charAt(0).toUpperCase() + newCombatantTypeForDialog.slice(1)}</Button>
+            <Button onClick={handleAddEnemyOrAlly}>Add {parseInt(enemyQuantity, 10) > 1 && newCombatantTypeForDialog === 'enemy' ? 'Enemies' : newCombatantTypeForDialog.charAt(0).toUpperCase() + newCombatantTypeForDialog.slice(1)}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -558,12 +560,6 @@ export function CombatTrackerTool() {
                             </span>
                             )}
                             
-                            <div className="mt-auto flex justify-end items-center gap-3 text-xs text-muted-foreground dark:text-gray-400">
-                                <div className="flex items-center">
-                                    <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
-                                     {c.hp} / {c.maxHp}
-                                </div>
-                            </div>
                             <div className="w-full mt-1">
                                 <div className="flex items-center justify-between text-xs mb-0.5">
                                     <span className="flex items-center">
@@ -593,7 +589,7 @@ export function CombatTrackerTool() {
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
-                           <Button 
+                            <Button 
                                 variant="destructive" 
                                 className="w-full" 
                                 size="sm"
@@ -661,7 +657,7 @@ export function CombatTrackerTool() {
 
 
       {combatants.length > 0 && (
-        <div className="shadow-md flex-shrink-0 bg-card border-t p-2">
+         <div className="shadow-md flex-shrink-0 bg-card border-t p-2 mt-2">
             <div className="flex items-center gap-2">
                 {!combatStarted ? (
                     <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
