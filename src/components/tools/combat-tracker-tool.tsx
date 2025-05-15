@@ -149,7 +149,7 @@ export function CombatTrackerTool() {
       id: String(Date.now() + Math.random()),
       name: characterToAdd.name,
       type: 'player',
-      hp: characterToAdd.currentHp ?? characterToAdd.maxHp ?? 10, // Prioritize current HP
+      hp: characterToAdd.currentHp ?? characterToAdd.maxHp ?? 10,
       maxHp: characterToAdd.maxHp ?? 10,
       initiative: initiativeValue,
       conditions: [],
@@ -179,13 +179,13 @@ export function CombatTrackerTool() {
         const existingCombatantIndex = newCombatantsList.findIndex(c => c.originalCharacterId === char.id);
         const displayColor = playerColorClasses[index % playerColorClasses.length];
 
-        if (existingCombatantIndex === -1) { // Character not in combat yet
+        if (existingCombatantIndex === -1) { 
           const initiativeRoll = roll1d20() + (char.initiativeModifier ?? 0);
           newCombatantsList.push({
             id: String(Date.now() + Math.random() + index), 
             name: char.name,
             type: 'player',
-            hp: char.currentHp ?? char.maxHp ?? 10, // Prioritize current HP
+            hp: char.currentHp ?? char.maxHp ?? 10, 
             maxHp: char.maxHp ?? 10,
             initiative: initiativeRoll,
             conditions: [],
@@ -202,7 +202,7 @@ export function CombatTrackerTool() {
             initiative: roll1d20() + (newCombatantsList[existingCombatantIndex].initiativeModifier ?? 0),
             armorClass: char.armorClass, 
             displayColor: displayColor, 
-            hp: char.currentHp ?? char.maxHp ?? newCombatantsList[existingCombatantIndex].hp, // Update HP too
+            hp: char.currentHp ?? char.maxHp ?? newCombatantsList[existingCombatantIndex].hp, 
             maxHp: char.maxHp ?? newCombatantsList[existingCombatantIndex].maxHp,
           };
           changed = true;
@@ -380,7 +380,7 @@ export function CombatTrackerTool() {
       <div className="flex-grow flex flex-col min-h-0">
         <div className="p-1.5 flex-shrink-0">
           <h3 className="flex items-center text-lg font-semibold">
-            <Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order
+            <Users className="mr-2 h-5 w-5 text-primary" /> Initiative
             {combatStarted && round > 0 && (
               <span className="ml-2 text-sm text-muted-foreground font-medium">
                 (Round {round} - {sortedCombatants[turnIndex]?.name}'s turn)
@@ -388,7 +388,7 @@ export function CombatTrackerTool() {
             )}
           </h3>
         </div>
-        <div className="px-1 py-1.5 flex-grow overflow-y-auto">
+        <div className="px-2 py-1.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -397,7 +397,7 @@ export function CombatTrackerTool() {
                 <li 
                   key={c.id} 
                   className={cn(
-                    'flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300',
+                    'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300',
                     c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
                     c.hp <= 0 ? 'opacity-50 grayscale' : '',
                     c.displayColor || 'bg-card' 
@@ -411,7 +411,7 @@ export function CombatTrackerTool() {
                     {c.initiative ?? '-'}
                   </div>
 
-                  <div className="flex-grow space-y-0.5">
+                  <div className="flex-grow flex flex-col">
                     <h4 className={cn(
                         "font-semibold text-md",
                         c.type === 'player' ? 'text-primary-darker' : 'text-destructive-darker', 
@@ -420,48 +420,37 @@ export function CombatTrackerTool() {
                     >
                       {c.name}
                     </h4>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground dark:text-gray-400">
-                      <div className="flex items-center">
-                        <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
-                        HP:
-                        <Input
-                          type="number"
-                          value={String(c.hp)}
-                          onChange={(e) => handleHpChange(c.id, parseInt(e.target.value))}
-                          className="w-12 h-6 ml-1 mr-0.5 text-xs p-1 bg-transparent border-slate-400 dark:border-slate-600 focus:ring-primary focus:border-primary"
-                          min="0"
-                          max={c.maxHp}
-                        />
-                        / {c.maxHp}
-                      </div>
-                      <div className="flex items-center">
-                        <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                        AC: {c.armorClass ?? 'N/A'}
-                      </div>
-                    </div>
                     {c.conditions.length > 0 && (
-                      <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-1">
+                      <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left">
                         {c.conditions.join(', ')}
                       </span>
                     )}
+                     <div className="mt-auto flex justify-end items-center gap-3 text-xs text-muted-foreground dark:text-gray-400">
+                        <div className="flex items-center">
+                            <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
+                             {c.hp} / {c.maxHp}
+                        </div>
+                        <div className="flex items-center">
+                            <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                            {c.armorClass ?? 'N/A'}
+                        </div>
+                    </div>
                   </div>
                   
-                  <div className="flex-shrink-0">
-                    <AlertDialog>
-                      <ShadAlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive h-7 w-7">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </ShadAlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
+                  <AlertDialog>
+                    <ShadAlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon-sm" className="absolute top-1.5 right-1.5 text-destructive hover:text-destructive h-7 w-7">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </ShadAlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </li>
               ))}
             </ul>
@@ -495,4 +484,3 @@ export function CombatTrackerTool() {
     </div>
   );
 }
-
