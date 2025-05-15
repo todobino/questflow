@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-// Removed Manrope import
+import { Outfit } from 'next/font/google'; // Import Outfit
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { ThemeProvider } from 'next-themes';
 
-// Removed manrope constant
+const outfit = Outfit({ subsets: ['latin'], display: 'swap' }); // Instantiate Outfit
 
 export const metadata: Metadata = {
   title: 'QuestFlow',
@@ -18,8 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* Removed manrope.className and manrope.variable */}
-      <body className="antialiased">
+      <body className={`${outfit.className} antialiased`}> {/* Apply Outfit className */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
