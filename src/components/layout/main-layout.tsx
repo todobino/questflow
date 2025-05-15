@@ -13,8 +13,7 @@ import { PartySheet } from '@/components/party/party-sheet';
 import { Dices, Swords, Users } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs';
-
+import { CampaignSwitcher } from '@/components/shared/campaign-switcher'; // Import CampaignSwitcher
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -36,16 +35,15 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     setMounted(true);
   }, []);
 
-  if (!mounted && typeof window !== 'undefined' && isLoading) { // Delay rendering until mounted and loaded to avoid hydration issues
+  if (!mounted && typeof window !== 'undefined' && isLoading) {
     return null;
   }
-
 
   return (
     <SidebarProvider defaultOpen>
       <div className="flex h-screen w-full bg-background text-foreground">
 
-        {mounted && ( // Keep sidebar rendering tied to mounted to avoid issues with useSidebar hook
+        {mounted && (
           <SidebarNav
             campaigns={campaigns}
             activeCampaign={activeCampaign}
@@ -56,23 +54,30 @@ function MainLayoutContent({ children }: MainLayoutProps) {
         <div className="w-[calc(100vw-var(--sidebar-width)-25vw)] md:w-[calc(100vw-var(--sidebar-width)-25vw)] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
             <SidebarTrigger />
-            {/* Mobile header - campaign name or app title */}
-            {mounted && <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>}
+            {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign.name}</h1>}
           </header>
 
-          {/* Desktop Header with Breadcrumbs */}
+          {/* SessionHeader with Campaign Switcher */}
           <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
-            {mounted && campaigns && ( // Ensure campaigns is loaded for breadcrumbs
-              <Breadcrumbs 
-                activeCampaign={activeCampaign} 
-                campaigns={campaigns} 
-                setCampaignActive={handleSetCampaignActive} 
+            {mounted && campaigns && activeCampaign && (
+              <CampaignSwitcher
+                activeCampaign={activeCampaign}
+                campaigns={campaigns}
+                setCampaignActive={handleSetCampaignActive}
+              />
+            )}
+            {mounted && campaigns && !activeCampaign && (
+               <CampaignSwitcher
+                activeCampaign={null}
+                campaigns={campaigns}
+                setCampaignActive={handleSetCampaignActive}
               />
             )}
           </header>
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-            {children} {/* PageHeader will be rendered by individual pages here */}
+            {/* Breadcrumbs will be rendered by individual pages here, below the SessionHeader */}
+            {children}
           </main>
         </div>
 
@@ -114,7 +119,6 @@ function MainLayoutContent({ children }: MainLayoutProps) {
   );
 }
 
-
 export function MainLayout({ children }: MainLayoutProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -123,7 +127,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, []);
 
   if (!mounted) {
-    return null; 
+    return null;
   }
 
   return (

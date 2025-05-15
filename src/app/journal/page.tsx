@@ -29,12 +29,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-// Mock data - in a real app, this would come from a database
-const mockCampaigns: Campaign[] = [
-  { id: '1', name: 'The Whispering Peaks', description: 'An adventure into the mysterious mountains where ancient secrets lie.', isActive: true },
-  { id: '2', name: 'Curse of the Sunken City', description: 'Explore the ruins of a city lost beneath the waves.', isActive: false },
-];
+import { useCampaignContext } from '@/contexts/campaign-context';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 const mockSessionNotes: SessionNote[] = [
   { id: 's1', campaignId: '1', date: new Date().toISOString(), title: 'First Steps into Gloomwood', notes: 'The party ventured into Gloomwood forest, encountered goblins, and found a mysterious amulet.', summary: 'Party explored Gloomwood, fought goblins, found an amulet.' },
@@ -42,8 +38,7 @@ const mockSessionNotes: SessionNote[] = [
 ];
 
 export default function JournalPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | undefined>(mockCampaigns.find(c=>c.isActive)?.id || mockCampaigns[0]?.id);
+  const { campaigns, activeCampaign } = useCampaignContext();
   const [sessionNotes, setSessionNotes] = useState<SessionNote[]>([]);
   const [currentNote, setCurrentNote] = useState<Partial<SessionNote>>({ title: '', notes: ''});
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -51,35 +46,34 @@ export default function JournalPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (selectedCampaignId) {
-      setSessionNotes(mockSessionNotes.filter(note => note.campaignId === selectedCampaignId));
+    if (activeCampaign) {
+      // In a real app, fetch notes for activeCampaign.id
+      setSessionNotes(mockSessionNotes.filter(note => note.campaignId === activeCampaign.id));
     } else {
       setSessionNotes([]);
     }
     setCurrentNote({ title: '', notes: '' });
     setEditingNoteId(null);
-  }, [selectedCampaignId]);
+  }, [activeCampaign]);
 
   const handleSaveNote = () => {
-    if (!currentNote.title || !currentNote.notes || !selectedCampaignId) {
-      toast({ title: 'Error', description: 'Title and notes are required.', variant: 'destructive' });
+    if (!currentNote.title || !currentNote.notes || !activeCampaign) {
+      toast({ title: 'Error', description: 'Title and notes are required, and a campaign must be active.', variant: 'destructive' });
       return;
     }
 
     if (editingNoteId) {
-      setSessionNotes(prev => prev.map(n => n.id === editingNoteId ? { ...n, ...currentNote, campaignId: selectedCampaignId } as SessionNote : n));
-      // Removed informational toast
+      setSessionNotes(prev => prev.map(n => n.id === editingNoteId ? { ...n, ...currentNote, campaignId: activeCampaign.id } as SessionNote : n));
     } else {
       const newNote: SessionNote = {
         id: String(Date.now()),
-        campaignId: selectedCampaignId,
+        campaignId: activeCampaign.id,
         date: new Date().toISOString(),
         title: currentNote.title,
         notes: currentNote.notes,
         summary: currentNote.summary,
       };
       setSessionNotes(prev => [newNote, ...prev]);
-      // Removed informational toast
     }
     setCurrentNote({ title: '', notes: '' });
     setEditingNoteId(null);
@@ -108,7 +102,6 @@ export default function JournalPage() {
     try {
       const result = await generateSessionSummary({ sessionNotes: currentNote.notes });
       setCurrentNote(prev => ({ ...prev, summary: result.summary }));
-      // Removed informational toast
     } catch (error) {
       console.error('Error generating summary:', error);
       toast({ title: 'Error', description: 'Could not generate summary.', variant: 'destructive' });
@@ -123,8 +116,9 @@ export default function JournalPage() {
 
   return (
     <>
+      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
-        title="Campaign Journal"
+        title="Session Log"
         description="Log your session notes, track plot developments, and generate AI-powered summaries."
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -139,37 +133,23 @@ export default function JournalPage() {
                   </Button>
                 )}
               </div>
-              <div className="mt-2">
-                <Select
-                  value={selectedCampaignId}
-                  onValueChange={(value) => setSelectedCampaignId(value)}
-                >
-                  <SelectTrigger className="w-full md:w-[280px]">
-                    <SelectValue placeholder="Select a campaign" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {campaigns.map(campaign => (
-                      <SelectItem key={campaign.id} value={campaign.id}>
-                        {campaign.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {!activeCampaign && (
+                <p className="text-sm text-destructive mt-2">Please select an active campaign from the Campaign Manager to add notes.</p>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <Input
                 placeholder="Session Title (e.g., The Dragon's Lair)"
                 value={currentNote.title || ''}
                 onChange={(e) => setCurrentNote(prev => ({ ...prev, title: e.target.value }))}
-                disabled={!selectedCampaignId}
+                disabled={!activeCampaign}
               />
               <Textarea
                 placeholder="Start writing your session notes here... What happened? Who did what? Any important clues?"
                 className="min-h-[200px] resize-y"
                 value={currentNote.notes || ''}
                 onChange={(e) => setCurrentNote(prev => ({ ...prev, notes: e.target.value }))}
-                disabled={!selectedCampaignId}
+                disabled={!activeCampaign}
               />
               {currentNote.summary && (
                 <div>
@@ -179,11 +159,11 @@ export default function JournalPage() {
               )}
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button onClick={handleGenerateSummary} variant="outline" disabled={isSummarizing || !currentNote.notes || !selectedCampaignId}>
+              <Button onClick={handleGenerateSummary} variant="outline" disabled={isSummarizing || !currentNote.notes || !activeCampaign}>
                 {isSummarizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
                 {isSummarizing ? 'Summarizing...' : 'Generate Summary'}
               </Button>
-              <Button onClick={handleSaveNote} disabled={!currentNote.title || !currentNote.notes || !selectedCampaignId}>
+              <Button onClick={handleSaveNote} disabled={!currentNote.title || !currentNote.notes || !activeCampaign}>
                 <Save className="mr-2 h-4 w-4" /> {editingNoteId ? 'Update Note' : 'Save Note'}
               </Button>
             </CardFooter>
@@ -194,13 +174,13 @@ export default function JournalPage() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Session Log</CardTitle>
-              <CardDescription>Notes for "{campaigns.find(c => c.id === selectedCampaignId)?.name || 'selected campaign'}".</CardDescription>
+              <CardDescription>Notes for "{activeCampaign?.name || 'no active campaign'}".</CardDescription>
             </CardHeader>
             <CardContent>
-              {sessionNotes.length === 0 && selectedCampaignId ? (
+              {sessionNotes.length === 0 && activeCampaign ? (
                 <p className="text-center text-muted-foreground">No session notes for this campaign yet.</p>
-              ) : !selectedCampaignId ? (
-                 <p className="text-center text-muted-foreground">Please select a campaign to view notes.</p>
+              ) : !activeCampaign ? (
+                 <p className="text-center text-muted-foreground">Please select an active campaign to view notes.</p>
               ) : (
                 <ul className="space-y-3 max-h-[400px] overflow-y-auto">
                   {sessionNotes.map(note => (

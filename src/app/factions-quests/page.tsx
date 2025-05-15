@@ -7,6 +7,7 @@ import { useCampaignContext } from '@/contexts/campaign-context';
 import type { Faction, FactionReputation } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Users } from 'lucide-react';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 const getReputationMilestone = (score: number): {milestone: string, color: string} => {
   if (score <= -11) return { milestone: 'Hated', color: 'bg-red-700 hover:bg-red-700' };
@@ -23,80 +24,74 @@ export default function FactionsQuestsPage() {
 
   if (isLoading) {
     return (
-      <PageHeader title="Factions & Quests">
-        <div className="text-center py-12">Loading faction data...</div>
-      </PageHeader>
+      <div className="text-center py-12">Loading faction data...</div>
     );
   }
 
-  if (!activeCampaign) {
-    return (
-      <PageHeader title="Factions & Quests">
-        <Card className="text-center py-12">
+  return (
+    <>
+      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
+      <PageHeader
+        title="Factions & Quests"
+        description={activeCampaign ? `Manage faction reputations and track quests for "${activeCampaign.name}".` : "Please select an active campaign."}
+      />
+
+      {!activeCampaign ? (
+         <Card className="text-center py-12">
           <CardHeader>
             <CardTitle>No Active Campaign</CardTitle>
             <CardDescription>Please select or create an active campaign to view its factions and quests.</CardDescription>
           </CardHeader>
         </Card>
-      </PageHeader>
-    );
-  }
-
-  const campaignFactions = factions.filter(f => f.campaignId === activeCampaign.id);
-
-  return (
-    <>
-      <PageHeader
-        title="Factions & Quests"
-        description={`Manage faction reputations and track quests for "${activeCampaign.name}".`}
-      />
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {campaignFactions.length === 0 ? (
-          <Card className="md:col-span-2 lg:col-span-3">
-            <CardHeader>
-              <CardTitle>No Factions Defined</CardTitle>
-              <CardDescription>There are no factions set up for this campaign yet.</CardDescription>
-            </CardHeader>
-          </Card>
-        ) : (
-          campaignFactions.map(faction => {
-            const reputation = factionReputations.find(
-              rep => rep.factionId === faction.id && rep.campaignId === activeCampaign.id
-            );
-            const repScore = reputation ? reputation.score : 0;
-            const {milestone, color} = getReputationMilestone(repScore);
-
-            return (
-              <Card key={faction.id} className="shadow-lg flex flex-col">
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {factions.filter(f => f.campaignId === activeCampaign.id).length === 0 ? (
+              <Card className="md:col-span-2 lg:col-span-3">
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-xl">{faction.name}</CardTitle>
-                    <Badge variant="secondary" className={`text-xs ${color} text-white`}>{milestone}</Badge>
-                  </div>
-                  <CardDescription className="text-sm text-muted-foreground pt-1">
-                    Reputation: <span className="font-semibold">{repScore >= 0 ? `+${repScore}` : repScore}</span>
-                  </CardDescription>
+                  <CardTitle>No Factions Defined</CardTitle>
+                  <CardDescription>There are no factions set up for this campaign yet.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="text-sm">{faction.description || 'No description available.'}</p>
-                </CardContent>
-                {/* Quest tracking for this faction can be added here later */}
               </Card>
-            );
-          })
-        )}
-      </div>
+            ) : (
+              factions.filter(f => f.campaignId === activeCampaign.id).map(faction => {
+                const reputation = factionReputations.find(
+                  rep => rep.factionId === faction.id && rep.campaignId === activeCampaign.id
+                );
+                const repScore = reputation ? reputation.score : 0;
+                const {milestone, color} = getReputationMilestone(repScore);
 
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Quest Log</CardTitle>
-          <CardDescription>Quest tracking is coming soon!</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>This section will allow you to create, manage, and track quests linked to factions and locations.</p>
-        </CardContent>
-      </Card>
+                return (
+                  <Card key={faction.id} className="shadow-lg flex flex-col">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-xl">{faction.name}</CardTitle>
+                        <Badge variant="secondary" className={`text-xs ${color} text-white`}>{milestone}</Badge>
+                      </div>
+                      <CardDescription className="text-sm text-muted-foreground pt-1">
+                        Reputation: <span className="font-semibold">{repScore >= 0 ? `+${repScore}` : repScore}</span>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                      <p className="text-sm">{faction.description || 'No description available.'}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Quest Log</CardTitle>
+              <CardDescription>Quest tracking is coming soon!</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>This section will allow you to create, manage, and track quests linked to factions and locations.</p>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </>
   );
 }

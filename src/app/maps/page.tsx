@@ -14,8 +14,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Loader2, Save, Layers } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCampaignContext } from '@/contexts/campaign-context';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 export default function MapsPage() {
+  const { activeCampaign } = useCampaignContext();
   const [mapData, setMapData] = useState<OverworldMapData | null>(null);
   const [savedMaps, setSavedMaps] = useState<OverworldMapData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +30,6 @@ export default function MapsPage() {
     try {
       const result = await generateBattleMap(input);
       setMapData(result);
-      // Removed informational toast
     } catch (error) {
       console.error('Error generating map:', error);
       toast({
@@ -42,18 +44,17 @@ export default function MapsPage() {
   const handleSaveMap = () => {
     if (mapData) {
       if (savedMaps.some(savedMap => savedMap.mapImage === mapData.mapImage)) {
-        // Removed informational toast
         return;
       }
       setSavedMaps(prev => [mapData, ...prev]); 
-      // Removed informational toast
     }
   };
 
   return (
     <>
+      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
-        title="D&D Battle Map Generator"
+        title="D&amp;D Battle Map Generator"
         description="Create unique, grid-based battle maps for your Dungeons & Dragons sessions using AI. Select a terrain and describe your scene."
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

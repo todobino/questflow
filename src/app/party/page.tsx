@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS, type DndClass } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 
 interface CharacterCardProps {
@@ -189,13 +190,11 @@ export default function PartyManagerPage() {
     if (isFormOpen && !editingCharacter?.id) {
        setEditingCharacter(prev => ({ ...prev, ...newCharacterData }));
     }
-
-    // Removed informational toast
     setIsRandomizing(false);
   };
   
   const handleLevelUpParty = () => {
-    // Removed informational toast
+    // Placeholder for future functionality
   };
 
   const handleViewProfile = (character: Character) => {
@@ -204,30 +203,15 @@ export default function PartyManagerPage() {
 
   if (isCampaignLoading) {
     return (
-      <PageHeader title="Party Manager">
-        <div className="text-center py-12">Loading party data...</div>
-      </PageHeader>
-    );
-  }
-
-  if (!activeCampaign) {
-    return (
-      <PageHeader title="Party Manager">
-        <Card className="text-center py-12">
-          <CardHeader>
-            <CardTitle>No Active Campaign</CardTitle>
-            <CardDescription>Please select or create an active campaign to manage its party.</CardDescription>
-          </CardHeader>
-        </Card>
-      </PageHeader>
+      <div className="text-center py-12">Loading party data...</div>
     );
   }
   
-
   return (
     <>
+      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
-        title="Party Manager"
+        title="Party Roster"
         actions={
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
@@ -245,7 +229,14 @@ export default function PartyManagerPage() {
         }
       />
 
-      {partyMembers.length === 0 ? (
+      {!activeCampaign ? (
+         <Card className="text-center py-12">
+          <CardHeader>
+            <CardTitle>No Active Campaign</CardTitle>
+            <CardDescription>Please select or create an active campaign to manage its party.</CardDescription>
+          </CardHeader>
+        </Card>
+      ) : partyMembers.length === 0 ? (
         <Card className="text-center py-12 min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed hover:border-primary transition-colors">
           <CardHeader>
             <CardTitle>Party is Empty</CardTitle>

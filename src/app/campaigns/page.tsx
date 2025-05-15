@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useCampaignContext } from '@/contexts/campaign-context'; // Import the context hook
+import { useCampaignContext } from '@/contexts/campaign-context';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 export default function CampaignsPage() {
   const { 
@@ -54,12 +55,11 @@ export default function CampaignsPage() {
     deleteCampaignFromContext(campaignId);
   };
 
-  const handleSaveCampaign = (campaignData: Campaign) => { // campaignData from form doesn't have full ID if new
+  const handleSaveCampaign = (campaignData: Campaign) => {
     if (editingCampaign) {
-      updateCampaign({ ...campaignData, id: editingCampaign.id }); // Ensure ID is correct for update
+      updateCampaign({ ...campaignData, id: editingCampaign.id });
     } else {
-      // For new campaigns, addCampaign in context will assign ID and banner
-      const { id, bannerImageUrl, ...dataToSave } = campaignData; // Exclude dummy id/banner from form
+      const { id, bannerImageUrl, ...dataToSave } = campaignData; 
       addCampaign(dataToSave);
     }
     setIsFormOpen(false);
@@ -76,16 +76,13 @@ export default function CampaignsPage() {
 
   if (isLoading) {
     return (
-      <PageHeader
-        title="Campaign Manager"
-      >
-        <div className="text-center py-12">Loading campaigns...</div>
-      </PageHeader>
+      <div className="text-center py-12">Loading campaigns...</div>
     );
   }
 
   return (
     <>
+      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Campaign Manager"
         actions={
@@ -171,7 +168,7 @@ export default function CampaignsPage() {
 
               <CardFooter 
                 className="flex items-center justify-between gap-2 p-3 border-t border-border bg-muted/50"
-                onClick={(e) => e.stopPropagation()} // Stop propagation for footer clicks too
+                onClick={(e) => e.stopPropagation()}
               >
                  <Label htmlFor={`active-switch-${campaign.id}`} className="text-sm font-medium text-muted-foreground flex-grow cursor-pointer">
                     Active Campaign
@@ -180,7 +177,7 @@ export default function CampaignsPage() {
                     id={`active-switch-${campaign.id}`}
                     checked={campaign.id === activeCampaign?.id}
                     onCheckedChange={() => handleSetActiveSwitch(campaign.id)}
-                    onClick={handleSwitchClick} // Use specific handler for switch
+                    onClick={handleSwitchClick} 
                     aria-label={`Set ${campaign.name} as active campaign`}
                   />
               </CardFooter>

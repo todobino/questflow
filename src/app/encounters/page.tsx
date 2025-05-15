@@ -1,9 +1,16 @@
+
+'use client';
+
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCampaignContext } from '@/contexts/campaign-context';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 
 export default function EncountersPage() {
+  const { activeCampaign } = useCampaignContext();
   return (
     <>
+      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Encounter Builder"
         description="Design and manage combat and social encounters for your campaigns."

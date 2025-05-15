@@ -16,8 +16,11 @@ import { PREDEFINED_TABLES, type RandomTable, type TableItem } from '@/lib/rando
 import { useToast } from '@/hooks/use-toast';
 import { Dices, ListChecks, PlusCircle, Rows, Columns, MessageSquare, Sparkles, Users } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCampaignContext } from '@/contexts/campaign-context';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
 
 export default function RandomTablesPage() {
+  const { activeCampaign } = useCampaignContext();
   const [availableTables, setAvailableTables] = useState<RandomTable[]>(PREDEFINED_TABLES);
   const [selectedTableId, setSelectedTableId] = useState<string | undefined>(PREDEFINED_TABLES[0]?.id);
   const [rolledResult, setRolledResult] = useState<TableItem | null>(null);
@@ -48,12 +51,11 @@ export default function RandomTablesPage() {
       const result = table.items[randomIndex];
       setRolledResult(result);
       setIsRolling(false);
-      // Removed informational toast
     }, 300);
   };
 
   const handleAddNewTable = () => {
-    // Removed informational toast
+    // Placeholder for future functionality
   };
   
   const getIconForTable = (tableId: string) => {
@@ -69,6 +71,7 @@ export default function RandomTablesPage() {
 
   return (
     <>
+      {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
       <PageHeader
         title="Random Tables"
         description="Generate unexpected twists, mundane details, or crucial plot hooks for your campaigns."
