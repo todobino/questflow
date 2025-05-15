@@ -12,7 +12,8 @@ import {
   Swords,
   Settings,
   UsersRound,
-  Scroll as ScrollIconEntry // Explicitly alias Scroll
+  Scroll as ScrollIconEntry, // Explicitly alias Scroll
+  Flag, // Added for Factions
 } from 'lucide-react';
 
 export interface NavItem {
@@ -42,7 +43,7 @@ export const SITE_NAV_ITEMS: NavItem[] = [
 
 export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
-    title: 'Party',
+    title: 'Party Manager', // Changed from 'Party'
     href: '/party',
     icon: UsersRound,
   },
@@ -60,12 +61,18 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     disabled: true,
   },
   {
+    title: 'Factions', // New item
+    href: '/factions', // Assuming a new route
+    icon: Flag,
+    disabled: true,
+  },
+  {
     title: 'Maps',
     href: '/maps',
     icon: MapIcon,
   },
   {
-    title: 'Tables',
+    title: 'Random Tables', // Changed from 'Tables'
     href: '/tables',
     icon: ListOrdered,
   },
@@ -76,12 +83,12 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     disabled: true,
   },
   {
-    title: 'Journal',
+    title: 'Session Journal', // Changed from 'Journal'
     href: '/journal',
     icon: BookMarked,
   },
   {
-    title: 'Lore',
+    title: 'Lore & World', // Changed from 'Lore'
     href: '/lore',
     icon: BookOpenText,
     disabled: true,
