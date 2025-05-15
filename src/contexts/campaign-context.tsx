@@ -397,14 +397,15 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   }, [activeCampaign, sessionLogs, toast, currentSession]);
 
   const endCurrentSession = useCallback(() => {
-    if (!currentSession || currentSession.status !== 'active') {
-      toast({ title: "No Active Session", description: "There is no active session to end.", variant: "destructive" });
+    if (!currentSession || (currentSession.status !== 'active' && currentSession.status !== 'paused')) {
+      toast({ title: "No Active or Paused Session", description: "There is no session to end.", variant: "destructive" });
       return;
     }
     const endedSession = {
       ...currentSession,
       endTime: new Date().toISOString(),
       status: 'completed' as 'completed',
+      pausedTime: undefined, // Ensure pausedTime is cleared when ending
     };
     setSessionLogsState(prevLogs =>
       prevLogs.map(log => (log.id === currentSession.id ? endedSession : log))
