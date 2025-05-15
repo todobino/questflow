@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, ArrowRight, Play, Users, UserPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, ChevronDown, Heart, MinusCircle } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowRight, Play, Users, UserPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, ChevronDown, Heart, MinusCircle, ShieldPlus } from 'lucide-react';
 import type { Combatant, Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -473,24 +473,12 @@ export function CombatTrackerTool() {
                             >
                             {c.name}
                             </h4>
-                           {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
                            
                             {c.conditions.length > 0 && (
                             <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left">
                                 {c.conditions.join(', ')}
                             </span>
                             )}
-                        </div>
-                        
-                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                            {c.armorClass !== undefined && (
-                                <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
-                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                                <span className="font-semibold">{c.armorClass}</span>
-                                </div>
-                            )}
-                        </div>
-                        <div className="absolute bottom-1.5 right-1.5 flex items-center gap-3 text-xs text-muted-foreground dark:text-gray-400">
                              <div className="w-full mt-1">
                                 <div className="flex items-center justify-between text-xs mb-0.5">
                                     <span className="flex items-center">
@@ -508,7 +496,15 @@ export function CombatTrackerTool() {
                                 />
                             </div>
                         </div>
-
+                        
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+                            {c.armorClass !== undefined && (
+                                <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
+                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                                <span className="font-semibold">{c.armorClass}</span>
+                                </div>
+                            )}
+                        </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
