@@ -96,19 +96,16 @@ export function CombatTrackerTool() {
   const { toast } = useToast();
 
   const sortedCombatants = useMemo(() => {
-    // if (combatStarted) { // Sort only if combat has started to maintain manual order before that
       return [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
-    // }
-    // return combatants;
-  }, [combatants]); // Removed combatStarted dependency for now to always sort
+  }, [combatants]); 
 
   const currentTurnCombatantId = combatStarted && sortedCombatants.length > 0 ? sortedCombatants[turnIndex]?.id : null;
 
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddEnemyOrAlly = () => {
-    if (!enemyName || !enemyHp) { // Initiative modifier is now optional, defaults to 0
-      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
+    if (!enemyName || !enemyHp || !enemyInitiative) { 
+      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
       return;
     }
     const quantity = parseInt(enemyQuantity, 10);
@@ -123,9 +120,9 @@ export function CombatTrackerTool() {
         return;
     }
     
-    const initiativeModifierValue = enemyInitiative !== '' ? parseInt(enemyInitiative, 10) : 0;
-    if (enemyInitiative !== '' && isNaN(initiativeModifierValue)) {
-        toast({ title: 'Invalid Initiative Modifier', description: 'Initiative Modifier must be a number or empty (will default to 0).', variant: 'destructive' });
+    const initiativeModifierValue = parseInt(enemyInitiative, 10);
+    if (isNaN(initiativeModifierValue)) {
+        toast({ title: 'Invalid Initiative Modifier', description: 'Initiative Modifier must be a number.', variant: 'destructive' });
         return;
     }
 
@@ -263,18 +260,16 @@ export function CombatTrackerTool() {
         const displayColor = playerColorClasses[pcIndexInParty % playerColorClasses.length];
 
         if (existingCombatantIndex !== -1) {
-          // Update existing combatant's initiative, HP, Max HP, and AC
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
             hp: char.currentHp ?? char.maxHp ?? updatedCombatantsList[existingCombatantIndex].hp,
             maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
-            initiativeModifier: char.initiativeModifier ?? 0, // ensure this is also updated
+            initiativeModifier: char.initiativeModifier ?? 0, 
             displayColor: updatedCombatantsList[existingCombatantIndex].displayColor || displayColor,
           };
         } else {
-          // Add new combatant
           updatedCombatantsList.push({
             id: String(Date.now() + Math.random() + index),
             name: char.name,
@@ -580,8 +575,7 @@ export function CombatTrackerTool() {
                             >
                             {c.name}
                             </h4>
-                             {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
-                           
+                                                      
                             {c.conditions.length > 0 && (
                             <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left truncate">
                                 {c.conditions.join(', ')}
@@ -591,9 +585,10 @@ export function CombatTrackerTool() {
                             <div className="w-full mt-1">
                                 <div className="flex items-center justify-between text-xs mb-0.5 text-muted-foreground">
                                     <span className="flex items-center">
-                                    <Heart className="mr-1 h-3 w-3 text-red-500" /> 
-                                    {c.hp} / {c.maxHp} ({Math.round(hpPercentage)}%)
+                                      <Heart className="mr-1 h-3 w-3 text-red-500" /> 
+                                      {c.hp} / {c.maxHp}
                                     </span>
+                                    <span>{Math.round(hpPercentage)}%</span>
                                 </div>
                                 <Progress 
                                     value={hpPercentage} 
@@ -612,38 +607,13 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
-                             <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive-foreground hover:bg-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCombatantToDeleteId(c.id);
-                                  setIsDeleteConfirmOpen(true);
-                                  setOpenPopoverId(null); // Close popover when opening delete confirm
-                                }}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                <span className="sr-only">Delete {c.name}</span>
-                              </Button>
+                             
                         </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
-                             <Button 
-                                variant="destructive" 
-                                className="w-full" 
-                                size="sm"
-                                onClick={(e) => {
-                                    e.stopPropagation(); 
-                                    setCombatantToDeleteId(c.id);
-                                    setIsDeleteConfirmOpen(true);
-                                    setOpenPopoverId(null); 
-                                }}
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
-                            </Button>
+                             {/* Delete button removed from here */}
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
