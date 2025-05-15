@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { useState, Fragment } from 'react';
+import { SITE_NAV_ITEMS, CAMPAIGN_MENU_NAV_ITEMS } from '@/lib/constants';
+
 
 interface BreadcrumbsProps {
   activeCampaign: Campaign | null;
@@ -22,26 +24,15 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
   const router = useRouter();
   const [popoverOpen, setPopoverOpen] = useState(false);
 
-  const pathSegments = pathname.split('/').filter(segment => segment);
-
   const handleCampaignSelect = (campaignId: string) => {
     setCampaignActive(campaignId);
     setPopoverOpen(false);
-    // Optionally, navigate to the campaign's default page or refresh
-    // For now, just setting active campaign, assuming pages will react.
-  };
-
-  const formatSegment = (segment: string) => {
-    return segment
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
   };
 
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center text-sm h-full">
+    <nav aria-label="Campaign Switcher" className="flex items-center text-sm h-full">
       <ol className="flex items-center space-x-1.5">
-        {activeCampaign && (
+        {activeCampaign ? (
           <li>
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
@@ -53,11 +44,11 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                     "hover:bg-muted hover:text-foreground hover:border-primary"
                   )}
                 >
-                  <span>{activeCampaign.name}</span>
+                  <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
                   <ChevronDown
                     className={cn(
-                      "h-4 w-4 text-neutral-600 dark:text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity",
-                      "group-hover:text-foreground"
+                      "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 transition-opacity",
+                      "group-hover:text-foreground" 
                     )}
                   />
                 </Button>
@@ -100,63 +91,18 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
               </PopoverContent>
             </Popover>
           </li>
+        ) : (
+          <li>
+            <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto px-2 py-1 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+                onClick={() => router.push('/campaigns')}
+            >
+                Select Campaign
+            </Button>
+          </li>
         )}
-
-        {pathSegments.map((segment, index) => {
-          const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
-          const isLastSegment = index === pathSegments.length - 1;
-          const segmentTitle = formatSegment(segment);
-
-          // If no active campaign, and we are on the /campaigns page, don't show further segments.
-          if (!activeCampaign && pathname === '/campaigns' && segment === 'campaigns') {
-            return (
-              <Fragment key={href}>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                <li>
-                  <span className="px-2 py-1 font-semibold text-foreground">
-                    Campaign Manager
-                  </span>
-                </li>
-              </Fragment>
-            );
-          }
-           // If no active campaign, don't render path segments other than campaign manager
-          if (!activeCampaign && segment !== 'campaigns') return null;
-
-
-          return (
-            <Fragment key={href}>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              <li>
-                {isLastSegment ? (
-                  <span className="px-2 py-1 font-semibold text-foreground">
-                    {segmentTitle}
-                  </span>
-                ) : (
-                  <Button
-                    asChild
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto px-2 py-1 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
-                  >
-                    <Link href={href}>{segmentTitle}</Link>
-                  </Button>
-                )}
-              </li>
-            </Fragment>
-          );
-        })}
-         {/* Handle root / or /campaigns when no other segments exist but campaign is active */}
-         {(pathname === '/' || pathname === '/campaigns') && pathSegments.length === 0 && activeCampaign && (
-            <>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                <li>
-                    <span className="px-2 py-1 font-semibold text-foreground">
-                        Campaign Manager
-                    </span>
-                </li>
-            </>
-         )}
       </ol>
     </nav>
   );
