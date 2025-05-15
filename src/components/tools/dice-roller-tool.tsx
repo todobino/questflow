@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added CardHeader, CardTitle
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Minus, Disc3, Dices, History, RotateCcw, Sparkles } from 'lucide-react';
@@ -112,12 +112,12 @@ export function DiceRollerTool() {
 
 
   useEffect(() => {
-    if (!lastRollOutput && diceChain.length === 0 && modifier === 0) {
-      setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>);
-      return;
-    }
     if (!lastRollOutput) { 
       const parts: React.ReactNode[] = [];
+      if (diceChain.length === 0 && modifier === 0) {
+        setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>);
+        return;
+      }
       diceChain.forEach((item, index) => {
         parts.push(
           <Tooltip key={`${item.die}-${index}-tooltip`}>
@@ -236,9 +236,28 @@ export function DiceRollerTool() {
 
   const rollSingleDie = (sides: number): number => Math.floor(Math.random() * sides) + 1;
 
+  const getRollDetailsDisplayForFormula = (result: IndividualDieRollResult, dieType: DiceType): string => {
+    if (result.isD20AdvDis && result.physicalRolls.length === 2 && result.advantageState) {
+        const r1 = result.physicalRolls[0];
+        const r2 = result.physicalRolls[1];
+        const chosen = result.chosenRoll;
+        const advState = result.advantageState;
+
+        const r1Styled = chosen === r1 
+            ? `<strong class="font-bold ${advState === 'advantage' ? 'text-success' : 'text-destructive'}">${r1}</strong>` 
+            : `<span class="text-muted-foreground/70">${r1}</span>`;
+        const r2Styled = chosen === r2 
+            ? `<strong class="font-bold ${advState === 'advantage' ? 'text-success' : 'text-destructive'}">${r2}</strong>`
+            : `<span class="text-muted-foreground/70">${r2}</span>`;
+        
+        return `${dieType}(${r1Styled},${r2Styled})`;
+    }
+    return `${dieType}(${result.chosenRoll})`;
+  };
+
   const executeDiceChainRoll = () => {
     if (diceChain.length === 0 && modifier === 0) {
-       setLastRollOutput({
+      setLastRollOutput({
           id: String(Date.now() + Math.random()),
           total: 0,
           breakdown: "0 = <strong>0</strong>",
@@ -261,15 +280,14 @@ export function DiceRollerTool() {
 
     setIsRolling(primaryDiceTypeForOutput);
     setCriticalMessage(null);
+    setLastRollOutput(null); // Clear previous result before timeout
 
     setTimeout(() => {
       let currentTotalSum = 0;
       const outputRollSegments: RollSegment[] = [];
       let overallIsCritical: 'success' | 'failure' | undefined = undefined;
-      const formulaStringParts: string[] = []; // For the simple formula string
-
+      
       diceChain.forEach((chainItem) => {
-        formulaStringParts.push(`${chainItem.count > 1 ? chainItem.count : ''}${chainItem.die}`);
         const dieConfig = DICE_CONFIG.find(d => d.type === chainItem.die);
         if (!dieConfig) return;
 
@@ -316,61 +334,52 @@ export function DiceRollerTool() {
         });
       });
 
-      let simpleFormulaString = formulaStringParts.join(' + ');
-      if (modifier !== 0) {
-        simpleFormulaString += (formulaStringParts.length > 0 ? (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`) : (modifier > 0 ? `+${modifier}` : String(modifier)));
-      } else if (formulaStringParts.length === 0 && modifier === 0){
-        simpleFormulaString = "0";
-      }
-
       const finalTotalWithModifier = currentTotalSum + modifier;
       const rollId = String(Date.now() + Math.random());
       
       // Construct detailed breakdown string for history and last roll display
       const breakdownPartsForDisplay: string[] = [];
+      let formulaStringParts: string[] = [];
+
       outputRollSegments.forEach(segment => {
         const dieTypeStr = segment.die;
         const count = segment.count;
-
+        
+        const individualRollValues = segment.results.map(r => r.chosenRoll);
+        
         if (segment.results.length > 0 && segment.results[0].isD20AdvDis && segment.results[0].physicalRolls.length === 2 && segment.results[0].advantageState) {
-          // Handle each d20 with adv/dis individually if count > 1
-          const d20FormattedRolls: string[] = [];
-          segment.results.forEach(result => {
-            const r1 = result.physicalRolls[0];
-            const r2 = result.physicalRolls[1];
-            const chosen = result.chosenRoll;
-            const advState = result.advantageState;
-
-            const r1Styled = chosen === r1 
-              ? `<strong class="font-bold ${advState === 'advantage' ? 'text-success' : 'text-destructive'}">${r1}</strong>` 
-              : `<span class="text-muted-foreground/70">${r1}</span>`;
-            const r2Styled = chosen === r2 
-              ? `<strong class="font-bold ${advState === 'advantage' ? 'text-success' : 'text-destructive'}">${r2}</strong>`
-              : `<span class="text-muted-foreground/70">${r2}</span>`;
-            
-            d20FormattedRolls.push(`${dieTypeStr}(${r1Styled},${r2Styled})`);
-          });
-          breakdownPartsForDisplay.push(d20FormattedRolls.join(' + '));
+            const d20FormattedRolls: string[] = [];
+            segment.results.forEach(result => {
+              d20FormattedRolls.push(getRollDetailsDisplayForFormula(result, segment.die));
+            });
+            breakdownPartsForDisplay.push(d20FormattedRolls.join(' + '));
+            formulaStringParts.push(...d20FormattedRolls);
         } else {
-          // For multiple dice of same type (e.g. 2d6) or single non-adv/dis d20
-          const rolls = segment.results.map(r => r.chosenRoll).join('+');
-          breakdownPartsForDisplay.push(`${count > 1 ? count : ''}${dieTypeStr}(${rolls})`);
+          const rollsString = individualRollValues.join('+');
+          breakdownPartsForDisplay.push(`${count > 1 ? count : ''}${dieTypeStr}(${rollsString})`);
+          formulaStringParts.push(`${count > 1 ? count : ''}${dieTypeStr}`);
         }
       });
       
       let finalBreakdownHtmlString = breakdownPartsForDisplay.join(' + ');
+      let simpleFormulaString = formulaStringParts.join(' + ');
 
-      if (simpleFormulaString === "0" && finalTotalWithModifier === 0 && breakdownPartsForDisplay.length === 0 && modifier === 0) {
+      if (diceChain.length === 0 && modifier === 0) { // Handles "0" roll
         finalBreakdownHtmlString = "0 = <strong>0</strong>";
+        simpleFormulaString = "0";
       } else {
-        if (breakdownPartsForDisplay.length > 0 && modifier !== 0) {
-          finalBreakdownHtmlString += ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}`;
-        } else if (breakdownPartsForDisplay.length === 0 && modifier !== 0) { // Only modifier
-          finalBreakdownHtmlString = `${modifier}`;
+        if (modifier !== 0) {
+          const modStr = `${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}`;
+          if (breakdownPartsForDisplay.length > 0) {
+            finalBreakdownHtmlString += ` ${modStr}`;
+          } else { // Only modifier
+            finalBreakdownHtmlString = `${modifier}`;
+          }
+          simpleFormulaString += ` ${modStr}`;
         }
         finalBreakdownHtmlString += ` = <strong>${finalTotalWithModifier}</strong>`;
       }
-
+      
       const resultDetails: RollResultDetails = {
         id: rollId,
         total: finalTotalWithModifier,
@@ -395,7 +404,13 @@ export function DiceRollerTool() {
       } else if (resultDetails.isCritical === 'failure') {
         setCriticalMessage({ text: "CRITICAL FAILURE!", colorClass: "text-destructive" });
       }
+      
       setIsRolling(false);
+      setDiceChain([]);
+      setModifier(0);
+      setModifierInput('0');
+      setAdvantageState(null);
+      // setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>); // Let result persist
     }, 300);
   };
 
@@ -406,8 +421,10 @@ export function DiceRollerTool() {
     setAdvantageState(null);
     setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>);
 
+
     setIsRolling('coin');
     setCriticalMessage(null);
+    setLastRollOutput(null); // Clear dice roll result
 
 
     setTimeout(() => {
@@ -420,7 +437,7 @@ export function DiceRollerTool() {
         breakdown: breakdownString,
         diceType: 'coin',
       };
-      setLastRollOutput(resultDetails);
+      setLastRollOutput(resultDetails); // Show coin flip result in main display
 
       const historyEntry: HistoryEntry = {
         timestamp: new Date(),
@@ -483,11 +500,9 @@ export function DiceRollerTool() {
 
         <CardContent className="space-y-4 px-4 pt-4 pb-0">
            <div className="mb-4 flex min-h-[90px] flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner">
-                {isRolling ? (
-                    isRolling === 'coin' ? 
-                      <Disc3 className="h-10 w-10 animate-spin text-accent" /> : 
-                      <Dices className="h-10 w-10 animate-spin text-accent" />
-                ) : lastRollOutput ? (
+                {isRolling === 'coin' ? <Disc3 className="h-10 w-10 animate-spin text-accent" />
+                 : isRolling ? <Dices className="h-10 w-10 animate-spin text-accent" />
+                 : lastRollOutput ? (
                   <div className="flex items-center justify-center gap-2">
                      {lastRollOutput.diceType === 'coin' ? (
                           <Disc3 className="h-10 w-10 text-foreground" />
@@ -538,7 +553,7 @@ export function DiceRollerTool() {
                         key="coin"
                         onClick={handleCoinFlip}
                         className={cn(
-                            "font-semibold transition-transform hover:scale-105 active:scale-95 text-primary-foreground",
+                            "font-semibold transition-transform hover:scale-105 active:scale-95",
                             "h-auto aspect-square w-full flex flex-col items-center justify-center p-1 text-xs",
                             "border-primary"
                         )}
@@ -556,7 +571,7 @@ export function DiceRollerTool() {
                </Tooltip>
             </TooltipProvider>
           </div>
-
+          
           <div className="flex flex-row flex-wrap items-center gap-2 pt-1">
             <div className="flex items-center gap-1">
               <Button variant="outline" size="icon" onClick={() => handleModifierValueChange(-1)} disabled={!!isRolling} className="h-8 w-8">
@@ -652,36 +667,6 @@ export function DiceRollerTool() {
             )}
           </div>
         </CardContent>
-
-        <div className="bg-muted/50 w-full flex-1 min-h-0 flex flex-col mt-auto">
-          <Separator className="my-0" />
-          {rollHistory.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center p-2 text-xs text-muted-foreground">
-              No rolls yet.
-            </div>
-          ) : (
-            <ScrollArea className="flex-1 text-xs">
-              <div className="p-2 space-y-1.5">
-                {rollHistory.map((entry, index) => (
-                  <React.Fragment key={entry.id}>
-                    <div className="text-xs flex justify-between items-start py-1">
-                      <span
-                        className="whitespace-pre-wrap break-words text-left text-foreground flex-grow mr-2"
-                        dangerouslySetInnerHTML={{ __html: entry.breakdown }}
-                      />
-                      {mounted && (
-                        <span className="text-muted-foreground/80 text-[11px] flex-shrink-0">
-                          {new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
-                        </span>
-                      )}
-                    </div>
-                    {index < rollHistory.length - 1 && <Separator className="my-0 bg-border/70" />}
-                  </React.Fragment>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
-        </div>
       </Card>
 
       <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
@@ -736,4 +721,3 @@ export function DiceRollerTool() {
     </div>
   );
 }
-
