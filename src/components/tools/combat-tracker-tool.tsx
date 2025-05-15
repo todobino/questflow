@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, ChevronDown, Heart, MinusCircle, History, Users as UsersIcon } from 'lucide-react'; // Added UsersIcon
+import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, Trash2, MinusCircle, History, Users as UsersIcon, ShieldPlus, ArrowRight, Heart } from 'lucide-react'; // Added ArrowRight, Heart
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -167,26 +167,26 @@ export function CombatTrackerTool() {
           finalInitiative = roll1d20() + initiativeModifierValue;
       }
       
-      const combatantType = newCombatantTypeForDialog; // 'ally' or 'enemy'
+      const combatantType = newCombatantTypeForDialog; 
       let displayColor = ENEMY_COLOR;
-      let isPlayerType = false; // Differentiates between 'player character' and 'player-controlled ally'
+      let isPlayerType = false; 
 
       if (combatantType === 'ally') {
         displayColor = ALLY_COLOR;
-        isPlayerType = true; // Allies are 'player' type but not 'player characters'
+        isPlayerType = true; 
       }
 
 
       const newCombatant: Combatant = {
         id: String(Date.now() + Math.random() + i),
         name: combatantName,
-        type: isPlayerType ? 'player' : 'enemy', // 'player' for allies, 'enemy' for enemies
+        type: isPlayerType ? 'player' : 'enemy', 
         hp: currentHpValue,
         maxHp: maxHpValue,
         armorClass: acValue,
         initiative: finalInitiative,
         conditions: [],
-        isPlayerCharacter: false, // Allies and Enemies are not true player characters by default
+        isPlayerCharacter: false, 
         displayColor: displayColor,
       };
       newCombatantsBatch.push(newCombatant);
@@ -279,7 +279,7 @@ export function CombatTrackerTool() {
             maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
             initiativeModifier: char.initiativeModifier ?? 0, 
-            displayColor: PLAYER_CHARACTER_COLOR, // Ensure consistent color
+            displayColor: PLAYER_CHARACTER_COLOR, 
           };
         } else {
           // Add new player character
@@ -304,13 +304,10 @@ export function CombatTrackerTool() {
     setCombatants(updatedCombatantsList);
   };
 
-  const removeCombatant = (id: string) => {
-    setCombatants(prev => prev.filter(c => c.id !== id));
-  };
 
   const confirmDeleteCombatant = () => {
     if (combatantToDeleteId) {
-      removeCombatant(combatantToDeleteId);
+      setCombatants(prev => prev.filter(c => c.id !== combatantToDeleteId));
     }
     setIsDeleteConfirmOpen(false);
     setCombatantToDeleteId(null);
@@ -421,7 +418,7 @@ export function CombatTrackerTool() {
                     size="sm" 
                     className="w-full hover:bg-background hover:border-primary hover:text-primary"
                 >
-                    Add Combatant <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
+                    Add Combatant <ArrowRight className="ml-auto h-4 w-4 opacity-50" />
                 </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
@@ -429,7 +426,7 @@ export function CombatTrackerTool() {
                     <UserPlus className="mr-2 h-4 w-4" /> Player
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => { setNewCombatantTypeForDialog('ally'); setIsAddEnemyDialogOpen(true); }}>
-                    <ShieldIcon className="mr-2 h-4 w-4" /> Ally
+                    <ShieldPlus className="mr-2 h-4 w-4" /> Ally
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => { setNewCombatantTypeForDialog('enemy'); setIsAddEnemyDialogOpen(true); }}>
                     <Bot className="mr-2 h-4 w-4" /> Enemy
@@ -639,24 +636,23 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
+                            <Button 
+                                variant="ghost" 
+                                size="icon-sm" 
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive-foreground hover:bg-destructive"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCombatantToDeleteId(c.id);
+                                    setIsDeleteConfirmOpen(true);
+                                }}
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                         </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
-                             <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setCombatantToDeleteId(c.id);
-                                    setIsDeleteConfirmOpen(true);
-                                    setOpenPopoverId(null);
-                                }}
-                            >
-                                <MinusCircle className="mr-2 h-4 w-4" /> Delete {c.name}
-                            </Button>
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
@@ -771,7 +767,7 @@ export function CombatTrackerTool() {
                     </Button>
                 ) : (
                     <Button onClick={nextTurn} className="flex-1" size="sm">
-                        Next Turn <ChevronDown className="ml-2 h-4 w-4" />
+                        Next Turn <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 )}
                   <Button
