@@ -28,10 +28,8 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
   let pageTitle = 'Page'; // Default
   if (currentPage) {
     pageTitle = currentPage.title;
-  } else if (pathname === '/campaigns') {
+  } else if (pathname === '/campaigns' || pathname === '/') {
     pageTitle = 'Campaign Manager';
-  } else if (pathname === '/') {
-    pageTitle = 'Campaign Manager'; // Default to campaigns if root
   }
   else {
     const pathSegments = pathname.split('/');
@@ -58,15 +56,15 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                   size="sm"
                   className={cn(
                     "group flex items-center gap-1 px-2 py-1 h-auto font-semibold",
-                    "bg-muted text-neutral-600 dark:text-neutral-400 border border-border",
+                    "bg-muted text-neutral-600 dark:text-neutral-400 border border-border", 
                     "hover:bg-muted hover:text-foreground hover:border-primary"
                   )}
                 >
                   <span>{activeCampaign.name}</span>
                   <ChevronDown
                     className={cn(
-                      "h-4 w-4 text-neutral-600 dark:text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity",
-                      "group-hover:text-foreground"
+                      "h-4 w-4 text-neutral-600 dark:text-neutral-400", // Dark gray by default, always visible
+                      "group-hover:text-foreground" // Black on hover
                     )}
                   />
                 </Button>
@@ -86,7 +84,7 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                         >
                           <span>{campaign.name}</span>
                           {campaign.id === activeCampaign.id && (
-                            <span className="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-success">
+                             <span className="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-success">
                               <Check className="h-3.5 w-3.5 text-success-foreground" />
                             </span>
                           )}
@@ -120,7 +118,7 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
         <li>
           <span className={cn(
             "px-2 py-1 font-semibold capitalize",
-            "text-foreground"
+             "text-foreground"
           )}>
             {pageTitle}
           </span>
