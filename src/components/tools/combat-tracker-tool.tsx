@@ -85,14 +85,19 @@ export function CombatTrackerTool() {
   const [hitHealAmount, setHitHealAmount] = useState('');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [combatantToDeleteId, setCombatantToDeleteId] = useState<string | null>(null);
+  const [roundChangeMessage, setRoundChangeMessage] = useState<string | null>(null);
 
 
   const { toast } = useToast();
 
   const sortedCombatants = useMemo(() => {
+    // If combat has started, sort by initiative. Otherwise, keep the current order.
     if (combatStarted) {
       return [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
     }
+    // When combat hasn't started, we want to display them sorted if initiatives are present
+    // or in the order they were added if not all have initiative.
+    // The `handleAddPartyToCombat` and manual additions handle initial sorting.
     return combatants;
   }, [combatants, combatStarted]);
 
@@ -108,14 +113,14 @@ export function CombatTrackerTool() {
     const newCombatant: Combatant = {
       id: String(Date.now() + Math.random()),
       name: enemyName,
-      type: newCombatantTypeForDialog === 'ally' ? 'player' : 'enemy',
+      type: newCombatantTypeForDialog === 'ally' ? 'player' : 'enemy', // 'ally' is player-aligned, 'enemy' is hostile
       hp: parseInt(enemyHp),
       maxHp: parseInt(enemyMaxHp),
       initiative: enemyInitiative ? parseInt(enemyInitiative) : undefined,
       conditions: [],
-      isPlayerCharacter: false, // Allies are not full player characters from context
+      isPlayerCharacter: false, 
     };
-    setCombatants(prev => [...prev, newCombatant]);
+    setCombatants(prev => [...prev, newCombatant].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity)));
     setEnemyName(''); setEnemyHp(''); setEnemyMaxHp(''); setEnemyInitiative('');
     setIsAddEnemyDialogOpen(false);
   };
@@ -178,7 +183,7 @@ export function CombatTrackerTool() {
       armorClass: characterToAdd.armorClass,
       displayColor: displayColor,
     };
-    setCombatants(prev => [...prev, newPlayerCombatant]);
+    setCombatants(prev => [...prev, newPlayerCombatant].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity)));
     setSelectedPlayerCharacterId(undefined);
     setPlayerInitiativeInput('');
     setIsAddPlayerDialogOpen(false);
@@ -189,44 +194,50 @@ export function CombatTrackerTool() {
       return;
     }
 
-    let updatedCombatants = [...combatants];
-    const partyCharactersToAdd = partyCharacters.filter(char => char.campaignId === activeCampaign.id);
+    let updatedCombatantsList = [...combatants];
+    const partyInCombat = new Set(updatedCombatantsList.map(c => c.originalCharacterId));
 
-    partyCharactersToAdd.forEach((char, index) => {
-      const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
-      const existingCombatantIndex = updatedCombatants.findIndex(c => c.originalCharacterId === char.id);
-      
-      const pcIndex = partyCharacters.findIndex(pc => pc.id === char.id); 
-      const displayColor = playerColorClasses[pcIndex % playerColorClasses.length];
+    partyCharacters.forEach((char, index) => {
+      if (char.campaignId === activeCampaign.id) {
+        const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
+        const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
+        
+        const pcIndexInParty = partyCharacters.filter(pc => pc.campaignId === activeCampaign.id).findIndex(pc => pc.id === char.id); 
+        const displayColor = playerColorClasses[pcIndexInParty % playerColorClasses.length];
 
-      if (existingCombatantIndex !== -1) {
-        updatedCombatants[existingCombatantIndex] = {
-          ...updatedCombatants[existingCombatantIndex],
-          initiative: newInitiative,
-          hp: char.currentHp ?? char.maxHp ?? updatedCombatants[existingCombatantIndex].hp,
-          maxHp: char.maxHp ?? updatedCombatants[existingCombatantIndex].maxHp,
-          armorClass: char.armorClass,
-          initiativeModifier: char.initiativeModifier ?? 0,
-          displayColor: updatedCombatants[existingCombatantIndex].displayColor || displayColor, 
-        };
-      } else {
-        updatedCombatants.push({
-          id: String(Date.now() + Math.random() + index),
-          name: char.name,
-          type: 'player',
-          hp: char.currentHp ?? char.maxHp ?? 10,
-          maxHp: char.maxHp ?? 10,
-          initiative: newInitiative,
-          conditions: [],
-          initiativeModifier: char.initiativeModifier ?? 0,
-          isPlayerCharacter: true,
-          originalCharacterId: char.id,
-          armorClass: char.armorClass,
-          displayColor: displayColor,
-        });
+        if (existingCombatantIndex !== -1) {
+          // Update existing player combatant
+          updatedCombatantsList[existingCombatantIndex] = {
+            ...updatedCombatantsList[existingCombatantIndex],
+            initiative: newInitiative,
+            hp: char.currentHp ?? char.maxHp ?? updatedCombatantsList[existingCombatantIndex].hp,
+            maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
+            armorClass: char.armorClass,
+            initiativeModifier: char.initiativeModifier ?? 0,
+            displayColor: updatedCombatantsList[existingCombatantIndex].displayColor || displayColor, 
+          };
+        } else {
+          // Add new player combatant
+          updatedCombatantsList.push({
+            id: String(Date.now() + Math.random() + index),
+            name: char.name,
+            type: 'player',
+            hp: char.currentHp ?? char.maxHp ?? 10,
+            maxHp: char.maxHp ?? 10,
+            initiative: newInitiative,
+            conditions: [],
+            initiativeModifier: char.initiativeModifier ?? 0,
+            isPlayerCharacter: true,
+            originalCharacterId: char.id,
+            armorClass: char.armorClass,
+            displayColor: displayColor,
+          });
+        }
       }
     });
-    setCombatants(updatedCombatants);
+    // Sort all combatants by initiative (descending) after adding/updating party
+    updatedCombatantsList.sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
+    setCombatants(updatedCombatantsList);
   };
 
   const removeCombatant = (id: string) => {
@@ -263,6 +274,7 @@ export function CombatTrackerTool() {
       return c;
     }));
     setOpenPopoverId(null); 
+    setHitHealAmount('');
   };
 
   const handleInitiativeChange = (id: string, newInitiativeVal: string) => {
@@ -295,6 +307,7 @@ export function CombatTrackerTool() {
     if (newTurnIndex >= sortedCombatants.length) {
       newTurnIndex = 0;
       newRound += 1;
+      setRoundChangeMessage(`Round ${newRound}`);
     }
     setTurnIndex(newTurnIndex);
     setRound(newRound);
@@ -312,9 +325,23 @@ export function CombatTrackerTool() {
     }
   }, [isAddPlayerDialogOpen, selectedPlayerCharacterId]);
 
+  useEffect(() => {
+    if (roundChangeMessage) {
+      const timer = setTimeout(() => setRoundChangeMessage(null), 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [roundChangeMessage]);
+
 
   return (
     <div className="flex flex-col h-full">
+      {roundChangeMessage && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <span className={`text-5xl sm:text-6xl md:text-7xl font-extrabold animate-explode-text text-foreground drop-shadow-lg`}>
+            {roundChangeMessage}
+          </span>
+        </div>
+      )}
       <div className="flex-shrink-0 mb-2">
          <div className="grid grid-cols-2 gap-2">
             <DropdownMenu>
@@ -345,7 +372,7 @@ export function CombatTrackerTool() {
       <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Player Character to Combat</DialogTitle>
+            <DialogTitle>Add Player to Combat</DialogTitle>
             <DialogDescription>Select a player character from your active party.</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
@@ -454,7 +481,7 @@ export function CombatTrackerTool() {
                             'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300 cursor-pointer',
                             c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
                             c.hp <= 0 ? 'opacity-50 grayscale' : '',
-                            c.isPlayerCharacter ? c.displayColor : (c.type === 'enemy' ? 'bg-red-100 dark:bg-red-800/70' : 'bg-green-100 dark:bg-green-800/70') // Specific color for enemies and allies not from party
+                            c.isPlayerCharacter ? c.displayColor : (c.type === 'enemy' ? 'bg-red-100 dark:bg-red-800/70' : 'bg-green-100 dark:bg-green-800/70') 
                         )}
                         >
                         <div className={cn(
@@ -465,9 +492,9 @@ export function CombatTrackerTool() {
                             {c.initiative ?? '-'}
                         </div>
 
-                        <div className="flex-grow flex flex-col">
+                        <div className="flex-grow flex flex-col min-w-0"> {/* Added min-w-0 here for better truncation */}
                             <h4 className={cn(
-                                "font-semibold text-md",
+                                "font-semibold text-md truncate", // Added truncate
                                 c.type === 'player' ? 'text-primary-darker dark:text-foreground' : 'text-destructive-darker dark:text-foreground'
                             )}
                             >
@@ -475,11 +502,12 @@ export function CombatTrackerTool() {
                             </h4>
                            
                             {c.conditions.length > 0 && (
-                            <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left">
+                            <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left truncate">
                                 {c.conditions.join(', ')}
                             </span>
                             )}
-                             <div className="w-full mt-1">
+                            
+                            <div className="w-full mt-1">
                                 <div className="flex items-center justify-between text-xs mb-0.5">
                                     <span className="flex items-center">
                                     <Heart className="mr-1 h-3 w-3 text-red-500" /> 
@@ -490,7 +518,8 @@ export function CombatTrackerTool() {
                                 <Progress 
                                     value={hpPercentage} 
                                     className={cn(
-                                    "h-1.5 w-full [&>div]:bg-primary dark:[&>div]:bg-foreground",
+                                    "h-1.5 w-full",
+                                     c.type === 'player' ? '[&>div]:bg-primary dark:[&>div]:bg-foreground' : '[&>div]:bg-destructive dark:[&>div]:bg-destructive',
                                     isHpLow && "[&>div]:bg-destructive"
                                     )} 
                                 />
@@ -577,8 +606,8 @@ export function CombatTrackerTool() {
 
 
       {combatants.length > 0 && (
-        <div className="shadow-md flex-shrink-0 bg-card border-t">
-            <div className="p-2 flex items-center gap-2">
+        <div className="shadow-md flex-shrink-0 bg-card border-t p-2">
+            <div className="flex items-center gap-2">
                 {!combatStarted ? (
                     <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
                         <Play className="mr-2 h-4 w-4" /> Start Combat
