@@ -16,17 +16,35 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   useSidebar,
-  SidebarSeparator,
+  SidebarSeparator, // Ensure SidebarSeparator is imported
 } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger as RadixTooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import {
   Briefcase,
   Settings,
   Search as SearchIcon,
+  ChevronDown,
 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useState, useEffect } from 'react';
 import { ThemeToggleButton } from '@/components/shared/theme-toggle-button';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 
 interface SidebarNavProps {
@@ -39,6 +57,7 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
   const pathname = usePathname();
   const { state: sidebarState, isMobile } = useSidebar();
   const [mounted, setMounted] = useState(false);
+  const [campaignSwitcherOpen, setCampaignSwitcherOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -48,6 +67,10 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
   const AppLogoComponent = APP_LOGO_ICON;
   const searchNavItem = SITE_NAV_ITEMS.find(item => item.title === 'Search');
 
+  const handleCampaignSelect = (campaignId: string) => {
+    handleSetCampaignActive(campaignId);
+    setCampaignSwitcherOpen(false);
+  };
 
   return (
     <Sidebar>
@@ -60,10 +83,10 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
         </Link>
       </SidebarHeader>
 
+      <SidebarSeparator /> {/* Added separator here */}
 
       <SidebarContent>
-        {/* Active Campaign Section Removed */}
-
+        {/* Removed Active Campaign Section to integrate into breadcrumbs or other areas */}
         {/* Campaign Menu Nav */}
         <SidebarMenu className="px-2">
           {campaignNavItems.map((item) => (
@@ -73,10 +96,10 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
                     asChild
                     isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
                     tooltip={item.title}
-                    disabled={item.disabled || !activeCampaign}
-                    className={cn("text-sm",(item.disabled || !activeCampaign) && "cursor-not-allowed opacity-50")}
+                    disabled={item.disabled || (!activeCampaign && item.href !== '/campaigns')} // Allow campaigns link even if no active campaign
+                    className={cn("text-sm", (item.disabled || (!activeCampaign && item.href !== '/campaigns')) && "cursor-not-allowed opacity-50")}
                 >
-                    <Link href={(item.disabled || !activeCampaign) ? '#' : item.href}>
+                    <Link href={(item.disabled || (!activeCampaign && item.href !== '/campaigns')) ? '#' : item.href}>
                     <item.icon />
                     <span>{item.title}</span>
                     </Link>
