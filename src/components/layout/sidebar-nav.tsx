@@ -68,17 +68,17 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
               <Link
                   href="/campaigns"
                   className={cn(
-                      "block rounded-md p-2 bg-sidebar-accent border border-sidebar-border hover:border-primary transition-colors group",
+                      "block rounded-md p-2 bg-sidebar-accent border border-border shadow-md hover:border-primary transition-colors group", // Changed border-sidebar-border to border-border and added shadow-md
                       (sidebarState !== 'expanded' && !isMobile) && "flex justify-center items-center h-12"
                   )}
                   aria-label={activeCampaign ? `Manage campaigns. Active: ${activeCampaign.name}` : "Manage Campaigns"}
               >
               {(sidebarState === 'expanded' || isMobile) ? (
                 <>
-                  <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign:</p>
+                  <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign:</p> {/* Changed text and removed font-semibold */}
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 overflow-hidden min-w-0">
-                        <span className="line-clamp-2 text-left break-words leading-tight font-extrabold text-foreground">
+                        <span className="line-clamp-2 text-left break-words leading-tight font-extrabold text-foreground"> {/* Changed font-medium to font-extrabold */}
                           {activeCampaign ? activeCampaign.name : 'No Active Campaign'}
                         </span>
                     </span>
