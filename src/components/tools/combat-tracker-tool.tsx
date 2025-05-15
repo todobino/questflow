@@ -173,20 +173,20 @@ export function CombatTrackerTool() {
 
       if (combatantType === 'ally') {
         displayColor = ALLY_COLOR;
-        isPlayerType = true; 
+        isPlayerType = false; // Allies are not player characters
       }
 
 
       const newCombatant: Combatant = {
         id: String(Date.now() + Math.random() + i),
         name: combatantName,
-        type: isPlayerType ? 'player' : 'enemy', 
+        type: combatantType, 
         hp: currentHpValue,
         maxHp: maxHpValue,
         armorClass: acValue,
         initiative: finalInitiative,
         conditions: [],
-        isPlayerCharacter: false, 
+        isPlayerCharacter: false, // Only player characters are true isPlayerCharacter
         displayColor: displayColor,
       };
       newCombatantsBatch.push(newCombatant);
@@ -411,15 +411,15 @@ export function CombatTrackerTool() {
       )}
       <div className="flex-shrink-0 mb-2">
          <div className="grid grid-cols-2 gap-2">
-            <DropdownMenu>
+           <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full hover:bg-background hover:border-primary hover:text-primary"
-                >
-                    Add Combatant <ArrowRight className="ml-auto h-4 w-4 opacity-50" />
-                </Button>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full hover:bg-background hover:border-primary hover:text-primary"
+                    >
+                        Add Combatant 
+                    </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
                 <DropdownMenuItem onClick={() => {setIsAddPlayerDialogOpen(true); setSelectedPlayerCharacterId(undefined); setPlayerInitiativeInput('');}}>
@@ -434,7 +434,7 @@ export function CombatTrackerTool() {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default">
+            <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default" disabled={combatStarted}>
                 <UsersIcon className="mr-2 h-4 w-4" /> Add Party
             </Button>
         </div>
@@ -611,7 +611,7 @@ export function CombatTrackerTool() {
                             </span>
                             )}
                             
-                            <div className="w-full mt-1">
+                             <div className="w-full mt-1">
                                 <div className="flex items-center justify-between text-xs mb-0.5 text-muted-foreground">
                                     <span className="flex items-center">
                                       <Heart className="mr-1 h-3 w-3 text-red-500" /> 
@@ -623,7 +623,7 @@ export function CombatTrackerTool() {
                                     value={hpPercentage} 
                                     className={cn(
                                     "h-1.5 w-full",
-                                     isHpLow ? '[&>div]:bg-destructive' : (c.type === 'player' && c.isPlayerCharacter ? '[&>div]:bg-primary dark:[&>div]:bg-foreground' : '[&>div]:bg-slate-600 dark:[&>div]:bg-slate-400')
+                                     isHpLow ? '[&>div]:bg-destructive' : (c.displayColor === PLAYER_CHARACTER_COLOR ? '[&>div]:bg-primary dark:[&>div]:bg-foreground' : '[&>div]:bg-slate-600 dark:[&>div]:bg-slate-400')
                                     )} 
                                 />
                             </div>
@@ -636,23 +636,22 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
-                            <Button 
-                                variant="ghost" 
-                                size="icon-sm" 
-                                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive-foreground hover:bg-destructive"
+                        </div>
+                        </li>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3" side="bottom" align="end">
+                        <div className="space-y-3">
+                           <Button 
+                                variant="destructive" 
+                                className="w-full"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setCombatantToDeleteId(c.id);
                                     setIsDeleteConfirmOpen(true);
                                 }}
                             >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
                             </Button>
-                        </div>
-                        </li>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-3" side="bottom" align="end">
-                        <div className="space-y-3">
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
@@ -784,3 +783,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
