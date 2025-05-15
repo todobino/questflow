@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Shield as ShieldIcon, Award } from 'lucide-react';
+import { Shield as ShieldIcon, Award, Users } from 'lucide-react';
 
 export function PartySheet() {
   const {
@@ -30,12 +30,32 @@ export function PartySheet() {
     }
   }, [activeCampaign, characters]);
 
+  const totalCurrentHp = partyMembers.reduce((sum, member) => sum + (member.currentHp ?? 0), 0);
+  const totalMaxHp = partyMembers.reduce((sum, member) => sum + (member.maxHp ?? 1), 0); // Use 1 as min to avoid div by zero
+  const partyStrengthPercentage = totalMaxHp > 0 ? (totalCurrentHp / totalMaxHp) * 100 : 0;
+
   if (isCampaignLoading) {
     return <p className="text-sm text-muted-foreground text-center py-4">Loading party...</p>;
   }
 
   return (
     <div className="h-full flex flex-col">
+      {activeCampaign && partyMembers.length > 0 && (
+        <div className="mb-3 p-3 border rounded-lg bg-card shadow-sm">
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-sm font-semibold flex items-center">
+              <Users className="h-4 w-4 mr-2 text-primary" />
+              Party Strength
+            </p>
+            <p className="text-xs text-muted-foreground">{Math.round(partyStrengthPercentage)}%</p>
+          </div>
+          <Progress value={partyStrengthPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
+           <p className="text-xs text-muted-foreground mt-1 text-center">
+            HP: {totalCurrentHp} / {totalMaxHp}
+          </p>
+        </div>
+      )}
+
       <ScrollArea className="flex-grow">
         <div className="space-y-3 pr-1">
           {partyMembers.map((member) => {
