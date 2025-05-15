@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, ArrowRight, Play, ShieldAlert, Heart, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX, Shield as ShieldIcon } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowRight, Play, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, ChevronDown } from 'lucide-react';
 import type { Combatant, Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -35,6 +35,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger as ShadAlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 
 const initialCombatants: Combatant[] = [];
@@ -165,7 +171,7 @@ export function CombatTrackerTool() {
     setIsAddPlayerDialogOpen(false);
   };
 
-  const handleRollEntirePartyInitiative = () => {
+  const handleAddPartyToCombat = () => {
     if (!activeCampaign || !partyCharacters) {
       return;
     }
@@ -281,18 +287,28 @@ export function CombatTrackerTool() {
     <div className="flex flex-col h-full">
       <div className="flex-shrink-0 mb-2 space-y-2">
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => {setIsAddPlayerDialogOpen(true); setSelectedPlayerCharacterId(undefined); setPlayerInitiativeInput('');}} variant="outline" size="sm">
-            <UserPlus className="mr-2 h-4 w-4" /> Add Player
-          </Button>
-          <Button onClick={() => setIsAddEnemyDialogOpen(true)} variant="outline" size="sm">
-            <Bot className="mr-2 h-4 w-4" /> Add Enemy
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full">
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Combatant <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
+              <DropdownMenuItem onClick={() => {setIsAddPlayerDialogOpen(true); setSelectedPlayerCharacterId(undefined); setPlayerInitiativeInput('');}}>
+                <UserPlus className="mr-2 h-4 w-4" /> Player Character
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsAddEnemyDialogOpen(true)}>
+                <Bot className="mr-2 h-4 w-4" /> Enemy/NPC
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {!combatStarted && (
+            <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default">
+              <Users className="mr-2 h-4 w-4" /> Add Party
+            </Button>
+          )}
         </div>
-        {!combatStarted && (
-          <Button onClick={handleRollEntirePartyInitiative} className="w-full" size="sm" variant="default">
-            <Users className="mr-2 h-4 w-4" /> Add Party
-          </Button>
-        )}
       </div>
 
       <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
@@ -380,7 +396,7 @@ export function CombatTrackerTool() {
       <div className="flex-grow flex flex-col min-h-0">
         <div className="p-1.5 flex-shrink-0">
           <h3 className="flex items-center text-lg font-semibold">
-            <Users className="mr-2 h-5 w-5 text-primary" /> Initiative
+            <Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order
             {combatStarted && round > 0 && (
               <span className="ml-2 text-sm text-muted-foreground font-medium">
                 (Round {round})
@@ -489,3 +505,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
