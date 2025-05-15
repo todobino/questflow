@@ -6,17 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useCampaignContext } from '@/contexts/campaign-context';
 import type { Faction, FactionReputation } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { Users } from 'lucide-react';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs'; // Import Breadcrumbs
+import { Users, Info } from 'lucide-react';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs'; 
 
-const getReputationMilestone = (score: number): {milestone: string, color: string} => {
-  if (score <= -11) return { milestone: 'Hated', color: 'bg-red-700 hover:bg-red-700' };
-  if (score <= -6) return { milestone: 'Hostile', color: 'bg-red-500 hover:bg-red-500' };
-  if (score <= -1) return { milestone: 'Unfriendly', color: 'bg-orange-500 hover:bg-orange-500' };
-  if (score <= 4) return { milestone: 'Neutral', color: 'bg-gray-500 hover:bg-gray-500' };
-  if (score <= 9) return { milestone: 'Friendly', color: 'bg-sky-500 hover:bg-sky-500' };
-  if (score <= 19) return { milestone: 'Allied', color: 'bg-green-500 hover:bg-green-500' };
-  return { milestone: 'Exalted', color: 'bg-green-700 hover:bg-green-700' };
+const getReputationMilestone = (score: number): {milestone: string, color: string, description: string} => {
+  if (score <= -11) return { milestone: 'Hated', color: 'bg-red-700 hover:bg-red-700', description: 'Actively seeks to harm the party; attacks on sight.' };
+  if (score <= -6) return { milestone: 'Hostile', color: 'bg-red-500 hover:bg-red-500', description: 'Uncooperative, may refuse services or aid enemies.' };
+  if (score <= -1) return { milestone: 'Unfriendly', color: 'bg-orange-500 hover:bg-orange-500', description: 'Suspicious, higher prices, less likely to offer help or quests.' };
+  if (score <= 4) return { milestone: 'Neutral', color: 'bg-gray-500 hover:bg-gray-500', description: 'Indifferent, standard interactions and prices.' };
+  if (score <= 9) return { milestone: 'Friendly', color: 'bg-sky-500 hover:bg-sky-500', description: 'Helpful, may offer discounts or minor quests.' };
+  if (score <= 19) return { milestone: 'Allied', color: 'bg-green-500 hover:bg-green-500', description: 'Provides significant aid, important quests, and resources.' };
+  return { milestone: 'Exalted', color: 'bg-green-700 hover:bg-green-700', description: 'Staunch supporters, offering unique benefits and unwavering loyalty.' };
 };
 
 export default function FactionsQuestsPage() {
@@ -28,6 +28,17 @@ export default function FactionsQuestsPage() {
     );
   }
 
+  const reputationMilestones = [
+    { score: -20, name: 'Hated', description: '(-20 to -11): Faction actively works against the party, potentially attacking on sight.' },
+    { score: -10, name: 'Hostile', description: '(-10 to -6): Uncooperative, may refuse services, aid party enemies.' },
+    { score: -5, name: 'Unfriendly', description: '(-5 to -1): Suspicious, higher prices, unlikely to offer help or quests.' },
+    { score: 0, name: 'Neutral', description: '(0 to +4): Indifferent, standard interactions and prices.' },
+    { score: 5, name: 'Friendly', description: '(+5 to +9): Helpful, may offer discounts, minor quests, or useful information.' },
+    { score: 10, name: 'Allied', description: '(+10 to +19): Provides significant aid, access to special quests, and resources.' },
+    { score: 20, name: 'Exalted', description: '(+20): Staunch supporters, offering unique benefits and unwavering loyalty.' },
+  ];
+
+
   return (
     <>
       {activeCampaign && <Breadcrumbs activeCampaign={activeCampaign} />}
@@ -35,6 +46,31 @@ export default function FactionsQuestsPage() {
         title="Factions & Quests"
         description={activeCampaign ? `Manage faction reputations and track quests for "${activeCampaign.name}".` : "Please select an active campaign."}
       />
+
+      <Card className="mb-6 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center"><Info className="mr-2 h-5 w-5 text-primary" />Understanding Faction Reputation</CardTitle>
+          <CardDescription>
+            Faction reputation ranges from -20 (Hated) to +20 (Exalted). Your party's actions and choices can influence these scores, impacting interactions, quest availability, and more.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-1 text-sm">
+            {reputationMilestones.map(milestone => {
+              const { color } = getReputationMilestone(milestone.score);
+              return (
+                <li key={milestone.name} className="flex items-start">
+                  <Badge variant="secondary" className={`mr-2 mt-0.5 text-xs ${color} text-white shrink-0`}>{milestone.name}</Badge>
+                  <span className="text-muted-foreground">{milestone.description}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Higher reputation can unlock new quests, better prices from merchants aligned with the faction, and access to restricted areas or resources. Conversely, low reputation can lead to hostility, higher prices, or even outright conflict.
+          </p>
+        </CardContent>
+      </Card>
 
       {!activeCampaign ? (
          <Card className="text-center py-12">
