@@ -1,15 +1,10 @@
 import type { Metadata } from 'next';
-import { Manrope } from 'next/font/google'; // Import Manrope
+// Removed Manrope import
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { ThemeProvider } from 'next-themes';
 
-const manrope = Manrope({ 
-  subsets: ['latin'],
-  weight: ['400', '500', '700'], // Common weights, adjust as needed
-  display: 'swap',
-  variable: '--font-manrope', 
-});
+// Removed manrope constant
 
 export const metadata: Metadata = {
   title: 'QuestFlow',
@@ -23,14 +18,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${manrope.className} antialiased`}>
+      {/* Removed manrope.className and manrope.variable */}
+      <body className="antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {/* CampaignProvider will be moved into MainLayout */}
           <MainLayout>{children}</MainLayout>
         </ThemeProvider>
       </body>
