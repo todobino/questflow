@@ -83,12 +83,11 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
         </Link>
       </SidebarHeader>
 
-      <SidebarSeparator /> {/* Added separator here */}
+      <SidebarSeparator />
 
       <SidebarContent>
-        {/* Removed Active Campaign Section to integrate into breadcrumbs or other areas */}
         {/* Campaign Menu Nav */}
-        <SidebarMenu className="px-2">
+        <SidebarMenu className="px-2 pt-2"> {/* Added pt-2 here */}
           {campaignNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
                <TooltipProvider>
