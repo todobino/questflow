@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { useState } from 'react'; // Added import for useState
+import { useState } from 'react';
 
 interface BreadcrumbsProps {
   activeCampaign: Campaign | null;
@@ -42,10 +42,10 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="group flex items-center gap-1 px-2 py-1 h-auto font-semibold text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  className="group flex items-center gap-1 px-2 py-1 h-auto font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <span>{activeCampaign.name}</span>
-                  <ChevronDown className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[250px] p-0">
@@ -67,7 +67,7 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                       ))}
                     </CommandGroup>
                     <CommandGroup>
-                       <CommandItem 
+                       <CommandItem
                         onSelect={() => {
                             router.push('/campaigns');
                             setPopoverOpen(false);
@@ -99,4 +99,3 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
     </nav>
   );
 }
-
