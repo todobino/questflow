@@ -289,7 +289,7 @@ export function CombatTrackerTool() {
         <div className="grid grid-cols-2 gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full">
+              <Button variant="outline" size="sm" className="w-full hover:bg-background hover:border-primary hover:text-primary">
                 Add Combatant <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
@@ -505,5 +505,3 @@ export function CombatTrackerTool() {
     </div>
   );
 }
-
-
