@@ -3,10 +3,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card'; // CardHeader and CardTitle removed if not used elsewhere
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, ArrowRight, Play, ShieldAlert, HeartCrack, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices } from 'lucide-react'; // Changed ChevronDown to ArrowRight
+import { PlusCircle, Trash2, ArrowRight, Play, ShieldAlert, HeartCrack, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX } from 'lucide-react';
 import type { Combatant, Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -235,7 +235,7 @@ export function CombatTrackerTool() {
     setRound(newRound);
   };
 
-  const endCombat = () => { // Renamed from resetCombat
+  const endCombat = () => { 
     setRound(0);
     setTurnIndex(0);
     setCombatStarted(false);
@@ -349,13 +349,13 @@ export function CombatTrackerTool() {
         </DialogContent>
       </Dialog>
 
-      <Card className="shadow-md flex-grow flex flex-col min-h-0">
-        <CardHeader className="p-1.5 flex-shrink-0">
-          <CardTitle className="flex items-center text-lg">
+      <div className="flex-grow flex flex-col min-h-0"> {/* Replaces Card */}
+        <div className="p-1.5 flex-shrink-0"> {/* Replaces CardHeader */}
+          <h3 className="flex items-center text-lg font-semibold"> {/* Replaces CardTitle */}
             <Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-1.5 flex-grow overflow-y-auto">
+          </h3>
+        </div>
+        <div className="p-1.5 flex-grow overflow-y-auto"> {/* Replaces CardContent */}
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -412,8 +412,8 @@ export function CombatTrackerTool() {
               ))}
             </ul>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {combatants.length > 0 && (
         <Card className="shadow-md mt-2 flex-shrink-0">
@@ -427,8 +427,13 @@ export function CombatTrackerTool() {
                         Next Turn <ArrowRight className="ml-2 h-4 w-4" /> 
                     </Button>
                 )}
-                  <Button onClick={endCombat} variant="outline" className="w-full" size="sm"> 
-                    <RotateCcw className="mr-2 h-4 w-4" /> End Combat
+                  <Button 
+                    onClick={endCombat} 
+                    variant="outline" 
+                    className="w-full text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive hover:border-destructive" 
+                    size="sm"
+                  > 
+                    <ShieldX className="mr-2 h-4 w-4" /> End Combat
                 </Button>
             </CardContent>
         </Card>
@@ -436,3 +441,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
