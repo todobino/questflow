@@ -40,7 +40,7 @@ export interface SessionNote {
 export interface Combatant {
   id: string;
   name: string;
-  type: 'player' | 'enemy' | 'ally'; // Added 'ally' type
+  type: 'player' | 'enemy' | 'ally';
   hp: number;
   maxHp: number;
   initiative?: number;
@@ -96,4 +96,13 @@ export interface FactionReputation {
   factionId: string;
   campaignId: string; // Ensure reputation is per-campaign
   score: number; // Range: -20 to +20
+}
+
+export interface SessionLog {
+  id: string;
+  campaignId: string;
+  sessionNumber: number;
+  startTime: string; // ISO string
+  endTime?: string; // ISO string, optional if session is active
+  status: 'active' | 'completed';
 }

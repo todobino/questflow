@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Campaign, Character, Faction, FactionReputation } from '@/lib/types'; // Added Faction, FactionReputation
+import type { Campaign, Character, Faction, FactionReputation, SessionLog } from '@/lib/types';
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,7 +23,10 @@ interface CampaignContextType {
   closeProfileDialog: () => void;
   factions: Faction[];
   factionReputations: FactionReputation[];
-  // Add functions to manage factions and reputations later if needed
+  sessionLogs: SessionLog[];
+  currentSession: SessionLog | null;
+  startNewSession: () => void;
+  endCurrentSession: () => void;
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -50,7 +53,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 28,
       armorClass: 12,
       initiativeModifier: 2,
-      currentExp: 7200, 
+      currentExp: 7200,
       nextLevelExp: 14000,
     },
     {
@@ -68,7 +71,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 52,
       armorClass: 15,
       initiativeModifier: 1,
-      currentExp: 8500, 
+      currentExp: 8500,
       nextLevelExp: 14000,
     },
     {
@@ -86,7 +89,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 30,
       armorClass: 16,
       initiativeModifier: 0,
-      currentExp: 3000, 
+      currentExp: 3000,
       nextLevelExp: 6500,
     },
 ];
@@ -109,6 +112,11 @@ const initialMockFactionReputations: FactionReputation[] = [
   { factionId: 'fac6', campaignId: '3', score: -5 },  // Nightwood Cult - Unfriendly
 ];
 
+const initialMockSessionLogs: SessionLog[] = [
+    { id: 'log1', campaignId: '1', sessionNumber: 1, startTime: new Date(Date.now() - 86400000 * 7).toISOString(), endTime: new Date(Date.now() - 86400000 * 7 + 3 * 3600000).toISOString(), status: 'completed' },
+    { id: 'log2', campaignId: '1', sessionNumber: 2, startTime: new Date(Date.now() - 86400000 * 3).toISOString(), endTime: new Date(Date.now() - 86400000 * 3 + 4 * 3600000).toISOString(), status: 'completed' },
+];
+
 
 export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const [campaigns, setCampaignsState] = useState<Campaign[]>([]);
@@ -116,6 +124,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const [characters, setCharactersState] = useState<Character[]>([]);
   const [factions, setFactionsState] = useState<Faction[]>([]);
   const [factionReputations, setFactionReputationsState] = useState<FactionReputation[]>([]);
+  const [sessionLogs, setSessionLogsState] = useState<SessionLog[]>([]);
+  const [currentSession, setCurrentSessionState] = useState<SessionLog | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -127,7 +137,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     const storedCharacters = localStorage.getItem('characters');
     const storedFactions = localStorage.getItem('factions');
     const storedFactionReputations = localStorage.getItem('factionReputations');
-
+    const storedSessionLogs = localStorage.getItem('sessionLogs');
 
     if (storedCampaigns) {
       setCampaignsState(JSON.parse(storedCampaigns));
@@ -153,6 +163,16 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       setFactionReputationsState(initialMockFactionReputations);
     }
 
+    if (storedSessionLogs) {
+      const parsedLogs = JSON.parse(storedSessionLogs) as SessionLog[];
+      setSessionLogsState(parsedLogs);
+      const activeLog = parsedLogs.find(log => log.status === 'active' && log.campaignId === (activeCampaign?.id || ''));
+      setCurrentSessionState(activeLog || null);
+    } else {
+      setSessionLogsState(initialMockSessionLogs);
+    }
+
+
     setIsLoading(false);
   }, []);
 
@@ -161,8 +181,28 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('campaigns', JSON.stringify(campaigns));
       const currentActive = campaigns.find(c => c.isActive) || campaigns[0] || null;
       setActiveCampaignState(currentActive);
+      
+      // When active campaign changes, find if there's an active session for it
+      if (currentActive) {
+          const activeLogForNewCampaign = sessionLogs.find(log => log.status === 'active' && log.campaignId === currentActive.id);
+          setCurrentSessionState(activeLogForNewCampaign || null);
+      } else {
+          setCurrentSessionState(null); // No active campaign, no active session
+      }
+
     }
-  }, [campaigns, isLoading]);
+  }, [campaigns, isLoading]); // Removed sessionLogs from dep array to avoid loop
+
+   useEffect(() => {
+    // This effect ensures that if activeCampaign changes, currentSession updates accordingly.
+    if (!isLoading && activeCampaign) {
+      const activeLogForCurrentCampaign = sessionLogs.find(log => log.status === 'active' && log.campaignId === activeCampaign.id);
+      setCurrentSessionState(activeLogForCurrentCampaign || null);
+    } else if (!isLoading && !activeCampaign) {
+       setCurrentSessionState(null);
+    }
+  }, [activeCampaign, sessionLogs, isLoading]);
+
 
   useEffect(() => {
     if (!isLoading) {
@@ -181,6 +221,12 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('factionReputations', JSON.stringify(factionReputations));
     }
   }, [factionReputations, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem('sessionLogs', JSON.stringify(sessionLogs));
+    }
+  }, [sessionLogs, isLoading]);
 
 
   const setCampaignActive = useCallback((campaignId: string) => {
@@ -205,7 +251,6 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       }
       return newCampaigns;
     });
-    
   }, []);
 
   const updateCampaign = useCallback((updatedCampaign: Campaign) => {
@@ -216,15 +261,14 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       }
       return newCampaigns;
     });
-    
   }, []);
 
   const deleteCampaign = useCallback((campaignId: string) => {
     setCampaignsState(prev => prev.filter(c => c.id !== campaignId));
     setCharactersState(prevChars => prevChars.filter(char => char.campaignId !== campaignId));
-    // Also remove factions and reputations associated with this campaign
     setFactionsState(prevFactions => prevFactions.filter(f => f.campaignId !== campaignId));
     setFactionReputationsState(prevReps => prevReps.filter(r => r.campaignId !== campaignId));
+    setSessionLogsState(prevLogs => prevLogs.filter(log => log.campaignId !== campaignId)); // Also clear session logs for deleted campaign
     toast({
       title: "Campaign Deleted",
       description: "The campaign and its associated data have been successfully deleted.",
@@ -247,22 +291,19 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       armorClass: characterData.armorClass || 10,
       initiativeModifier: characterData.initiativeModifier || 0,
       currentExp: characterData.currentExp || 0,
-      nextLevelExp: characterData.nextLevelExp || 1000, 
+      nextLevelExp: characterData.nextLevelExp || 1000,
       imageUrl: characterData.imageUrl || `https://placehold.co/400x400.png`,
     };
     setCharactersState(prev => [newCharacter, ...prev]);
-    
   }, [activeCampaign, toast]);
 
   const updateCharacter = useCallback((updatedCharacter: Character) => {
     setCharactersState(prev => prev.map(c => c.id === updatedCharacter.id ? updatedCharacter : c));
-    
   }, []);
 
   const deleteCharacter = useCallback((characterId: string) => {
     setCharactersState(prev => prev.filter(c => c.id !== characterId));
-    toast({ title: "Character Removed", description: "The character has been removed.", variant: "destructive" });
-  }, [toast]);
+  }, []);
 
   const openProfileDialog = useCallback((character: Character) => {
     setSelectedCharacterForProfile(character);
@@ -274,6 +315,58 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     setIsProfileOpen(false);
   }, []);
 
+  const startNewSession = useCallback(() => {
+    if (!activeCampaign) {
+      toast({ title: "Error", description: "No active campaign to start a session for.", variant: "destructive" });
+      return;
+    }
+    if (currentSession && currentSession.campaignId === activeCampaign.id && currentSession.status === 'active') {
+      toast({ title: "Info", description: "A session is already active for this campaign.", variant: "default" }); // Use default or a specific info variant
+      return;
+    }
+
+    // End any other active session for potentially different campaign
+    if (currentSession && currentSession.status === 'active') {
+        setSessionLogsState(prevLogs =>
+        prevLogs.map(log =>
+            log.id === currentSession.id
+            ? { ...log, endTime: new Date().toISOString(), status: 'completed' }
+            : log
+        )
+        );
+    }
+
+    const campaignSessionLogs = sessionLogs.filter(log => log.campaignId === activeCampaign.id);
+    const lastSessionNumber = campaignSessionLogs.reduce((max, log) => Math.max(max, log.sessionNumber), 0);
+
+    const newSession: SessionLog = {
+      id: String(Date.now()),
+      campaignId: activeCampaign.id,
+      sessionNumber: lastSessionNumber + 1,
+      startTime: new Date().toISOString(),
+      status: 'active',
+    };
+    setSessionLogsState(prevLogs => [newSession, ...prevLogs]);
+    setCurrentSessionState(newSession);
+  }, [activeCampaign, currentSession, sessionLogs, toast]);
+
+  const endCurrentSession = useCallback(() => {
+    if (!currentSession || currentSession.status !== 'active') {
+      toast({ title: "Error", description: "No active session to end.", variant: "destructive" });
+      return;
+    }
+    const endedSession = {
+      ...currentSession,
+      endTime: new Date().toISOString(),
+      status: 'completed' as 'completed',
+    };
+    setSessionLogsState(prevLogs =>
+      prevLogs.map(log => (log.id === currentSession.id ? endedSession : log))
+    );
+    setCurrentSessionState(null);
+  }, [currentSession, toast]);
+
+
   if (isLoading && typeof window === 'undefined') {
     return null;
   }
@@ -283,7 +376,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       campaigns, activeCampaign, setCampaignActive, addCampaign, updateCampaign, deleteCampaign, isLoading,
       characters, addCharacter, updateCharacter, deleteCharacter,
       selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog,
-      factions, factionReputations
+      factions, factionReputations,
+      sessionLogs, currentSession, startNewSession, endCurrentSession
     }}>
       {children}
     </CampaignContext.Provider>

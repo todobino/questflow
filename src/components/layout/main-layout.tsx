@@ -13,7 +13,8 @@ import { PartySheet } from '@/components/party/party-sheet';
 import { Dices, Swords, Users } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
-import { CampaignSwitcher } from '@/components/shared/campaign-switcher'; // Import CampaignSwitcher
+import { CampaignSwitcher } from '@/components/shared/campaign-switcher';
+import { SessionTools } from '@/components/shared/session-tools'; // Import SessionTools
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -38,6 +39,9 @@ function MainLayoutContent({ children }: MainLayoutProps) {
   if (!mounted && typeof window !== 'undefined' && isLoading) {
     return null;
   }
+  if (!mounted) { // Prevents rendering on server or during first client pass if not ready
+    return null;
+  }
 
   return (
     <SidebarProvider defaultOpen>
@@ -57,26 +61,19 @@ function MainLayoutContent({ children }: MainLayoutProps) {
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign.name}</h1>}
           </header>
 
-          {/* SessionHeader with Campaign Switcher */}
-          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
-            {mounted && campaigns && activeCampaign && (
+          {/* SessionHeader */}
+          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center justify-between border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
+            {mounted && campaigns && (
               <CampaignSwitcher
                 activeCampaign={activeCampaign}
                 campaigns={campaigns}
                 setCampaignActive={handleSetCampaignActive}
               />
             )}
-            {mounted && campaigns && !activeCampaign && (
-               <CampaignSwitcher
-                activeCampaign={null}
-                campaigns={campaigns}
-                setCampaignActive={handleSetCampaignActive}
-              />
-            )}
+            {mounted && <SessionTools />}
           </header>
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-            {/* Breadcrumbs will be rendered by individual pages here, below the SessionHeader */}
             {children}
           </main>
         </div>
