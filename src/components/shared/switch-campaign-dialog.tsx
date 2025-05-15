@@ -38,15 +38,16 @@ export function SwitchCampaignDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2 sm:gap-0">
-          <AlertDialogCancel onClick={onClose}>Cancel Switch</AlertDialogCancel>
+          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
           <Button variant="outline" onClick={onPauseAndSwitch}>
-            Pause Session & Switch
+            Pause & Switch
           </Button>
           <AlertDialogAction onClick={onEndAndSwitch}>
-            End Session & Switch
+            End & Switch
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
+
