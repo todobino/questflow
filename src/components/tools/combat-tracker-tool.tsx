@@ -24,7 +24,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"; // Removed DialogTrigger as it's not used directly here
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,7 +56,6 @@ export function CombatTrackerTool() {
 
 
   const [editingCombatantId, setEditingCombatantId] = useState<string | null>(null);
-  // Removed editFormName, editFormHp, etc. as inline editing handles this
 
   const [round, setRound] = useState(0);
   const [turnIndex, setTurnIndex] = useState(0);
@@ -149,13 +148,12 @@ export function CombatTrackerTool() {
     };
     setCombatants(prev => [...prev, newPlayerCombatant]);
     setSelectedPlayerCharacterId(undefined);
-    setPlayerInitiativeInput(''); // Reset initiative input
+    setPlayerInitiativeInput(''); 
     setIsAddPlayerDialogOpen(false);
   };
 
   const handleRollEntirePartyInitiative = () => {
     if (!activeCampaign || !partyCharacters) {
-      // Toast removed by user request
       return;
     }
 
@@ -198,7 +196,7 @@ export function CombatTrackerTool() {
   };
 
   const handleHpChange = (id: string, newHp: number) => {
-    setCombatants(prev => prev.map(c => c.id === id ? { ...c, hp: Math.max(0, Math.min(c.maxHp, newHp)) } : c));
+    setCombatants(prev => prev.map(c => c.id === id ? { ...c, hp: Math.max(0, Math.min(c.maxHp ?? Infinity, newHp)) } : c));
   };
 
   const handleInitiativeChange = (id: string, newInitiativeVal: string) => {
@@ -242,12 +240,10 @@ export function CombatTrackerTool() {
     setRound(0);
     setTurnIndex(0);
     setCombatStarted(false);
-    // Restore HP to max HP for all combatants on reset
     setCombatants(prev => prev.map(c => ({...c, hp: c.maxHp, conditions: [], initiative: undefined })));
   };
 
   useEffect(() => {
-    // Reset player initiative input when selected player changes or dialog opens/closes
     if (isAddPlayerDialogOpen) {
       setPlayerInitiativeInput('');
     }
@@ -280,7 +276,7 @@ export function CombatTrackerTool() {
             <Select 
               onValueChange={(value) => {
                 setSelectedPlayerCharacterId(value);
-                setPlayerInitiativeInput(''); // Reset initiative when player changes
+                setPlayerInitiativeInput(''); 
               }} 
               value={selectedPlayerCharacterId}
             >
@@ -401,7 +397,7 @@ export function CombatTrackerTool() {
                           HP:
                           <Input
                             type="number"
-                            value={c.hp}
+                            value={String(c.hp)}
                             onChange={(e) => handleHpChange(c.id, parseInt(e.target.value))}
                             className="w-12 h-6 ml-1 mr-1 text-xs p-1"
                             min="0"
@@ -422,7 +418,7 @@ export function CombatTrackerTool() {
 
       {combatants.length > 0 && (
         <Card className="shadow-md">
-            <CardContent className="space-y-2 pt-4">
+            <CardContent className="space-y-2 pt-6"> {/* Adjusted pt-6 to pt-4 if CardHeader was removed, keeping pt-4 */}
                 {!combatStarted ? (
                     <Button onClick={startCombat} className="w-full bg-success text-success-foreground hover:bg-success/90" size="sm">
                         <Play className="mr-2 h-4 w-4" /> Start Combat
@@ -436,13 +432,9 @@ export function CombatTrackerTool() {
                     <RotateCcw className="mr-2 h-4 w-4" /> Reset Combat
                 </Button>
             </CardContent>
-              {combatStarted && (
-                <CardFooter className="text-xs text-muted-foreground pt-2 justify-center">
-                    Round: {round}
-                </CardFooter>
-            )}
         </Card>
       )}
     </div>
   );
 }
+
