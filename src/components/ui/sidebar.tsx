@@ -369,7 +369,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn("flex flex-col gap-2", className)} 
+      className={cn("flex flex-col gap-2 p-2", className)} 
       {...props}
     />
   )
@@ -399,7 +399,7 @@ const SidebarSeparator = React.forwardRef<
     <Separator
       ref={ref}
       data-sidebar="separator"
-      className={cn("mx-2 w-auto bg-sidebar-border", className)}
+      className={cn("bg-sidebar-border", className)} // Removed mx-2 and w-auto
       {...props}
     />
   )
