@@ -3,13 +3,23 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Minus, Disc3, Dices } from 'lucide-react';
+import { Plus, Minus, Disc3, Dices, History } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetClose,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import { format, isToday, isYesterday, parseISO, formatISOWithOptions } from 'date-fns';
 
 
 type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
@@ -45,7 +55,7 @@ interface RollResultDetails {
 
 
 type HistoryEntry = {
-  timestamp: Date;
+  timestamp: Date; // Store as Date object
 } & RollResultDetails;
 
 
@@ -78,6 +88,8 @@ export function DiceRollerTool() {
   const [modifierInput, setModifierInput] = useState('0');
   const [criticalMessage, setCriticalMessage] = useState<CriticalMessage | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isHistorySheetOpen, setIsHistorySheetOpen] = useState(false);
+
 
   const modifierInputRef = useRef<HTMLInputElement>(null);
 
@@ -322,20 +334,11 @@ export function DiceRollerTool() {
       if (diceChain.length === 0 && modifier === 0) currentFormula = "0";
       else if (diceChain.length === 0 && modifier !== 0) currentFormula = String(modifier);
       else if (modifier !== 0) currentFormula += (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`);
-
-      let historyBreakdownString = outputRollSegments.map(segment => {
-        const chosenRollsForSegment = segment.results.map(r => r.chosenRoll);
-        return `${segment.count > 1 ? segment.count : ''}${segment.die}(${chosenRollsForSegment.join('+')})`;
-      }).join(' + ');
-
-      if (outputRollSegments.length === 0 && modifier !== 0) {
-        historyBreakdownString = `${modifier > 0 ? '+' : ''}${modifier}`;
-      } else if (modifier !== 0) {
-        historyBreakdownString += (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`);
-      } else if (outputRollSegments.length === 0 && modifier === 0) {
-        historyBreakdownString = "0";
-      }
-      historyBreakdownString += ` = ${finalTotalWithModifier}`;
+      
+      const historyBreakdownString = outputRollSegments.map(segment => {
+        const rollsSum = segment.results.reduce((sum, r) => sum + r.chosenRoll, 0);
+        return `${segment.count > 1 ? segment.count : ''}${segment.die}(${segment.results.map(r => r.chosenRoll).join('+')})`;
+      }).join(' + ') + (modifier !== 0 ? (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`) : '') + ` = ${finalTotalWithModifier}`;
 
 
       const resultDetails: RollResultDetails = {
@@ -363,24 +366,24 @@ export function DiceRollerTool() {
       } else if (resultDetails.isCritical === 'failure') {
         setCriticalMessage({ text: "CRITICAL FAILURE!", colorClass: "text-destructive" });
       }
-
-      // Don't reset the chain or modifier here so the user can see what they rolled
-      // They will be reset when the user interacts with the builder again
-      // setDiceChain([]);
-      // setModifier(0);
-      // setAdvantageState(null); 
-
-
+      
+      setDiceChain([]);
+      setModifier(0);
+      setAdvantageState(null); 
+      // No longer setting lastRollOutput to null here, to persist the result.
+      // No longer resetting activeRollFormulaDisplay here.
+      
       setIsRolling(false);
     }, 300);
   };
 
   const handleCoinFlip = () => {
     setIsRolling(true);
-    setDiceChain([]);
+    setDiceChain([]); // Clear dice chain for coin flip
     setModifier(0);
     setAdvantageState(null);
     setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>);
+
 
     setTimeout(() => {
       const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
@@ -403,6 +406,25 @@ export function DiceRollerTool() {
     }, 300);
   };
 
+  const groupRollsByDay = (history: HistoryEntry[]): Record<string, HistoryEntry[]> => {
+    return history.reduce((acc, roll) => {
+      const dateKey = formatISOWithOptions(roll.timestamp, { representation: 'date' });
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(roll);
+      return acc;
+    }, {} as Record<string, HistoryEntry[]>);
+  };
+
+  const formatDisplayDate = (dateStr: string) => {
+    if (!mounted) return dateStr; // Prevent hydration mismatch
+    const date = parseISO(dateStr);
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
+    return format(date, "MMMM d, yyyy");
+  };
+
 
   return (
     <div className="h-full flex flex-col">
@@ -414,15 +436,26 @@ export function DiceRollerTool() {
         </div>
       )}
       <Card className="shadow-md flex flex-col flex-1 min-h-0">
+        <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
+          <CardTitle className="flex items-center text-lg">
+            <Dices className="mr-2 h-5 w-5 text-primary" />
+            Dice Roller
+          </CardTitle>
+          <Button variant="ghost" size="icon" onClick={() => setIsHistorySheetOpen(true)} className="h-8 w-8">
+            <History className="h-4 w-4" />
+            <span className="sr-only">Roll History</span>
+          </Button>
+        </CardHeader>
+
         <CardContent className="space-y-4 px-4 pt-4 pb-0">
 
           <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
-            {isRolling && (!lastRollOutput || lastRollOutput.diceType !== 'coin') ? (
+            {isRolling ? (
               <Disc3 className="h-10 w-10 animate-spin text-accent" />
             ) : lastRollOutput ? (
               <div className="flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
-                  {lastRollOutput.diceType === 'coin' ?
+                  {lastRollOutput.diceType === 'coin' ? 
                     <Disc3 className="h-10 w-10 text-foreground" /> :
                     <Dices className="h-10 w-10 text-foreground" />
                   }
@@ -433,23 +466,19 @@ export function DiceRollerTool() {
                     {lastRollOutput.total}
                   </span>
                 </div>
-                {lastRollOutput.diceType !== 'coin' && lastRollOutput.rollSegments && (
-                  <p className="text-xs text-muted-foreground mt-1 text-center">
+                {lastRollOutput.diceType !== 'coin' && lastRollOutput.rollSegments && typeof lastRollOutput.total === 'number' && (
+                   <p className="text-xs text-foreground mt-1 text-center">
                     {lastRollOutput.rollSegments.map((segment, segIdx) => (
                       <React.Fragment key={`${lastRollOutput.id}-seg-${segIdx}`}>
                         {segIdx > 0 ? ' + ' : ''}
                         {segment.count > 1 ? `${segment.count}` : ''}{segment.die}
-                        {segment.results.map((res, resIdx) => (
-                          <React.Fragment key={`${lastRollOutput.id}-seg-${segIdx}-res-${resIdx}`}>
-                            {getRollDetailsDisplay(res)}
-                          </React.Fragment>
-                        ))}
+                        {segment.results.map((res) => getRollDetailsDisplay(res))}
                       </React.Fragment>
                     ))}
                     {lastRollOutput.modifier !== undefined && lastRollOutput.modifier !== 0 && (
                       ` ${lastRollOutput.modifier! > 0 ? '+' : '-'} ${Math.abs(lastRollOutput.modifier!)}`
                     )}
-                    {lastRollOutput.rollSegments && lastRollOutput.rollSegments.length > 0 && typeof lastRollOutput.total === 'number' && lastRollOutput.total !==0 && ` = ${lastRollOutput.total}`}
+                     = {lastRollOutput.total}
                   </p>
                 )}
               </div>
@@ -486,30 +515,28 @@ export function DiceRollerTool() {
               );
             })}
             <TooltipProvider>
-              <Tooltip>
+               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    key="coin"
-                    onClick={handleCoinFlip}
-                    className={cn(
-                      "font-semibold transition-transform hover:scale-105 active:scale-95",
-                      "h-auto aspect-square flex flex-col items-center justify-center p-1 text-xs text-primary-foreground",
-                      "border-primary"
-                    )}
-                    variant="default"
-                    disabled={isRolling}
-                    aria-label="Flip a coin"
-                  >
-                    <div className="flex flex-col items-center justify-center">
-                      <Disc3 className="h-5 w-5" />
-                      <span className="text-[10px] mt-0">FLIP</span>
-                    </div>
-                  </Button>
+                    <Button
+                        key="coin"
+                        onClick={handleCoinFlip}
+                        className={cn(
+                        "font-semibold transition-transform hover:scale-105 active:scale-95",
+                        "h-auto aspect-square w-full flex flex-col items-center justify-center p-1 text-xs",
+                        "border-primary" // Black border for Coin Flip button
+                        )}
+                        variant="default"
+                        disabled={isRolling}
+                        aria-label="Flip a coin"
+                    >
+                        <div className="flex flex-col items-center justify-center">
+                            <Disc3 className="h-5 w-5 text-primary-foreground" />
+                            <span className="text-[10px] mt-0 text-primary-foreground">FLIP</span>
+                        </div>
+                    </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>Heads or Tails</p>
-                </TooltipContent>
-              </Tooltip>
+                <TooltipContent><p>Heads or Tails</p></TooltipContent>
+               </Tooltip>
             </TooltipProvider>
           </div>
 
@@ -543,46 +570,46 @@ export function DiceRollerTool() {
               </Button>
             </div>
             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => handleAdvantageToggle('advantage')}
-                    disabled={isRolling}
-                    className={cn(
-                      "text-xs px-3 py-1.5 h-8 transition-colors duration-150 flex-1 font-bold",
-                      advantageState === 'advantage'
-                        ? "bg-success text-success-foreground border-success"
-                        : "border-success text-success hover:bg-success hover:text-success-foreground"
-                    )}
-                    variant={advantageState === 'advantage' ? 'success' : 'outline'}
-                    aria-pressed={advantageState === 'advantage'}
-                  >
-                    ADV.
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Higher of 2d20</p></TooltipContent>
-              </Tooltip>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Button
+                            onClick={() => handleAdvantageToggle('advantage')}
+                            disabled={isRolling}
+                            className={cn(
+                                "text-xs px-3 py-1.5 h-8 transition-colors duration-150 flex-1 font-bold",
+                                advantageState === 'advantage' 
+                                ? "bg-success text-success-foreground border-success" 
+                                : "border-success text-success hover:bg-success hover:text-success-foreground"
+                            )}
+                            variant={advantageState === 'advantage' ? 'success' : 'outline'}
+                            aria-pressed={advantageState === 'advantage'}
+                            >
+                            ADV.
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Higher of 2d20</p></TooltipContent>
+                 </Tooltip>
             </TooltipProvider>
             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => handleAdvantageToggle('disadvantage')}
-                    disabled={isRolling}
-                    className={cn(
-                      "text-xs px-3 py-1.5 h-8 transition-colors duration-150 flex-1 font-bold",
-                      advantageState === 'disadvantage'
-                        ? "bg-destructive text-destructive-foreground border-destructive"
-                        : "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    )}
-                    variant={advantageState === 'disadvantage' ? 'destructive' : 'outline'}
-                    aria-pressed={advantageState === 'disadvantage'}
-                  >
-                    DIS.
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Lower of 2d20</p></TooltipContent>
-              </Tooltip>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            onClick={() => handleAdvantageToggle('disadvantage')}
+                            disabled={isRolling}
+                            className={cn(
+                                "text-xs px-3 py-1.5 h-8 transition-colors duration-150 flex-1 font-bold",
+                                advantageState === 'disadvantage' 
+                                ? "bg-destructive text-destructive-foreground border-destructive" 
+                                : "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            )}
+                            variant={advantageState === 'disadvantage' ? 'destructive' : 'outline'}
+                            aria-pressed={advantageState === 'disadvantage'}
+                            >
+                            DIS.
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Lower of 2d20</p></TooltipContent>
+                 </Tooltip>
             </TooltipProvider>
           </div>
 
@@ -592,42 +619,58 @@ export function DiceRollerTool() {
             </Button>
           </div>
         </CardContent>
-
-        <Separator className="my-0" />
-
-        <div className="bg-muted/50 w-full flex-1 min-h-0 flex flex-col">
-          {rollHistory.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center p-2 text-xs text-muted-foreground">
-              No rolls yet.
-            </div>
-          ) : (
-            <ScrollArea className="flex-1 text-xs">
-              <div className="p-2">
-                {rollHistory.map((entry, index) => (
-                  <React.Fragment key={entry.id}>
-                    <div className="flex justify-between items-center py-1">
-                      <span className="whitespace-pre-wrap break-words text-left text-foreground">
-                        {entry.breakdown}
-                      </span>
-                      {mounted && (
-                        <span className="text-muted-foreground ml-2 flex-shrink-0">
-                          {new Date(entry.timestamp).toLocaleTimeString([], {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true,
-                          })}
-                        </span>
-                      )}
-                    </div>
-                    {index < rollHistory.length - 1 && <Separator className="my-1 bg-border/70" />}
-                  </React.Fragment>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
-        </div>
+        
       </Card>
+
+      <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle>Roll History</SheetTitle>
+            <SheetDescription>Your most recent dice rolls and coin flips.</SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(100vh-120px)]">
+            <div className="p-4 space-y-3">
+              {rollHistory.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">No rolls yet.</p>
+              ) : (
+                Object.entries(groupRollsByDay(rollHistory))
+                  .sort(([dateA], [dateB]) => dateB.localeCompare(dateA)) // Sort by date, newest first
+                  .map(([date, rolls]) => (
+                    <div key={date}>
+                      <h4 className="font-semibold text-sm mb-1.5 text-muted-foreground">{formatDisplayDate(date)}</h4>
+                      <ul className="space-y-1.5">
+                        {rolls.map((entry, index) => (
+                          <React.Fragment key={entry.id}>
+                            <li className="text-xs flex justify-between items-center py-1">
+                              <span className="whitespace-pre-wrap break-words text-left text-foreground">
+                                {entry.breakdown}
+                              </span>
+                              {mounted && (
+                                <span className="text-muted-foreground ml-2 flex-shrink-0">
+                                  {format(entry.timestamp, "p")}
+                                </span>
+                              )}
+                            </li>
+                            {index < rolls.length - 1 && <Separator className="my-0.5 bg-border/70" />}
+                          </React.Fragment>
+                        ))}
+                      </ul>
+                       {/* Add a separator between date groups, but not after the last one */}
+                        { Object.keys(groupRollsByDay(rollHistory)).sort((a,b) => b.localeCompare(a)).indexOf(date) < Object.keys(groupRollsByDay(rollHistory)).length - 1 &&
+                            <Separator className="my-3" />
+                        }
+                    </div>
+                  ))
+              )}
+            </div>
+          </ScrollArea>
+          <SheetFooter className="p-4 border-t">
+            <SheetClose asChild>
+              <Button variant="outline">Close</Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
-
