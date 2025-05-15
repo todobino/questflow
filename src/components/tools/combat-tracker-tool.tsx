@@ -110,8 +110,8 @@ export function CombatTrackerTool() {
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddEnemyOrAlly = () => {
-    if (!enemyName || !enemyHp) {
-      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
+    if (!enemyName || !enemyHp || !enemyInitiative) {
+      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
       return;
     }
     const quantity = parseInt(enemyQuantity, 10);
@@ -262,12 +262,13 @@ export function CombatTrackerTool() {
 
     let updatedCombatantsList = [...combatants];
 
-    partyCharacters.forEach((char, index) => {
+    partyCharacters.forEach((char) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
         
         if (existingCombatantIndex !== -1) {
+          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -278,8 +279,9 @@ export function CombatTrackerTool() {
             displayColor: PLAYER_CHARACTER_COLOR,
           };
         } else {
+          // Add new player character
           updatedCombatantsList.push({
-            id: String(Date.now() + Math.random() + index), 
+            id: String(Date.now() + Math.random() + updatedCombatantsList.length), 
             name: char.name,
             type: 'player',
             hp: char.currentHp ?? char.maxHp ?? 10,
@@ -610,9 +612,8 @@ export function CombatTrackerTool() {
                                 <div className="flex items-center justify-between text-xs mb-0.5">
                                     <span className="flex items-center text-muted-foreground">
                                       <Heart className="mr-1 h-3 w-3 text-red-500" /> 
-                                      {c.hp} / {c.maxHp}
+                                      {c.hp} / {c.maxHp} ({Math.round(hpPercentage)}%)
                                     </span>
-                                    <span className="text-muted-foreground">{Math.round(hpPercentage)}%</span>
                                 </div>
                                 <Progress 
                                     value={hpPercentage} 
@@ -631,25 +632,24 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
-                             <Button 
-                                variant="ghost" 
-                                size="icon-sm" 
-                                className="h-7 w-7 p-0 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setCombatantToDeleteId(c.id);
-                                    setIsDeleteConfirmOpen(true);
-                                    setOpenPopoverId(null); // Close popover when opening delete dialog
-                                }}
-                            >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                <span className="sr-only">Delete {c.name}</span>
-                            </Button>
                         </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
+                             <Button 
+                                variant="destructive" 
+                                className="w-full"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Important to prevent popover from closing
+                                    setCombatantToDeleteId(c.id);
+                                    setIsDeleteConfirmOpen(true);
+                                    setOpenPopoverId(null);
+                                }}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
+                            </Button>
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
@@ -704,7 +704,7 @@ export function CombatTrackerTool() {
       </AlertDialog>
 
        <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
-        <SheetContent side="left" className="w-full sm:max-w-md p-0">
+        <SheetContent side="right" className="w-full sm:max-w-md p-0">
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Encounter History</SheetTitle>
             <SheetDescription>
@@ -781,4 +781,5 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
 
