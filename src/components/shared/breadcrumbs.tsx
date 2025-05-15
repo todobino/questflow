@@ -30,8 +30,10 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
     pageTitle = currentPage.title;
   } else if (pathname === '/campaigns') {
     pageTitle = 'Campaign Manager';
-  } else {
-    // Fallback for dynamic or unmatched paths if needed
+  } else if (pathname === '/') {
+    pageTitle = 'Dashboard'; // Or whatever your root page title is
+  }
+  else {
     const pathSegments = pathname.split('/');
     const lastSegment = pathSegments[pathSegments.length - 1];
     if (lastSegment) {
@@ -42,7 +44,7 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
 
   const handleCampaignSelect = (campaignId: string) => {
     setCampaignActive(campaignId);
-    setPopoverOpen(false); // Close popover after selection
+    setPopoverOpen(false);
   };
 
   return (
@@ -56,14 +58,14 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                   size="sm"
                   className={cn(
                     "group flex items-center gap-1 px-2 py-1 h-auto font-semibold",
-                    "bg-muted text-muted-foreground border border-border", 
+                    "bg-muted text-neutral-600 dark:text-neutral-400 border border-border", 
                     "hover:bg-muted hover:text-foreground hover:border-primary" 
                   )}
                 >
                   <span>{activeCampaign.name}</span>
                   <ChevronDown
                     className={cn(
-                      "h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-foreground transition-opacity" 
+                      "h-4 w-4 text-neutral-600 dark:text-neutral-400 group-hover:text-foreground"
                     )}
                   />
                 </Button>
@@ -94,7 +96,7 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                         }}
                         className="cursor-pointer"
                        >
-                        View All Campaigns
+                        Manage All Campaigns
                        </CommandItem>
                     </CommandGroup>
                   </CommandList>
@@ -104,14 +106,17 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
           </li>
         )}
 
-        {activeCampaign && (
+        {activeCampaign && pathname !== '/campaigns' && (
           <li className="flex items-center">
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </li>
         )}
 
         <li>
-          <span className="px-2 py-1 font-semibold text-foreground capitalize">
+          <span className={cn(
+            "px-2 py-1 font-semibold capitalize",
+            activeCampaign && pathname !== '/campaigns' ? "text-foreground" : "text-foreground" // Ensures current page is always foreground
+          )}>
             {pageTitle}
           </span>
         </li>
