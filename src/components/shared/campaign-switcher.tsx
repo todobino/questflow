@@ -30,7 +30,7 @@ export function CampaignSwitcher({ activeCampaign, campaigns, setCampaignActive 
       <Button
         variant="ghost"
         size="sm"
-        className="h-auto px-2 py-1 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="h-auto px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground" // Removed font-semibold
         onClick={() => router.push('/campaigns')}
       >
         Select Campaign
@@ -44,7 +44,7 @@ export function CampaignSwitcher({ activeCampaign, campaigns, setCampaignActive 
         <Button
           size="sm"
           className={cn(
-            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border",
+            "group flex items-center gap-1 px-2 py-1 h-auto border", // Removed font-semibold
             "bg-muted text-neutral-600 dark:text-neutral-400 border-border",
             "hover:bg-muted hover:text-foreground hover:border-primary"
           )}
@@ -52,8 +52,8 @@ export function CampaignSwitcher({ activeCampaign, campaigns, setCampaignActive 
           <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400", // Default: gray, always visible
-              "group-hover:text-foreground" // On button hover: black
+              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400",
+              "group-hover:text-foreground" 
             )}
           />
         </Button>
