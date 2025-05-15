@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
-import { DM_Sans } from 'next/font/google'; // Import DM_Sans
+import { Manrope } from 'next/font/google'; // Import Manrope
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
-// import { CampaignProvider } from '@/contexts/campaign-context'; // Removed from here
 import { ThemeProvider } from 'next-themes';
 
-const dmSans = DM_Sans({ 
+const manrope = Manrope({ 
   subsets: ['latin'],
-  weight: ['400', '500', '700'], 
+  weight: ['400', '500', '700'], // Common weights, adjust as needed
   display: 'swap',
-  variable: '--font-dm-sans', 
+  variable: '--font-manrope', 
 });
 
 export const metadata: Metadata = {
@@ -24,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.className} antialiased`}>
+      <body className={`${manrope.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
