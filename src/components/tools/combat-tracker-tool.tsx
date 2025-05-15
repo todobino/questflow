@@ -112,8 +112,8 @@ export function CombatTrackerTool() {
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddEnemyOrAlly = () => {
-    if (!enemyName || !enemyHp) {
-      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
+    if (!enemyName || !enemyHp || !enemyInitiative) {
+      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
       return;
     }
     const quantity = parseInt(enemyQuantity, 10);
@@ -173,7 +173,7 @@ export function CombatTrackerTool() {
       
       const combatantType = newCombatantTypeForDialog;
       let displayColor = ENEMY_COLOR;
-      let typeForCombatant: 'enemy' | 'player' = 'enemy'; // Default to enemy
+      let typeForCombatant: 'enemy' | 'player' = 'enemy'; 
 
       if (combatantType === 'ally') {
         displayColor = ALLY_COLOR;
@@ -268,13 +268,12 @@ export function CombatTrackerTool() {
 
     let updatedCombatantsList = [...combatants];
 
-    partyCharacters.forEach((char) => {
+    partyCharacters.forEach((char, index) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
         
         if (existingCombatantIndex !== -1) {
-          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -285,7 +284,6 @@ export function CombatTrackerTool() {
             displayColor: PLAYER_CHARACTER_COLOR,
           };
         } else {
-          // Add new player character
           updatedCombatantsList.push({
             id: String(Date.now() + Math.random() + updatedCombatantsList.length), 
             name: char.name,
@@ -520,7 +518,7 @@ export function CombatTrackerTool() {
                 </div>
                 <div>
                     <Label htmlFor="new-combatant-initiative-modifier" className="text-xs">Initiative Modifier</Label>
-                    <Input id="new-combatant-initiative-modifier" type="number" value={enemyInitiative} onChange={e => setEnemyInitiative(e.target.value)} placeholder="e.g., 2 or -1" bsSize="sm"/>
+                    <Input id="new-combatant-initiative-modifier" type="number" value={enemyInitiative} onChange={e => setEnemyInitiative(e.target.value)} placeholder="e.g., 0, 2 or -1" bsSize="sm"/>
                 </div>
             </div>
             <div>
@@ -571,7 +569,7 @@ export function CombatTrackerTool() {
             </Button>
         </CardHeader>
         <Separator />
-        <CardContent className="p-1.5 flex-grow overflow-y-auto">
+        <CardContent className="p-2 flex-grow overflow-y-auto">
             {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
             ) : (
@@ -619,7 +617,7 @@ export function CombatTrackerTool() {
                             <div className="w-full mt-1">
                                 <div className="flex items-center justify-between text-xs mb-0.5">
                                     <span className="flex items-center text-muted-foreground">
-                                        {c.hp} / {c.maxHp} ({Math.round(hpPercentage)}%)
+                                        HP: {c.hp} / {c.maxHp} ({Math.round(hpPercentage)}%)
                                     </span>
                                 </div>
                                 <Progress 
@@ -639,24 +637,23 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
-                           <Button 
-                                variant="ghost" 
-                                size="icon-sm"
-                                className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
-                                onClick={(e) => {
-                                    e.stopPropagation(); 
-                                    setCombatantToDeleteId(c.id);
-                                    setIsDeleteConfirmOpen(true);
-                                }}
-                            >
-                                <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
                         </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
-                            {/* Remove delete button from here */}
+                            <Button 
+                                variant="destructive" 
+                                className="w-full"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCombatantToDeleteId(c.id);
+                                    setIsDeleteConfirmOpen(true);
+                                    setOpenPopoverId(null); 
+                                }}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
+                            </Button>
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
