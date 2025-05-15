@@ -45,6 +45,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 
@@ -71,9 +72,10 @@ export function CombatTrackerTool() {
   const [enemyName, setEnemyName] = useState('');
   const [enemyHp, setEnemyHp] = useState('');
   const [enemyMaxHp, setEnemyMaxHp] = useState('');
-  const [enemyInitiative, setEnemyInitiative] = useState('');
+  const [enemyInitiative, setEnemyInitiative] = useState(''); // Now stores modifier
   const [enemyAC, setEnemyAC] = useState('');
   const [enemyQuantity, setEnemyQuantity] = useState('1');
+  const [initiativeRollType, setInitiativeRollType] = useState<'group' | 'individual'>('individual');
 
 
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
@@ -94,19 +96,19 @@ export function CombatTrackerTool() {
   const { toast } = useToast();
 
   const sortedCombatants = useMemo(() => {
-    if (combatStarted) {
+    // if (combatStarted) { // Sort only if combat has started to maintain manual order before that
       return [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
-    }
-    return combatants.sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
-  }, [combatants, combatStarted]);
+    // }
+    // return combatants;
+  }, [combatants]); // Removed combatStarted dependency for now to always sort
 
   const currentTurnCombatantId = combatStarted && sortedCombatants.length > 0 ? sortedCombatants[turnIndex]?.id : null;
 
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddEnemyOrAlly = () => {
-    if (!enemyName || !enemyHp || !enemyInitiative) {
-      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative are required.', variant: 'destructive' });
+    if (!enemyName || !enemyHp) { // Initiative modifier is now optional, defaults to 0
+      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
       return;
     }
     const quantity = parseInt(enemyQuantity, 10);
@@ -120,11 +122,13 @@ export function CombatTrackerTool() {
         toast({ title: 'Invalid Current HP', description: 'Current HP must be a number.', variant: 'destructive' });
         return;
     }
-    const initiativeValue = parseInt(enemyInitiative, 10);
-     if (isNaN(initiativeValue)) {
-        toast({ title: 'Invalid Initiative', description: 'Initiative must be a number.', variant: 'destructive' });
+    
+    const initiativeModifierValue = enemyInitiative !== '' ? parseInt(enemyInitiative, 10) : 0;
+    if (enemyInitiative !== '' && isNaN(initiativeModifierValue)) {
+        toast({ title: 'Invalid Initiative Modifier', description: 'Initiative Modifier must be a number or empty (will default to 0).', variant: 'destructive' });
         return;
     }
+
 
     const maxHpValue = enemyMaxHp !== '' ? parseInt(enemyMaxHp, 10) : currentHpValue;
     if (enemyMaxHp !== '' && isNaN(maxHpValue)) {
@@ -144,8 +148,22 @@ export function CombatTrackerTool() {
 
 
     const newCombatantsBatch: Combatant[] = [];
+    let groupInitiativeRoll: number | undefined = undefined;
+
+    if (quantity > 1 && initiativeRollType === 'group') {
+        groupInitiativeRoll = roll1d20() + initiativeModifierValue;
+    }
+
     for (let i = 0; i < quantity; i++) {
       const combatantName = quantity > 1 ? `${enemyName} ${i + 1}` : enemyName;
+      
+      let finalInitiative: number;
+      if (groupInitiativeRoll !== undefined) {
+          finalInitiative = groupInitiativeRoll;
+      } else {
+          finalInitiative = roll1d20() + initiativeModifierValue;
+      }
+      
       const newCombatant: Combatant = {
         id: String(Date.now() + Math.random() + i),
         name: combatantName,
@@ -153,7 +171,7 @@ export function CombatTrackerTool() {
         hp: currentHpValue,
         maxHp: maxHpValue,
         armorClass: acValue,
-        initiative: initiativeValue,
+        initiative: finalInitiative,
         conditions: [],
         isPlayerCharacter: false, 
       };
@@ -161,7 +179,7 @@ export function CombatTrackerTool() {
     }
     
     setCombatants(prev => [...prev, ...newCombatantsBatch].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity)));
-    setEnemyName(''); setEnemyHp(''); setEnemyMaxHp(''); setEnemyAC(''); setEnemyInitiative(''); setEnemyQuantity('1');
+    setEnemyName(''); setEnemyHp(''); setEnemyMaxHp(''); setEnemyAC(''); setEnemyInitiative(''); setEnemyQuantity('1'); setInitiativeRollType('individual');
     setIsAddEnemyDialogOpen(false);
   };
 
@@ -245,15 +263,15 @@ export function CombatTrackerTool() {
         const displayColor = playerColorClasses[pcIndexInParty % playerColorClasses.length];
 
         if (existingCombatantIndex !== -1) {
-          // Update existing combatant
+          // Update existing combatant's initiative, HP, Max HP, and AC
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
             hp: char.currentHp ?? char.maxHp ?? updatedCombatantsList[existingCombatantIndex].hp,
             maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
-            initiativeModifier: char.initiativeModifier ?? 0,
-            displayColor: updatedCombatantsList[existingCombatantIndex].displayColor || displayColor, 
+            initiativeModifier: char.initiativeModifier ?? 0, // ensure this is also updated
+            displayColor: updatedCombatantsList[existingCombatantIndex].displayColor || displayColor,
           };
         } else {
           // Add new combatant
@@ -313,15 +331,6 @@ export function CombatTrackerTool() {
     }));
     setOpenPopoverId(null); 
     setHitHealAmount('');
-  };
-
-  const handleInitiativeChange = (id: string, newInitiativeVal: string) => {
-     const newInitiative = newInitiativeVal === '' ? undefined : parseInt(newInitiativeVal, 10);
-     if (newInitiativeVal !== '' && isNaN(newInitiative!)) {
-         toast({ title: "Invalid Initiative", description: "Initiative must be a number.", variant: "destructive" });
-         return;
-     }
-     setCombatants(prev => prev.map(c => c.id === id ? { ...c, initiative: newInitiative } : c));
   };
 
   const startCombat = () => {
@@ -483,18 +492,37 @@ export function CombatTrackerTool() {
             </div>
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <Label htmlFor="new-combatant-ac" className="text-xs">Armor Class (AC) (Optional)</Label>
+                    <Label htmlFor="new-combatant-ac" className="text-xs">Armor Class (Optional)</Label>
                     <Input id="new-combatant-ac" type="number" value={enemyAC} onChange={e => setEnemyAC(e.target.value)} placeholder="15" bsSize="sm"/>
                 </div>
                 <div>
-                    <Label htmlFor="new-combatant-initiative" className="text-xs">Initiative</Label>
-                    <Input id="new-combatant-initiative" type="number" value={enemyInitiative} onChange={e => setEnemyInitiative(e.target.value)} placeholder="12" bsSize="sm"/>
+                    <Label htmlFor="new-combatant-initiative-modifier" className="text-xs">Initiative Modifier</Label>
+                    <Input id="new-combatant-initiative-modifier" type="number" value={enemyInitiative} onChange={e => setEnemyInitiative(e.target.value)} placeholder="e.g., 2 or -1" bsSize="sm"/>
                 </div>
             </div>
             <div>
                 <Label htmlFor="new-combatant-quantity" className="text-xs">Quantity</Label>
                 <Input id="new-combatant-quantity" type="number" value={enemyQuantity} onChange={e => setEnemyQuantity(e.target.value)} placeholder="1" bsSize="sm" min="1"/>
             </div>
+            {parseInt(enemyQuantity, 10) > 1 && (
+                <div className="space-y-2">
+                    <Label className="text-xs">Initiative Rolling</Label>
+                    <RadioGroup
+                        value={initiativeRollType}
+                        onValueChange={(value: 'group' | 'individual') => setInitiativeRollType(value)}
+                        className="flex space-x-4"
+                    >
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="group" id="roll-group" />
+                        <Label htmlFor="roll-group" className="text-xs font-normal">Roll as Group</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="individual" id="roll-individual" />
+                        <Label htmlFor="roll-individual" className="text-xs font-normal">Roll Individually</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddEnemyDialogOpen(false)}>Cancel</Button>
@@ -561,7 +589,7 @@ export function CombatTrackerTool() {
                             )}
                             
                             <div className="w-full mt-1">
-                                <div className="flex items-center justify-between text-xs mb-0.5">
+                                <div className="flex items-center justify-between text-xs mb-0.5 text-muted-foreground">
                                     <span className="flex items-center">
                                     <Heart className="mr-1 h-3 w-3 text-red-500" /> 
                                     {c.hp} / {c.maxHp} ({Math.round(hpPercentage)}%)
@@ -584,12 +612,26 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
+                             <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive-foreground hover:bg-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCombatantToDeleteId(c.id);
+                                  setIsDeleteConfirmOpen(true);
+                                  setOpenPopoverId(null); // Close popover when opening delete confirm
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span className="sr-only">Delete {c.name}</span>
+                              </Button>
                         </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
-                            <Button 
+                             <Button 
                                 variant="destructive" 
                                 className="w-full" 
                                 size="sm"
@@ -682,5 +724,7 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
+    
 
     
