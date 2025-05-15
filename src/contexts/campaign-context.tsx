@@ -48,7 +48,7 @@ const initialMockCharacters: Character[] = [
       background: 'Sage',
       level: 5,
       backstory: 'A curious elf seeking ancient lore. She has a keen mind and a quicker wit, often finding herself in trouble due to her insatiable thirst for knowledge.',
-      imageUrl: `https://placehold.co/400x400.png`,
+      imageUrl: `https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8RWxmJTIwV2l6YXJkJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzQ3MzQzOTg3fDA&ixlib=rb-4.1.0&q=80&w=1080`,
       currentHp: 28,
       maxHp: 28,
       armorClass: 12,
@@ -66,7 +66,7 @@ const initialMockCharacters: Character[] = [
       background: 'Outlander',
       level: 5,
       backstory: 'A fierce warrior from the wilds, driven by a primal connection to nature and a desire to protect his kin.',
-      imageUrl: `https://placehold.co/400x400.png`,
+      imageUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxPcmMlMjBCYXJiYXJpYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NDczNDM5ODd8MA&ixlib=rb-4.1.0&q=80&w=1080`,
       currentHp: 52,
       maxHp: 52,
       armorClass: 15,
@@ -191,7 +191,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       }
 
     }
-  }, [campaigns, isLoading]); // Removed sessionLogs from dep array to avoid loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaigns, isLoading]); 
 
    useEffect(() => {
     // This effect ensures that if activeCampaign changes, currentSession updates accordingly.
@@ -269,16 +270,12 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     setFactionsState(prevFactions => prevFactions.filter(f => f.campaignId !== campaignId));
     setFactionReputationsState(prevReps => prevReps.filter(r => r.campaignId !== campaignId));
     setSessionLogsState(prevLogs => prevLogs.filter(log => log.campaignId !== campaignId)); // Also clear session logs for deleted campaign
-    toast({
-      title: "Campaign Deleted",
-      description: "The campaign and its associated data have been successfully deleted.",
-      variant: "destructive",
-    });
-  }, [toast]);
+    
+  }, []);
 
   const addCharacter = useCallback((characterData: Omit<Character, 'id' | 'campaignId'>) => {
     if (!activeCampaign) {
-      toast({ title: "Error", description: "No active campaign selected.", variant: "destructive" });
+      
       return;
     }
     const newCharacter: Character = {
@@ -317,11 +314,11 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
 
   const startNewSession = useCallback(() => {
     if (!activeCampaign) {
-      toast({ title: "Error", description: "No active campaign to start a session for.", variant: "destructive" });
+      
       return;
     }
     if (currentSession && currentSession.campaignId === activeCampaign.id && currentSession.status === 'active') {
-      toast({ title: "Info", description: "A session is already active for this campaign.", variant: "default" }); // Use default or a specific info variant
+      
       return;
     }
 
@@ -352,7 +349,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
 
   const endCurrentSession = useCallback(() => {
     if (!currentSession || currentSession.status !== 'active') {
-      toast({ title: "Error", description: "No active session to end.", variant: "destructive" });
+      
       return;
     }
     const endedSession = {
