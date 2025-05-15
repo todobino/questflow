@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import type { NavItem } from '@/lib/constants';
-import { SITE_NAV_ITEMS, getFilteredCampaignNavItems, APP_LOGO_ICON, APP_NAME } from '@/lib/constants'; 
+import { SITE_NAV_ITEMS, getFilteredCampaignNavItems, APP_LOGO_ICON, APP_NAME } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -39,12 +39,12 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
   const pathname = usePathname();
   const { state: sidebarState, isMobile } = useSidebar();
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
-  
-  const campaignNavItems = getFilteredCampaignNavItems(); 
+
+  const campaignNavItems = getFilteredCampaignNavItems();
   const AppLogoComponent = APP_LOGO_ICON;
   const searchNavItem = SITE_NAV_ITEMS.find(item => item.title === 'Search');
 
@@ -59,23 +59,23 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
           )}
         </div>
       </SidebarHeader>
-      <SidebarSeparator />
+      {/* Removed SidebarSeparator here */}
 
       <SidebarContent>
         {/* Active Campaign Section */}
         {mounted && (
-          <div className="px-2 mb-2">
+          <div className="px-2 mb-2"> {/* Added mb-2 for gap */}
               <Link
                   href="/campaigns"
                   className={cn(
-                      "block rounded-md p-2 bg-sidebar-accent border border-sidebar-border hover:border-primary transition-colors group", // Updated border classes
+                      "block rounded-md p-2 bg-sidebar-accent border border-sidebar-border hover:border-primary transition-colors group",
                       (sidebarState !== 'expanded' && !isMobile) && "flex justify-center items-center h-12"
                   )}
                   aria-label={activeCampaign ? `Manage campaigns. Active: ${activeCampaign.name}` : "Manage Campaigns"}
               >
               {(sidebarState === 'expanded' || isMobile) ? (
                 <>
-                  <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign:</p> {/* Changed text to "Campaign:" */}
+                  <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign:</p>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 overflow-hidden min-w-0">
                         <span className="line-clamp-2 text-left break-words leading-tight font-extrabold text-foreground">
