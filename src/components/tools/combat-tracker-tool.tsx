@@ -94,7 +94,6 @@ export function CombatTrackerTool() {
       isPlayerCharacter: false,
     };
     setCombatants(prev => [...prev, newEnemy]);
-    // Removed informational toast
     setEnemyName(''); setEnemyHp(''); setEnemyMaxHp(''); setEnemyInitiative('');
     setIsAddEnemyDialogOpen(false);
   };
@@ -131,7 +130,6 @@ export function CombatTrackerTool() {
       originalCharacterId: characterToAdd.id,
     };
     setCombatants(prev => [...prev, newPlayerCombatant]);
-    // Removed informational toast
     setSelectedPlayerCharacterId(undefined);
     setIsAddPlayerDialogOpen(false);
   };
@@ -174,7 +172,6 @@ export function CombatTrackerTool() {
     });
 
     setCombatants(newCombatants);
-    // Removed informational toast
   };
 
 
@@ -184,7 +181,6 @@ export function CombatTrackerTool() {
     setEditFormHp(String(combatant.hp));
     setEditFormMaxHp(String(combatant.maxHp));
     setEditFormInitiative(combatant.initiative !== undefined ? String(combatant.initiative) : '');
-    // Removed informational toast
   };
   
   const handleUpdateCombatantFromList = (id: string, updates: Partial<Combatant>) => {
@@ -224,7 +220,6 @@ export function CombatTrackerTool() {
     setRound(1);
     setTurnIndex(0);
     setCombatStarted(true);
-    // Removed informational toast
   };
 
   const nextTurn = () => {
@@ -237,7 +232,6 @@ export function CombatTrackerTool() {
     }
     setTurnIndex(newTurnIndex);
     setRound(newRound);
-    // Removed informational toast
   };
   
   const resetCombat = () => {
@@ -245,7 +239,6 @@ export function CombatTrackerTool() {
     setTurnIndex(0);
     setCombatStarted(false);
     setCombatants(prev => prev.map(c => ({...c, hp: c.maxHp, conditions: []}))); 
-    // Removed informational toast
   };
 
   return (
@@ -258,9 +251,11 @@ export function CombatTrackerTool() {
           <Bot className="mr-2 h-4 w-4" /> Add Enemy
         </Button>
       </div>
-      <Button onClick={handleRollEntirePartyInitiative} className="w-full" size="sm" variant="default">
-        <Users className="mr-2 h-4 w-4" /> Roll Entire Party Initiative
-      </Button>
+      {!combatStarted && (
+        <Button onClick={handleRollEntirePartyInitiative} className="w-full" size="sm" variant="default">
+          <Users className="mr-2 h-4 w-4" /> Roll Entire Party Initiative
+        </Button>
+      )}
 
       <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
         <DialogContent>
