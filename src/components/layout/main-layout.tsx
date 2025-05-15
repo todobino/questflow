@@ -36,11 +36,16 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     setMounted(true);
   }, []);
 
+  if (!mounted && typeof window !== 'undefined' && isLoading) { // Delay rendering until mounted and loaded to avoid hydration issues
+    return null;
+  }
+
+
   return (
     <SidebarProvider defaultOpen>
       <div className="flex h-screen w-full bg-background text-foreground">
 
-        {mounted && !isLoading && (
+        {mounted && ( // Keep sidebar rendering tied to mounted to avoid issues with useSidebar hook
           <SidebarNav
             campaigns={campaigns}
             activeCampaign={activeCampaign}
@@ -51,11 +56,13 @@ function MainLayoutContent({ children }: MainLayoutProps) {
         <div className="w-[calc(100vw-var(--sidebar-width)-25vw)] md:w-[calc(100vw-var(--sidebar-width)-25vw)] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
             <SidebarTrigger />
-            {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>}
+            {/* Mobile header - campaign name or app title */}
+            {mounted && <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>}
           </header>
 
+          {/* Desktop Header with Breadcrumbs */}
           <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
-            {mounted && activeCampaign && campaigns && (
+            {mounted && campaigns && ( // Ensure campaigns is loaded for breadcrumbs
               <Breadcrumbs 
                 activeCampaign={activeCampaign} 
                 campaigns={campaigns} 
@@ -65,7 +72,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           </header>
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-            {children}
+            {children} {/* PageHeader will be rendered by individual pages here */}
           </main>
         </div>
 
@@ -116,7 +123,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, []);
 
   if (!mounted) {
-    return null;
+    return null; 
   }
 
   return (
