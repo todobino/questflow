@@ -12,8 +12,8 @@ import {
   Swords,
   Settings,
   UsersRound,
-  Scroll as ScrollIconEntry, // Explicitly alias Scroll
-  Flag, // Added for Factions
+  Scroll as ScrollIconEntry,
+  Flag,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -28,11 +28,6 @@ export const APP_LOGO_ICON = Swords;
 export const APP_NAME = "QuestFlow";
 
 export const SITE_NAV_ITEMS: NavItem[] = [
-  // {
-  //   title: 'Campaigns', // This is now handled by the campaign switcher block
-  //   href: '/campaigns',
-  //   icon: Briefcase,
-  // },
   {
     title: 'Search',
     href: '/search',
@@ -43,17 +38,10 @@ export const SITE_NAV_ITEMS: NavItem[] = [
 
 export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
-    title: 'Party Manager', // Changed from 'Party'
+    title: 'Party Manager',
     href: '/party',
     icon: UsersRound,
   },
-  // Characters link removed as it's integrated into Party Manager
-  // {
-  //   title: 'Characters',
-  //   href: '/characters',
-  //   icon: Users,
-  //   disabled: true, 
-  // },
   {
     title: 'Encounters',
     href: '/encounters',
@@ -61,34 +49,28 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     disabled: true,
   },
   {
-    title: 'Factions', // New item
-    href: '/factions', // Assuming a new route
-    icon: Flag,
-    disabled: true,
+    title: 'Factions & Quests', // Combined and renamed
+    href: '/factions-quests',   // New href
+    icon: Flag,               // Using Flag icon
+    disabled: false,          // Will be enabled as we're creating the page
   },
   {
-    title: 'Maps & Boards', // Changed from 'Maps'
+    title: 'Maps & Boards',
     href: '/maps',
     icon: MapIcon,
   },
   {
-    title: 'Random Tables', // Changed from 'Tables'
+    title: 'Random Tables',
     href: '/tables',
     icon: ListOrdered,
   },
   {
-    title: 'Questing', // Changed from 'Quests'
-    href: '/quests',
-    icon: ScrollIconEntry, // Use the alias
-    disabled: true,
-  },
-  {
-    title: 'Session Journal', // Changed from 'Journal'
+    title: 'Session Journal',
     href: '/journal',
     icon: BookMarked,
   },
   {
-    title: 'Lore & World', // Changed from 'Lore'
+    title: 'Lore & World',
     href: '/lore',
     icon: BookOpenText,
     disabled: true,
@@ -97,5 +79,3 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
 
 // Filter out the disabled "Characters" link for actual rendering if it's truly removed
 export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
-
-

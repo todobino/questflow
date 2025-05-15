@@ -25,7 +25,7 @@ export interface Character {
   initiativeModifier?: number;
   currentExp?: number; // Added for EXP tracking
   nextLevelExp?: number; // Added for EXP tracking
-  // Optional: stats, inventory, notes
+  // Optional: stats, inventory, notes, factionId
 }
 
 export interface SessionNote {
@@ -40,7 +40,7 @@ export interface SessionNote {
 export interface Combatant {
   id: string;
   name: string;
-  type: 'player' | 'enemy';
+  type: 'player' | 'enemy' | 'ally'; // Added 'ally' type
   hp: number;
   maxHp: number;
   initiative?: number;
@@ -81,6 +81,19 @@ export interface EncounterLogEntry {
   }>;
   defeatedCombatants: Array<{
     name:string;
-    type: 'enemy' | 'player'; // 'player' can represent non-PC allies too
+    type: 'enemy' | 'player' | 'ally';
   }>;
+}
+
+export interface Faction {
+  id: string;
+  name: string;
+  description: string;
+  campaignId: string; // Link to a specific campaign
+}
+
+export interface FactionReputation {
+  factionId: string;
+  campaignId: string; // Ensure reputation is per-campaign
+  score: number; // Range: -20 to +20
 }

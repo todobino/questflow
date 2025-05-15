@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Campaign, Character } from '@/lib/types';
+import type { Campaign, Character, Faction, FactionReputation } from '@/lib/types'; // Added Faction, FactionReputation
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,6 +21,9 @@ interface CampaignContextType {
   isProfileOpen: boolean;
   openProfileDialog: (character: Character) => void;
   closeProfileDialog: () => void;
+  factions: Faction[];
+  factionReputations: FactionReputation[];
+  // Add functions to manage factions and reputations later if needed
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -88,11 +91,31 @@ const initialMockCharacters: Character[] = [
     },
 ];
 
+const initialMockFactions: Faction[] = [
+  { id: 'fac1', campaignId: '1', name: 'The Silver Hand', description: 'A noble order dedicated to protecting the innocent and upholding justice in the Whispering Peaks.' },
+  { id: 'fac2', campaignId: '1', name: 'The Shadow Syndicate', description: 'A clandestine organization involved in smuggling, extortion, and other illicit activities.' },
+  { id: 'fac3', campaignId: '2', name: 'The Deepguard Order', description: 'Ancient protectors of the sunken city, wary of outsiders and its forgotten secrets.' },
+  { id: 'fac4', campaignId: '2', name: 'The Coral Reavers', description: 'Ruthless pirates who prey on ships and settlements along the coast near the Sunken City.' },
+  { id: 'fac5', campaignId: '3', name: 'The Riverwood Guard', description: 'The local militia of Riverwood, generally helpful but stretched thin.' },
+  { id: 'fac6', campaignId: '3', name: 'The Nightwood Cult', description: 'A secretive cult operating in the shadows of the Nightwood, with unsettling goals.' },
+];
+
+const initialMockFactionReputations: FactionReputation[] = [
+  { factionId: 'fac1', campaignId: '1', score: 5 }, // Silver Hand - Friendly
+  { factionId: 'fac2', campaignId: '1', score: -10 }, // Shadow Syndicate - Hostile
+  { factionId: 'fac3', campaignId: '2', score: 0 },  // Deepguard Order - Neutral
+  { factionId: 'fac4', campaignId: '2', score: -15 }, // Coral Reavers - Hated
+  { factionId: 'fac5', campaignId: '3', score: 2 },   // Riverwood Guard - Neutral (leaning Friendly)
+  { factionId: 'fac6', campaignId: '3', score: -5 },  // Nightwood Cult - Unfriendly
+];
+
 
 export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const [campaigns, setCampaignsState] = useState<Campaign[]>([]);
   const [activeCampaign, setActiveCampaignState] = useState<Campaign | null>(null);
   const [characters, setCharactersState] = useState<Character[]>([]);
+  const [factions, setFactionsState] = useState<Faction[]>([]);
+  const [factionReputations, setFactionReputationsState] = useState<FactionReputation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -102,6 +125,9 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedCampaigns = localStorage.getItem('campaigns');
     const storedCharacters = localStorage.getItem('characters');
+    const storedFactions = localStorage.getItem('factions');
+    const storedFactionReputations = localStorage.getItem('factionReputations');
+
 
     if (storedCampaigns) {
       setCampaignsState(JSON.parse(storedCampaigns));
@@ -114,6 +140,19 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setCharactersState(initialMockCharacters);
     }
+
+    if (storedFactions) {
+      setFactionsState(JSON.parse(storedFactions));
+    } else {
+      setFactionsState(initialMockFactions);
+    }
+
+    if (storedFactionReputations) {
+      setFactionReputationsState(JSON.parse(storedFactionReputations));
+    } else {
+      setFactionReputationsState(initialMockFactionReputations);
+    }
+
     setIsLoading(false);
   }, []);
 
@@ -130,6 +169,19 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('characters', JSON.stringify(characters));
     }
   }, [characters, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem('factions', JSON.stringify(factions));
+    }
+  }, [factions, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem('factionReputations', JSON.stringify(factionReputations));
+    }
+  }, [factionReputations, isLoading]);
+
 
   const setCampaignActive = useCallback((campaignId: string) => {
     const selectedCampaign = campaigns.find(c => c.id === campaignId);
@@ -170,9 +222,12 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const deleteCampaign = useCallback((campaignId: string) => {
     setCampaignsState(prev => prev.filter(c => c.id !== campaignId));
     setCharactersState(prevChars => prevChars.filter(char => char.campaignId !== campaignId));
+    // Also remove factions and reputations associated with this campaign
+    setFactionsState(prevFactions => prevFactions.filter(f => f.campaignId !== campaignId));
+    setFactionReputationsState(prevReps => prevReps.filter(r => r.campaignId !== campaignId));
     toast({
       title: "Campaign Deleted",
-      description: "The campaign and its characters have been successfully deleted.",
+      description: "The campaign and its associated data have been successfully deleted.",
       variant: "destructive",
     });
   }, [toast]);
@@ -227,7 +282,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     <CampaignContext.Provider value={{
       campaigns, activeCampaign, setCampaignActive, addCampaign, updateCampaign, deleteCampaign, isLoading,
       characters, addCharacter, updateCharacter, deleteCharacter,
-      selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog
+      selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog,
+      factions, factionReputations
     }}>
       {children}
     </CampaignContext.Provider>
@@ -241,4 +297,3 @@ export const useCampaignContext = () => {
   }
   return context;
 };
-
