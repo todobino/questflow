@@ -42,10 +42,14 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="group flex items-center gap-1 px-2 py-1 h-auto font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className="group flex items-center gap-1 px-2 py-1 h-auto font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <span>{activeCampaign.name}</span>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground transition-opacity group-hover:text-foreground"
+                    )}
+                  />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[250px] p-0">
