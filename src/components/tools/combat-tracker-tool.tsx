@@ -3,10 +3,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card'; // CardHeader and CardTitle removed if not used elsewhere
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, ArrowRight, Play, ShieldAlert, HeartCrack, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowRight, Play, ShieldAlert, Heart, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX, Shield as ShieldIcon } from 'lucide-react';
 import type { Combatant, Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -36,8 +35,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger as ShadAlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { cn } from '@/lib/utils';
 
 const initialCombatants: Combatant[] = [];
+
+const playerColorClasses = [
+  'bg-sky-100 dark:bg-sky-800',
+  'bg-emerald-100 dark:bg-emerald-800',
+  'bg-rose-100 dark:bg-rose-800',
+  'bg-amber-100 dark:bg-amber-800',
+  'bg-violet-100 dark:bg-violet-800',
+  'bg-pink-100 dark:bg-pink-800',
+  'bg-teal-100 dark:bg-teal-800',
+  'bg-fuchsia-100 dark:bg-fuchsia-800',
+];
+
 
 export function CombatTrackerTool() {
   const { activeCampaign, characters: partyCharacters } = useCampaignContext();
@@ -53,9 +65,6 @@ export function CombatTrackerTool() {
   const [selectedPlayerCharacterId, setSelectedPlayerCharacterId] = useState<string | undefined>(undefined);
   const [playerInitiativeInput, setPlayerInitiativeInput] = useState('');
 
-
-  const [editingCombatantId, setEditingCombatantId] = useState<string | null>(null);
-
   const [round, setRound] = useState(0);
   const [turnIndex, setTurnIndex] = useState(0);
   const [combatStarted, setCombatStarted] = useState(false);
@@ -63,10 +72,11 @@ export function CombatTrackerTool() {
   const { toast } = useToast();
 
   const sortedCombatants = useMemo(() => {
+    // Always sort by initiative if combat has started, otherwise maintain add order
     if (combatStarted) {
       return [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
     }
-    return combatants;
+    return combatants; 
   }, [combatants, combatStarted]);
 
   const currentTurnCombatantId = combatStarted && sortedCombatants.length > 0 ? sortedCombatants[turnIndex]?.id : null;
@@ -132,6 +142,9 @@ export function CombatTrackerTool() {
         toast({ title: "Invalid Initiative", description: "Initiative must be a number.", variant: "destructive" });
         return;
     }
+    
+    const playerIndex = partyCharacters.findIndex(p => p.id === characterToAdd.id);
+    const displayColor = playerColorClasses[playerIndex % playerColorClasses.length];
 
     const newPlayerCombatant: Combatant = {
       id: String(Date.now() + Math.random()),
@@ -144,6 +157,8 @@ export function CombatTrackerTool() {
       initiativeModifier: characterToAdd.initiativeModifier ?? 0,
       isPlayerCharacter: true,
       originalCharacterId: characterToAdd.id,
+      armorClass: characterToAdd.armorClass,
+      displayColor: displayColor,
     };
     setCombatants(prev => [...prev, newPlayerCombatant]);
     setSelectedPlayerCharacterId(undefined);
@@ -156,15 +171,19 @@ export function CombatTrackerTool() {
       return;
     }
 
-    let newCombatants = [...combatants];
+    let newCombatantsList = [...combatants];
+    let changed = false;
 
     partyCharacters
       .filter(char => char.campaignId === activeCampaign.id)
-      .forEach(char => {
-        if (!newCombatants.some(c => c.originalCharacterId === char.id)) {
+      .forEach((char, index) => {
+        const existingCombatantIndex = newCombatantsList.findIndex(c => c.originalCharacterId === char.id);
+        const displayColor = playerColorClasses[index % playerColorClasses.length];
+
+        if (existingCombatantIndex === -1) { // Character not in combat yet
           const initiativeRoll = roll1d20() + (char.initiativeModifier ?? 0);
-          newCombatants.push({
-            id: String(Date.now() + Math.random()),
+          newCombatantsList.push({
+            id: String(Date.now() + Math.random() + index), // Ensure unique ID
             name: char.name,
             type: 'player',
             hp: char.maxHp ?? 10,
@@ -174,24 +193,35 @@ export function CombatTrackerTool() {
             initiativeModifier: char.initiativeModifier ?? 0,
             isPlayerCharacter: true,
             originalCharacterId: char.id,
+            armorClass: char.armorClass,
+            displayColor: displayColor,
           });
+          changed = true;
+        } else if (newCombatantsList[existingCombatantIndex].initiative === undefined) { // Character in combat, but no initiative
+          newCombatantsList[existingCombatantIndex] = {
+            ...newCombatantsList[existingCombatantIndex],
+            initiative: roll1d20() + (newCombatantsList[existingCombatantIndex].initiativeModifier ?? 0),
+            armorClass: char.armorClass, // ensure AC is up to date
+            displayColor: displayColor, // ensure color is assigned
+          };
+          changed = true;
+        } else if (!newCombatantsList[existingCombatantIndex].displayColor) { // Assign color if missing
+           newCombatantsList[existingCombatantIndex] = {
+            ...newCombatantsList[existingCombatantIndex],
+            displayColor: displayColor,
+          };
+          changed = true;
         }
       });
 
-    newCombatants = newCombatants.map(c => {
-      if (c.isPlayerCharacter && c.initiative === undefined) {
-        return { ...c, initiative: roll1d20() + (c.initiativeModifier ?? 0) };
-      }
-      return c;
-    });
-
-    setCombatants(newCombatants);
+    if (changed) {
+      setCombatants(newCombatantsList);
+    }
   };
 
 
   const handleRemoveCombatant = (id: string) => {
     setCombatants(prev => prev.filter(c => c.id !== id));
-    toast({ title: "Combatant Removed", variant: "destructive" });
   };
 
   const handleHpChange = (id: string, newHp: number) => {
@@ -216,11 +246,10 @@ export function CombatTrackerTool() {
       toast({ title: "Not Enough Combatants", description: "Need at least one combatant.", variant: "destructive"});
       return;
     }
-    const sorted = [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
-    setCombatants(sorted);
     setRound(1);
     setTurnIndex(0);
     setCombatStarted(true);
+    // Sorting is handled by useMemo when combatStarted becomes true
   };
 
   const nextTurn = () => {
@@ -239,7 +268,8 @@ export function CombatTrackerTool() {
     setRound(0);
     setTurnIndex(0);
     setCombatStarted(false);
-    setCombatants(prev => prev.map(c => ({...c, hp: c.maxHp, conditions: [], initiative: undefined })));
+    // Optionally reset HP, conditions, and initiative for all combatants
+    // setCombatants(prev => prev.map(c => ({...c, hp: c.maxHp, conditions: [], initiative: undefined })));
   };
 
   useEffect(() => {
@@ -353,60 +383,85 @@ export function CombatTrackerTool() {
         <div className="p-1.5 flex-shrink-0">
           <h3 className="flex items-center text-lg font-semibold">
             <Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order
+            {combatStarted && round > 0 && (
+              <span className="ml-2 text-sm text-muted-foreground font-medium">
+                (Round {round} - {sortedCombatants[turnIndex]?.name}'s turn)
+              </span>
+            )}
           </h3>
         </div>
         <div className="p-1.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {sortedCombatants.map((c) => (
-                <li key={c.id} className={`rounded-md border p-2.5 text-xs transition-all duration-300 shadow-md ${c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.01]' : 'opacity-90 hover:opacity-100'}`}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <h4 className={`font-semibold ${c.type === 'player' ? 'text-blue-600' : 'text-red-600'}`}>{c.name}</h4>
-                    <div className="flex items-center gap-1.5">
-                        {!combatStarted && (
-                          <Input
-                            type="text"
-                            value={c.initiative === undefined ? '' : String(c.initiative)}
-                            onChange={(e) => handleInitiativeChange(c.id, e.target.value)}
-                            placeholder="Init"
-                            className="w-12 h-7 text-xs p-1"
-                          />
-                        )}
-                        {combatStarted && <span className="text-xs font-medium text-muted-foreground">Init: {c.initiative ?? 'N/A'}</span>}
-                        <AlertDialog>
-                          <ShadAlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive h-6 w-6">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </ShadAlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
+                <li 
+                  key={c.id} 
+                  className={cn(
+                    'flex items-center gap-3 p-2.5 rounded-lg border shadow-lg transition-all duration-300',
+                    c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
+                    c.displayColor || 'bg-card' // Fallback to card background
+                  )}
+                >
+                  <div className={cn(
+                      "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
+                      c.type === 'player' ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"
+                    )}
+                  >
+                    {c.initiative ?? '-'}
                   </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center">
-                        {c.hp <= 0 ? <HeartCrack className="mr-1 h-3.5 w-3.5 text-destructive" /> : <ShieldAlert className="mr-1 h-3.5 w-3.5 text-green-500" />}
+
+                  <div className="flex-grow space-y-0.5">
+                    <h4 className={cn(
+                        "font-semibold text-md",
+                        c.type === 'player' ? 'text-primary-darker' : 'text-destructive-darker', // Use custom darker shades or adjust theme
+                        'dark:text-foreground' // Ensure readability in dark mode
+                      )}
+                    >
+                      {c.name}
+                    </h4>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground dark:text-gray-400">
+                      <div className="flex items-center">
+                        <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
                         HP:
                         <Input
                           type="number"
                           value={String(c.hp)}
                           onChange={(e) => handleHpChange(c.id, parseInt(e.target.value))}
-                          className="w-12 h-6 ml-1 mr-1 text-xs p-1"
+                          className="w-12 h-6 ml-1 mr-0.5 text-xs p-1 bg-transparent border-slate-400 dark:border-slate-600 focus:ring-primary focus:border-primary"
                           min="0"
                           max={c.maxHp}
-                        /> / {c.maxHp}
+                        />
+                        / {c.maxHp}
+                      </div>
+                      <div className="flex items-center">
+                        <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                        AC: {c.armorClass ?? 'N/A'}
+                      </div>
                     </div>
                     {c.conditions.length > 0 && (
-                      <span className="text-[10px] text-yellow-600 bg-yellow-100 dark:bg-yellow-900/50 px-1.5 py-0.5 rounded-full">{c.conditions.join(', ')}</span>
+                      <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-1">
+                        {c.conditions.join(', ')}
+                      </span>
                     )}
+                  </div>
+                  
+                  <div className="flex-shrink-0">
+                    <AlertDialog>
+                      <ShadAlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive h-7 w-7">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </ShadAlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </li>
               ))}
@@ -416,8 +471,8 @@ export function CombatTrackerTool() {
       </div>
 
       {combatants.length > 0 && (
-        <Card className="shadow-md mt-2 flex-shrink-0">
-            <CardContent className="p-2 space-y-2">
+        <div className="shadow-md mt-2 flex-shrink-0 bg-card border-t">
+            <div className="p-2 space-y-2">
                 {!combatStarted ? (
                     <Button onClick={startCombat} className="w-full bg-success text-success-foreground hover:bg-success/90" size="sm">
                         <Play className="mr-2 h-4 w-4" /> Start Combat
@@ -435,10 +490,9 @@ export function CombatTrackerTool() {
                   > 
                     <ShieldX className="mr-2 h-4 w-4" /> End Combat
                 </Button>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
       )}
     </div>
   );
 }
-

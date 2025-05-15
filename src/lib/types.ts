@@ -46,7 +46,9 @@ export interface Combatant {
   initiativeModifier?: number; // For players, from character sheet
   isPlayerCharacter?: boolean; // True if this combatant represents a Character from the party
   originalCharacterId?: string; // ID of the Character if isPlayerCharacter is true
-  // Optional: armorClass, attackBonus, damage
+  armorClass?: number; // Added Armor Class
+  displayColor?: string; // Added for player-specific tile background color
+  // Optional: attackBonus, damage
 }
 
 export interface OverworldMapData {
