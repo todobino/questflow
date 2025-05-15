@@ -383,7 +383,7 @@ export function CombatTrackerTool() {
             <Users className="mr-2 h-5 w-5 text-primary" /> Initiative
             {combatStarted && round > 0 && (
               <span className="ml-2 text-sm text-muted-foreground font-medium">
-                (Round {round} - {sortedCombatants[turnIndex]?.name}'s turn)
+                (Round {round})
               </span>
             )}
           </h3>
@@ -420,6 +420,7 @@ export function CombatTrackerTool() {
                     >
                       {c.name}
                     </h4>
+                    {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
                     {c.conditions.length > 0 && (
                       <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left">
                         {c.conditions.join(', ')}
@@ -430,27 +431,31 @@ export function CombatTrackerTool() {
                             <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
                              {c.hp} / {c.maxHp}
                         </div>
-                        <div className="flex items-center">
-                            <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                            {c.armorClass ?? 'N/A'}
-                        </div>
                     </div>
                   </div>
                   
-                  <AlertDialog>
-                    <ShadAlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon-sm" className="absolute top-1.5 right-1.5 text-destructive hover:text-destructive h-7 w-7">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </ShadAlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+                    {c.armorClass !== undefined && (
+                        <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
+                        <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                        <span className="font-semibold">{c.armorClass}</span>
+                        </div>
+                    )}
+                    <AlertDialog>
+                        <ShadAlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0">
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                        </ShadAlertDialogTrigger>
+                        <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
+                        </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -484,3 +489,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
