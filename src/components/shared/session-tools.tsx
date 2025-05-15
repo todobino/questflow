@@ -86,7 +86,12 @@ export function SessionTools() {
             </div>
           )}
           {!lastCompletedSessionForActiveCampaign && <div className="text-muted-foreground">No sessions logged.</div>}
-          <Button onClick={handleStartSession} variant="outline" size="xs" className="px-2 py-1 h-auto">
+          <Button 
+            onClick={handleStartSession} 
+            variant="outline" 
+            size="xs" 
+            className="px-2 py-1 h-auto hover:bg-success hover:text-success-foreground hover:border-success"
+          >
             <PlayCircle className="mr-1.5 h-3.5 w-3.5" />
             Start Session
           </Button>
