@@ -19,7 +19,7 @@ import {
   SheetClose,
   SheetFooter,
 } from '@/components/ui/sheet';
-import { format, isToday, isYesterday, parseISO, formatISOWithOptions } from 'date-fns';
+import { format, isToday, isYesterday, parseISO, formatISO } from 'date-fns';
 
 
 type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
@@ -55,7 +55,7 @@ interface RollResultDetails {
 
 
 type HistoryEntry = {
-  timestamp: Date; // Store as Date object
+  timestamp: Date; 
 } & RollResultDetails;
 
 
@@ -329,11 +329,6 @@ export function DiceRollerTool() {
 
       const finalTotalWithModifier = currentTotalSum + modifier;
       const rollId = String(Date.now() + Math.random());
-
-      let currentFormula = diceChain.map(item => `${item.count > 1 ? item.count : ''}${item.die}`).join(' + ');
-      if (diceChain.length === 0 && modifier === 0) currentFormula = "0";
-      else if (diceChain.length === 0 && modifier !== 0) currentFormula = String(modifier);
-      else if (modifier !== 0) currentFormula += (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`);
       
       const historyBreakdownString = outputRollSegments.map(segment => {
         const rollsSum = segment.results.reduce((sum, r) => sum + r.chosenRoll, 0);
@@ -350,7 +345,7 @@ export function DiceRollerTool() {
         rollSegments: outputRollSegments,
         modifier: modifier,
         advantageState: advantageState,
-        formula: currentFormula || String(modifier)
+        formula: diceChain.map(item => `${item.count > 1 ? item.count : ''}${item.die}`).join(' + ') + (modifier !== 0 ? (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`) : '') || String(modifier)
       };
       setLastRollOutput(resultDetails);
 
@@ -367,23 +362,16 @@ export function DiceRollerTool() {
         setCriticalMessage({ text: "CRITICAL FAILURE!", colorClass: "text-destructive" });
       }
       
-      setDiceChain([]);
-      setModifier(0);
-      setAdvantageState(null); 
-      // No longer setting lastRollOutput to null here, to persist the result.
-      // No longer resetting activeRollFormulaDisplay here.
-      
       setIsRolling(false);
     }, 300);
   };
 
   const handleCoinFlip = () => {
     setIsRolling(true);
-    setDiceChain([]); // Clear dice chain for coin flip
+    setDiceChain([]); 
     setModifier(0);
     setAdvantageState(null);
     setActiveRollFormulaDisplay(<span className="text-muted-foreground text-lg">Build your roll</span>);
-
 
     setTimeout(() => {
       const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
@@ -408,7 +396,7 @@ export function DiceRollerTool() {
 
   const groupRollsByDay = (history: HistoryEntry[]): Record<string, HistoryEntry[]> => {
     return history.reduce((acc, roll) => {
-      const dateKey = formatISOWithOptions(roll.timestamp, { representation: 'date' });
+      const dateKey = formatISO(roll.timestamp, { representation: 'date' });
       if (!acc[dateKey]) {
         acc[dateKey] = [];
       }
@@ -418,7 +406,7 @@ export function DiceRollerTool() {
   };
 
   const formatDisplayDate = (dateStr: string) => {
-    if (!mounted) return dateStr; // Prevent hydration mismatch
+    if (!mounted) return dateStr; 
     const date = parseISO(dateStr);
     if (isToday(date)) return "Today";
     if (isYesterday(date)) return "Yesterday";
@@ -449,7 +437,7 @@ export function DiceRollerTool() {
 
         <CardContent className="space-y-4 px-4 pt-4 pb-0">
 
-          <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
+        <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
             {isRolling ? (
               <Disc3 className="h-10 w-10 animate-spin text-accent" />
             ) : lastRollOutput ? (
@@ -466,7 +454,7 @@ export function DiceRollerTool() {
                     {lastRollOutput.total}
                   </span>
                 </div>
-                {lastRollOutput.diceType !== 'coin' && lastRollOutput.rollSegments && typeof lastRollOutput.total === 'number' && (
+                 {lastRollOutput.diceType !== 'coin' && lastRollOutput.rollSegments && typeof lastRollOutput.total === 'number' && (
                    <p className="text-xs text-foreground mt-1 text-center">
                     {lastRollOutput.rollSegments.map((segment, segIdx) => (
                       <React.Fragment key={`${lastRollOutput.id}-seg-${segIdx}`}>
@@ -523,7 +511,7 @@ export function DiceRollerTool() {
                         className={cn(
                         "font-semibold transition-transform hover:scale-105 active:scale-95",
                         "h-auto aspect-square w-full flex flex-col items-center justify-center p-1 text-xs",
-                        "border-primary" // Black border for Coin Flip button
+                        "border-primary text-primary-foreground"
                         )}
                         variant="default"
                         disabled={isRolling}
@@ -620,6 +608,43 @@ export function DiceRollerTool() {
           </div>
         </CardContent>
         
+         <div className="mt-auto pt-3 border-t bg-muted/50">
+            <ScrollArea className="h-[150px] text-xs">
+                <div className="p-2 space-y-1.5">
+                {rollHistory.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-4">No rolls yet.</p>
+                ) : (
+                    Object.entries(groupRollsByDay(rollHistory))
+                    .sort(([dateA], [dateB]) => dateB.localeCompare(dateA))
+                    .map(([date, rolls]) => (
+                        <div key={date}>
+                        <h4 className="font-semibold text-xs mb-1 text-muted-foreground">{formatDisplayDate(date)}</h4>
+                        <ul className="space-y-1">
+                            {rolls.map((entry, index) => (
+                            <React.Fragment key={entry.id}>
+                                <li className="flex justify-between items-center py-0.5">
+                                <span className="whitespace-pre-wrap break-words text-left text-foreground">
+                                    {entry.breakdown}
+                                </span>
+                                {mounted && (
+                                    <span className="text-muted-foreground ml-2 flex-shrink-0">
+                                    {format(entry.timestamp, "p")}
+                                    </span>
+                                )}
+                                </li>
+                                {index < rolls.length - 1 && <Separator className="my-0.5 bg-border/70" />}
+                            </React.Fragment>
+                            ))}
+                        </ul>
+                        { Object.keys(groupRollsByDay(rollHistory)).sort((a,b) => b.localeCompare(a)).indexOf(date) < Object.keys(groupRollsByDay(rollHistory)).length - 1 &&
+                            <Separator className="my-2" />
+                        }
+                        </div>
+                    ))
+                )}
+                </div>
+            </ScrollArea>
+        </div>
       </Card>
 
       <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
@@ -634,7 +659,7 @@ export function DiceRollerTool() {
                 <p className="text-sm text-muted-foreground text-center py-8">No rolls yet.</p>
               ) : (
                 Object.entries(groupRollsByDay(rollHistory))
-                  .sort(([dateA], [dateB]) => dateB.localeCompare(dateA)) // Sort by date, newest first
+                  .sort(([dateA], [dateB]) => dateB.localeCompare(dateA))
                   .map(([date, rolls]) => (
                     <div key={date}>
                       <h4 className="font-semibold text-sm mb-1.5 text-muted-foreground">{formatDisplayDate(date)}</h4>
@@ -655,8 +680,7 @@ export function DiceRollerTool() {
                           </React.Fragment>
                         ))}
                       </ul>
-                       {/* Add a separator between date groups, but not after the last one */}
-                        { Object.keys(groupRollsByDay(rollHistory)).sort((a,b) => b.localeCompare(a)).indexOf(date) < Object.keys(groupRollsByDay(rollHistory)).length - 1 &&
+                       { Object.keys(groupRollsByDay(rollHistory)).sort((a,b) => b.localeCompare(a)).indexOf(date) < Object.keys(groupRollsByDay(rollHistory)).length - 1 &&
                             <Separator className="my-3" />
                         }
                     </div>
@@ -674,3 +698,4 @@ export function DiceRollerTool() {
     </div>
   );
 }
+
