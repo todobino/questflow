@@ -75,7 +75,7 @@ export function CombatTrackerTool() {
     if (combatStarted) {
       return [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
     }
-    return combatants; 
+    return combatants;
   }, [combatants, combatStarted]);
 
   const currentTurnCombatantId = combatStarted && sortedCombatants.length > 0 ? sortedCombatants[turnIndex]?.id : null;
@@ -141,7 +141,7 @@ export function CombatTrackerTool() {
         toast({ title: "Invalid Initiative", description: "Initiative must be a number.", variant: "destructive" });
         return;
     }
-    
+
     const playerIndex = partyCharacters.findIndex(p => p.id === characterToAdd.id);
     const displayColor = playerColorClasses[playerIndex % playerColorClasses.length];
 
@@ -179,13 +179,13 @@ export function CombatTrackerTool() {
         const existingCombatantIndex = newCombatantsList.findIndex(c => c.originalCharacterId === char.id);
         const displayColor = playerColorClasses[index % playerColorClasses.length];
 
-        if (existingCombatantIndex === -1) { 
+        if (existingCombatantIndex === -1) {
           const initiativeRoll = roll1d20() + (char.initiativeModifier ?? 0);
           newCombatantsList.push({
-            id: String(Date.now() + Math.random() + index), 
+            id: String(Date.now() + Math.random() + index),
             name: char.name,
             type: 'player',
-            hp: char.currentHp ?? char.maxHp ?? 10, 
+            hp: char.currentHp ?? char.maxHp ?? 10,
             maxHp: char.maxHp ?? 10,
             initiative: initiativeRoll,
             conditions: [],
@@ -196,17 +196,17 @@ export function CombatTrackerTool() {
             displayColor: displayColor,
           });
           changed = true;
-        } else if (newCombatantsList[existingCombatantIndex].initiative === undefined) { 
+        } else if (newCombatantsList[existingCombatantIndex].initiative === undefined) {
           newCombatantsList[existingCombatantIndex] = {
             ...newCombatantsList[existingCombatantIndex],
             initiative: roll1d20() + (newCombatantsList[existingCombatantIndex].initiativeModifier ?? 0),
-            armorClass: char.armorClass, 
-            displayColor: displayColor, 
-            hp: char.currentHp ?? char.maxHp ?? newCombatantsList[existingCombatantIndex].hp, 
+            armorClass: char.armorClass,
+            displayColor: displayColor,
+            hp: char.currentHp ?? char.maxHp ?? newCombatantsList[existingCombatantIndex].hp,
             maxHp: char.maxHp ?? newCombatantsList[existingCombatantIndex].maxHp,
           };
           changed = true;
-        } else if (!newCombatantsList[existingCombatantIndex].displayColor) { 
+        } else if (!newCombatantsList[existingCombatantIndex].displayColor) {
            newCombatantsList[existingCombatantIndex] = {
             ...newCombatantsList[existingCombatantIndex],
             displayColor: displayColor,
@@ -264,7 +264,7 @@ export function CombatTrackerTool() {
     setRound(newRound);
   };
 
-  const endCombat = () => { 
+  const endCombat = () => {
     setRound(0);
     setTurnIndex(0);
     setCombatStarted(false);
@@ -394,13 +394,13 @@ export function CombatTrackerTool() {
           ) : (
             <ul className="space-y-2.5">
               {sortedCombatants.map((c) => (
-                <li 
-                  key={c.id} 
+                <li
+                  key={c.id}
                   className={cn(
                     'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300',
                     c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
                     c.hp <= 0 ? 'opacity-50 grayscale' : '',
-                    c.displayColor || 'bg-card' 
+                    c.displayColor || 'bg-card'
                   )}
                 >
                   <div className={cn(
@@ -414,13 +414,13 @@ export function CombatTrackerTool() {
                   <div className="flex-grow flex flex-col">
                     <h4 className={cn(
                         "font-semibold text-md",
-                        c.type === 'player' ? 'text-primary-darker' : 'text-destructive-darker', 
-                        'dark:text-foreground' 
+                        c.type === 'player' ? 'text-primary-darker' : 'text-destructive-darker',
+                        'dark:text-foreground'
                       )}
                     >
                       {c.name}
                     </h4>
-                    {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
+                     {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
                     {c.conditions.length > 0 && (
                       <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left">
                         {c.conditions.join(', ')}
@@ -433,7 +433,7 @@ export function CombatTrackerTool() {
                         </div>
                     </div>
                   </div>
-                  
+
                   <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
                     {c.armorClass !== undefined && (
                         <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
@@ -465,22 +465,22 @@ export function CombatTrackerTool() {
 
       {combatants.length > 0 && (
         <div className="shadow-md mt-2 flex-shrink-0 bg-card border-t">
-            <div className="p-2 space-y-2">
+            <div className="p-2 flex items-center gap-2">
                 {!combatStarted ? (
-                    <Button onClick={startCombat} className="w-full bg-success text-success-foreground hover:bg-success/90" size="sm">
+                    <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
                         <Play className="mr-2 h-4 w-4" /> Start Combat
                     </Button>
                 ) : (
-                    <Button onClick={nextTurn} className="w-full" size="sm">
-                        Next Turn <ArrowRight className="ml-2 h-4 w-4" /> 
+                    <Button onClick={nextTurn} className="flex-1" size="sm">
+                        Next Turn <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 )}
-                  <Button 
-                    onClick={endCombat} 
-                    variant="outline" 
-                    className="w-full text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive hover:border-destructive" 
+                  <Button
+                    onClick={endCombat}
+                    variant="outline"
+                    className="bg-muted border-border text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
                     size="sm"
-                  > 
+                  >
                     <ShieldX className="mr-2 h-4 w-4" /> End Combat
                 </Button>
             </div>
@@ -489,4 +489,3 @@ export function CombatTrackerTool() {
     </div>
   );
 }
-
