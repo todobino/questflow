@@ -52,13 +52,14 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
   return (
     <Sidebar>
       <SidebarHeader className="p-2">
-        <div className="flex items-center gap-2 px-2">
+        <Link href="/campaigns" className="flex items-center gap-2 px-2 text-foreground hover:text-foreground">
           <AppLogoComponent className="h-6 w-6 text-primary" />
           {(sidebarState === 'expanded' || isMobile) && (
-            <span className="font-extrabold text-lg text-foreground">{APP_NAME}</span>
+            <span className="font-extrabold text-lg">{APP_NAME}</span>
           )}
-        </div>
+        </Link>
       </SidebarHeader>
+
 
       <SidebarContent>
         {/* Active Campaign Section Removed */}
