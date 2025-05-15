@@ -50,10 +50,10 @@ import {
 interface SidebarNavProps {
   campaigns: Campaign[];
   activeCampaign: Campaign | null;
-  handleSetCampaignActive: (campaignId: string) => void;
+  // handleSetCampaignActive: (campaignId: string) => void; // Removed, handled by CampaignSwitcher or page context
 }
 
-export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive }: SidebarNavProps) {
+export function SidebarNav({ campaigns, activeCampaign }: SidebarNavProps) {
   const pathname = usePathname();
   const { state: sidebarState, isMobile } = useSidebar();
   const [mounted, setMounted] = useState(false);
@@ -67,11 +67,6 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
   const AppLogoComponent = APP_LOGO_ICON;
   const searchNavItem = SITE_NAV_ITEMS.find(item => item.title === 'Search');
 
-  const handleCampaignSelect = (campaignId: string) => {
-    handleSetCampaignActive(campaignId);
-    setCampaignSwitcherOpen(false);
-  };
-
   return (
     <Sidebar>
       <SidebarHeader className="p-2">
@@ -82,8 +77,7 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
           )}
         </Link>
       </SidebarHeader>
-
-      <SidebarSeparator />
+      {/* Removed SidebarSeparator from here */}
 
       <SidebarContent>
         {/* Campaign Menu Nav */}
@@ -95,8 +89,8 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
                     asChild
                     isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
                     tooltip={item.title}
-                    disabled={item.disabled || (!activeCampaign && item.href !== '/campaigns')} // Allow campaigns link even if no active campaign
-                    className={cn("text-sm", (item.disabled || (!activeCampaign && item.href !== '/campaigns')) && "cursor-not-allowed opacity-50")}
+                    disabled={item.disabled || (!activeCampaign && item.href !== '/campaigns')}
+                    className={cn("font-normal", (item.disabled || (!activeCampaign && item.href !== '/campaigns')) && "cursor-not-allowed opacity-50")}
                 >
                     <Link href={(item.disabled || (!activeCampaign && item.href !== '/campaigns')) ? '#' : item.href}>
                     <item.icon />
@@ -119,7 +113,7 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
                   isActive={pathname === searchNavItem.href}
                   tooltip={searchNavItem.title}
                   disabled={searchNavItem.disabled}
-                  className="text-sm"
+                  className="font-normal"
                 >
                   <Link href={searchNavItem.disabled ? '#' : searchNavItem.href}>
                     <searchNavItem.icon />
@@ -136,7 +130,7 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
                         asChild
                         isActive={pathname === '/settings'}
                         tooltip="Settings"
-                        className="text-sm"
+                        className="font-normal"
                     >
                         <Link href="/settings">
                             <Settings />
