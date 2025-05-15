@@ -16,9 +16,9 @@ import {
   SheetTitle,
   SheetDescription,
   SheetClose,
-  SheetFooter as SheetModalFooter, // Renamed to avoid conflict
+  SheetFooter as SheetModalFooter,
 } from '@/components/ui/sheet';
-import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus } from 'lucide-react';
+import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus, Swords } from 'lucide-react';
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -33,7 +33,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter, // Renamed to avoid conflict
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -43,10 +43,9 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter as ShadAlertDialogFooter, // Renamed to avoid conflict
+  AlertDialogFooter as ShadAlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
@@ -78,7 +77,7 @@ export function CombatTrackerTool() {
   const [enemyName, setEnemyName] = useState('');
   const [enemyHp, setEnemyHp] = useState('');
   const [enemyMaxHp, setEnemyMaxHp] = useState('');
-  const [enemyInitiative, setEnemyInitiative] = useState(''); // Stores modifier
+  const [enemyInitiative, setEnemyInitiative] = useState('');
   const [enemyAC, setEnemyAC] = useState('');
   const [enemyQuantity, setEnemyQuantity] = useState('1');
   const [initiativeRollType, setInitiativeRollType] = useState<'group' | 'individual'>('individual');
@@ -113,8 +112,8 @@ export function CombatTrackerTool() {
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddEnemyOrAlly = () => {
-    if (!enemyName || !enemyHp || !enemyInitiative) {
-      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
+    if (!enemyName || !enemyHp) {
+      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
       return;
     }
     const quantity = parseInt(enemyQuantity, 10);
@@ -133,8 +132,7 @@ export function CombatTrackerTool() {
     if(enemyInitiative.trim() !== '') {
         initiativeModifierValue = parseInt(enemyInitiative.trim(), 10);
         if (isNaN(initiativeModifierValue)) { 
-            toast({ title: 'Invalid Initiative Modifier', description: 'Initiative Modifier must be a number.', variant: 'destructive' });
-            return;
+            initiativeModifierValue = 0; // Default to 0 if invalid
         }
     }
 
@@ -175,11 +173,11 @@ export function CombatTrackerTool() {
       
       const combatantType = newCombatantTypeForDialog;
       let displayColor = ENEMY_COLOR;
-      let typeForCombatant: 'enemy' | 'player' = 'enemy';
+      let typeForCombatant: 'enemy' | 'player' = 'enemy'; // Default to enemy
 
       if (combatantType === 'ally') {
         displayColor = ALLY_COLOR;
-        typeForCombatant = 'player'; // Allies are considered 'player' type but not player characters
+        typeForCombatant = 'player'; 
       }
 
 
@@ -265,18 +263,18 @@ export function CombatTrackerTool() {
 
  const handleAddPartyToCombat = () => {
     if (!activeCampaign || !partyCharacters) {
-      toast({ title: "No Active Campaign", description: "Please select an active campaign with party members.", variant: "destructive" });
       return;
     }
 
     let updatedCombatantsList = [...combatants];
 
-    partyCharacters.forEach((char, index) => {
+    partyCharacters.forEach((char) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
         
         if (existingCombatantIndex !== -1) {
+          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -287,6 +285,7 @@ export function CombatTrackerTool() {
             displayColor: PLAYER_CHARACTER_COLOR,
           };
         } else {
+          // Add new player character
           updatedCombatantsList.push({
             id: String(Date.now() + Math.random() + updatedCombatantsList.length), 
             name: char.name,
@@ -415,14 +414,14 @@ export function CombatTrackerTool() {
       )}
       <div className="flex-shrink-0 mb-2">
          <div className="grid grid-cols-2 gap-2">
-           <DropdownMenu>
+            <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button 
                         variant="outline" 
                         size="sm" 
                         className="w-full hover:bg-background hover:border-primary hover:text-primary"
                     >
-                        Add Combatant 
+                        Add Combatant
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
@@ -588,7 +587,7 @@ export function CombatTrackerTool() {
                     <PopoverTrigger asChild>
                         <li
                         className={cn(
-                            'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-lg transition-all duration-300 cursor-pointer',
+                            'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300 cursor-pointer',
                             c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
                             c.hp <= 0 ? 'opacity-50 grayscale' : '',
                             c.displayColor || (c.type === 'enemy' ? ENEMY_COLOR : ALLY_COLOR) 
@@ -640,7 +639,7 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
-                            <Button 
+                           <Button 
                                 variant="ghost" 
                                 size="icon-sm"
                                 className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
@@ -657,6 +656,7 @@ export function CombatTrackerTool() {
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
+                            {/* Remove delete button from here */}
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
@@ -698,7 +698,7 @@ export function CombatTrackerTool() {
                 <div className="flex items-center gap-2 w-full">
                     {!combatStarted ? (
                         <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
-                            <PlusCircle className="mr-2 h-4 w-4" /> Start Combat
+                            <Swords className="mr-2 h-4 w-4" /> Start Combat
                         </Button>
                     ) : (
                         <Button onClick={nextTurn} className="flex-1" size="sm">
@@ -786,3 +786,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
