@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, ChevronDown, Play, ShieldAlert, HeartCrack, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowRight, Play, ShieldAlert, HeartCrack, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices } from 'lucide-react'; // Changed ChevronDown to ArrowRight
 import type { Combatant, Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -36,7 +36,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger as ShadAlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-// ScrollArea is no longer needed here as CardContent will handle scrolling for initiative list
 
 const initialCombatants: Combatant[] = [];
 
@@ -236,7 +235,7 @@ export function CombatTrackerTool() {
     setRound(newRound);
   };
 
-  const resetCombat = () => {
+  const endCombat = () => { // Renamed from resetCombat
     setRound(0);
     setTurnIndex(0);
     setCombatStarted(false);
@@ -425,11 +424,11 @@ export function CombatTrackerTool() {
                     </Button>
                 ) : (
                     <Button onClick={nextTurn} className="w-full" size="sm">
-                        Next Turn <ChevronDown className="ml-2 h-4 w-4" />
+                        Next Turn <ArrowRight className="ml-2 h-4 w-4" /> 
                     </Button>
                 )}
-                  <Button onClick={resetCombat} variant="outline" className="w-full" size="sm">
-                    <RotateCcw className="mr-2 h-4 w-4" /> Reset Combat
+                  <Button onClick={endCombat} variant="outline" className="w-full" size="sm"> 
+                    <RotateCcw className="mr-2 h-4 w-4" /> End Combat
                 </Button>
             </CardContent>
         </Card>
@@ -437,4 +436,3 @@ export function CombatTrackerTool() {
     </div>
   );
 }
-
