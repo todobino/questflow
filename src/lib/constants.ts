@@ -27,6 +27,11 @@ export const APP_LOGO_ICON = Swords;
 export const APP_NAME = "QuestFlow";
 
 export const SITE_NAV_ITEMS: NavItem[] = [
+  // {
+  //   title: 'Campaigns', // This is now handled by the campaign switcher block
+  //   href: '/campaigns',
+  //   icon: Briefcase,
+  // },
   {
     title: 'Search',
     href: '/search',
@@ -41,11 +46,13 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     href: '/party',
     icon: UsersRound,
   },
-  {
-    title: 'Tables',
-    href: '/tables',
-    icon: ListOrdered,
-  },
+  // Characters link removed as it's integrated into Party Manager
+  // {
+  //   title: 'Characters',
+  //   href: '/characters',
+  //   icon: Users,
+  //   disabled: true, 
+  // },
   {
     title: 'Encounters',
     href: '/encounters',
@@ -56,6 +63,11 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     title: 'Maps',
     href: '/maps',
     icon: MapIcon,
+  },
+  {
+    title: 'Tables',
+    href: '/tables',
+    icon: ListOrdered,
   },
   {
     title: 'Quests',
@@ -78,3 +90,4 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
 
 // Filter out the disabled "Characters" link for actual rendering if it's truly removed
 export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
+
