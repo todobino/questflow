@@ -47,7 +47,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 28,
       armorClass: 12,
       initiativeModifier: 2,
-      currentExp: 6500,
+      currentExp: 7200, // EXP towards level 6 (level 5 starts at 6500, level 6 at 14000)
       nextLevelExp: 14000,
     },
     {
@@ -65,7 +65,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 52,
       armorClass: 15,
       initiativeModifier: 1,
-      currentExp: 7200,
+      currentExp: 8500, // EXP towards level 6
       nextLevelExp: 14000,
     },
     {
@@ -83,7 +83,7 @@ const initialMockCharacters: Character[] = [
       maxHp: 30,
       armorClass: 16,
       initiativeModifier: 0,
-      currentExp: 2700,
+      currentExp: 3000, // EXP towards level 5 (level 4 starts at 2700, level 5 at 6500)
       nextLevelExp: 6500,
     },
 ];
@@ -241,3 +241,4 @@ export const useCampaignContext = () => {
   }
   return context;
 };
+
