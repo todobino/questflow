@@ -22,15 +22,10 @@ import { Tooltip, TooltipContent, TooltipTrigger as RadixTooltipTrigger, Tooltip
 import {
   Briefcase,
   Settings,
-  ChevronDown,
-  Search as SearchIcon, // Use the imported SearchIcon
+  Search as SearchIcon,
 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { ThemeToggleButton } from '@/components/shared/theme-toggle-button';
 
 
@@ -64,23 +59,23 @@ export function SidebarNav({ campaigns, activeCampaign, handleSetCampaignActive 
           )}
         </div>
       </SidebarHeader>
-      {/* Removed SidebarSeparator here */}
+      <SidebarSeparator />
 
       <SidebarContent>
-        {/* Active Campaign Section - moved up */}
+        {/* Active Campaign Section */}
         {mounted && (
           <div className="px-2 mb-2">
               <Link
                   href="/campaigns"
                   className={cn(
-                      "block rounded-md p-2 bg-sidebar-accent border border-transparent hover:border-primary transition-colors group",
+                      "block rounded-md p-2 bg-sidebar-accent border border-sidebar-border hover:border-primary transition-colors group", // Updated border classes
                       (sidebarState !== 'expanded' && !isMobile) && "flex justify-center items-center h-12"
                   )}
                   aria-label={activeCampaign ? `Manage campaigns. Active: ${activeCampaign.name}` : "Manage Campaigns"}
               >
               {(sidebarState === 'expanded' || isMobile) ? (
                 <>
-                  <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign</p>
+                  <p className="text-xs text-muted-foreground mb-0.5 group-hover:text-foreground transition-colors">Campaign:</p> {/* Changed text to "Campaign:" */}
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 overflow-hidden min-w-0">
                         <span className="line-clamp-2 text-left break-words leading-tight font-extrabold text-foreground">
