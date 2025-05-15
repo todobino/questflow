@@ -72,7 +72,6 @@ export function CombatTrackerTool() {
   const { toast } = useToast();
 
   const sortedCombatants = useMemo(() => {
-    // Always sort by initiative if combat has started, otherwise maintain add order
     if (combatStarted) {
       return [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
     }
@@ -150,7 +149,7 @@ export function CombatTrackerTool() {
       id: String(Date.now() + Math.random()),
       name: characterToAdd.name,
       type: 'player',
-      hp: characterToAdd.maxHp ?? 10,
+      hp: characterToAdd.currentHp ?? characterToAdd.maxHp ?? 10, // Prioritize current HP
       maxHp: characterToAdd.maxHp ?? 10,
       initiative: initiativeValue,
       conditions: [],
@@ -183,10 +182,10 @@ export function CombatTrackerTool() {
         if (existingCombatantIndex === -1) { // Character not in combat yet
           const initiativeRoll = roll1d20() + (char.initiativeModifier ?? 0);
           newCombatantsList.push({
-            id: String(Date.now() + Math.random() + index), // Ensure unique ID
+            id: String(Date.now() + Math.random() + index), 
             name: char.name,
             type: 'player',
-            hp: char.maxHp ?? 10,
+            hp: char.currentHp ?? char.maxHp ?? 10, // Prioritize current HP
             maxHp: char.maxHp ?? 10,
             initiative: initiativeRoll,
             conditions: [],
@@ -197,15 +196,17 @@ export function CombatTrackerTool() {
             displayColor: displayColor,
           });
           changed = true;
-        } else if (newCombatantsList[existingCombatantIndex].initiative === undefined) { // Character in combat, but no initiative
+        } else if (newCombatantsList[existingCombatantIndex].initiative === undefined) { 
           newCombatantsList[existingCombatantIndex] = {
             ...newCombatantsList[existingCombatantIndex],
             initiative: roll1d20() + (newCombatantsList[existingCombatantIndex].initiativeModifier ?? 0),
-            armorClass: char.armorClass, // ensure AC is up to date
-            displayColor: displayColor, // ensure color is assigned
+            armorClass: char.armorClass, 
+            displayColor: displayColor, 
+            hp: char.currentHp ?? char.maxHp ?? newCombatantsList[existingCombatantIndex].hp, // Update HP too
+            maxHp: char.maxHp ?? newCombatantsList[existingCombatantIndex].maxHp,
           };
           changed = true;
-        } else if (!newCombatantsList[existingCombatantIndex].displayColor) { // Assign color if missing
+        } else if (!newCombatantsList[existingCombatantIndex].displayColor) { 
            newCombatantsList[existingCombatantIndex] = {
             ...newCombatantsList[existingCombatantIndex],
             displayColor: displayColor,
@@ -249,7 +250,6 @@ export function CombatTrackerTool() {
     setRound(1);
     setTurnIndex(0);
     setCombatStarted(true);
-    // Sorting is handled by useMemo when combatStarted becomes true
   };
 
   const nextTurn = () => {
@@ -268,8 +268,6 @@ export function CombatTrackerTool() {
     setRound(0);
     setTurnIndex(0);
     setCombatStarted(false);
-    // Optionally reset HP, conditions, and initiative for all combatants
-    // setCombatants(prev => prev.map(c => ({...c, hp: c.maxHp, conditions: [], initiative: undefined })));
   };
 
   useEffect(() => {
@@ -390,7 +388,7 @@ export function CombatTrackerTool() {
             )}
           </h3>
         </div>
-        <div className="py-1.5 flex-grow overflow-y-auto">
+        <div className="px-1 py-1.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -401,12 +399,13 @@ export function CombatTrackerTool() {
                   className={cn(
                     'flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300',
                     c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
-                    c.displayColor || 'bg-card' // Fallback to card background
+                    c.hp <= 0 ? 'opacity-50 grayscale' : '',
+                    c.displayColor || 'bg-card' 
                   )}
                 >
                   <div className={cn(
                       "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
-                      c.type === 'player' ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"
+                      c.type === 'player' ? "bg-primary/90 text-primary-foreground dark:bg-primary-foreground dark:text-primary" : "bg-destructive/90 text-destructive-foreground dark:bg-destructive dark:text-destructive-foreground"
                     )}
                   >
                     {c.initiative ?? '-'}
@@ -415,8 +414,8 @@ export function CombatTrackerTool() {
                   <div className="flex-grow space-y-0.5">
                     <h4 className={cn(
                         "font-semibold text-md",
-                        c.type === 'player' ? 'text-primary-darker' : 'text-destructive-darker', // Use custom darker shades or adjust theme
-                        'dark:text-foreground' // Ensure readability in dark mode
+                        c.type === 'player' ? 'text-primary-darker' : 'text-destructive-darker', 
+                        'dark:text-foreground' 
                       )}
                     >
                       {c.name}
