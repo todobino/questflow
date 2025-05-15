@@ -25,8 +25,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap } from 'lucide-react'; 
-import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '../ui/dialog'; 
+import { Save, Shuffle, Loader2, Heart, ShieldIcon as Shield, Zap, Award } from 'lucide-react';
+import { DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '../ui/dialog';
 
 const characterSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
@@ -39,32 +39,37 @@ const characterSchema = z.object({
   maxHp: z.coerce.number().int().min(1, "Max HP must be at least 1").optional().default(10),
   armorClass: z.coerce.number().int().optional().default(10),
   initiativeModifier: z.coerce.number().int().optional().default(0),
+  currentExp: z.coerce.number().int().min(0).optional().default(0),
+  nextLevelExp: z.coerce.number().int().min(1, "Next Level EXP must be at least 1").optional().default(1000),
   backstory: z.string().optional(),
   imageUrl: z.string().url().optional().or(z.literal('')).default('https://placehold.co/400x400.png'),
 }).refine(data => data.currentHp === undefined || data.maxHp === undefined || data.currentHp <= data.maxHp, {
   message: "Current HP cannot exceed Max HP",
-  path: ["currentHp"], 
+  path: ["currentHp"],
+}).refine(data => data.currentExp === undefined || data.nextLevelExp === undefined || data.currentExp <= data.nextLevelExp, {
+  message: "Current EXP cannot exceed EXP for Next Level",
+  path: ["currentExp"],
 });
 
 
 type CharacterFormData = z.infer<typeof characterSchema>;
 
 interface CharacterFormProps {
-  currentCharacter?: Partial<Character>; 
-  onSave: (character: CharacterFormData) => void; 
-  onClose: () => void; 
-  onRandomize: () => void; // Changed from Promise<void>
+  currentCharacter?: Partial<Character>;
+  onSave: (character: CharacterFormData) => void;
+  onClose: () => void;
+  onRandomize: () => void;
   isRandomizing: boolean;
-  isDialog?: boolean; 
+  isDialog?: boolean;
 }
 
-export function CharacterForm({ 
-  currentCharacter, 
-  onSave, 
-  onClose, 
-  onRandomize, 
+export function CharacterForm({
+  currentCharacter,
+  onSave,
+  onClose,
+  onRandomize,
   isRandomizing,
-  isDialog = false 
+  isDialog = false
 }: CharacterFormProps) {
   const form = useForm<CharacterFormData>({
     resolver: zodResolver(characterSchema),
@@ -79,9 +84,11 @@ export function CharacterForm({
       maxHp: 10,
       armorClass: 10,
       initiativeModifier: 0,
+      currentExp: 0,
+      nextLevelExp: 1000,
       backstory: '',
       imageUrl: 'https://placehold.co/400x400.png',
-      ...currentCharacter, 
+      ...currentCharacter,
     },
   });
 
@@ -94,19 +101,19 @@ export function CharacterForm({
     } else {
       setAvailableSubclasses([]);
     }
-  }, [selectedClass]); 
+  }, [selectedClass]);
 
   useEffect(() => {
     const defaultValues = {
-      name: '', race: '', class: '', subclass: '', background: '', 
+      name: '', race: '', class: '', subclass: '', background: '',
       level: 1, currentHp: 10, maxHp: 10, armorClass: 10, initiativeModifier: 0,
+      currentExp: 0, nextLevelExp: 1000,
       backstory: '', imageUrl: 'https://placehold.co/400x400.png'
     };
     if (currentCharacter) {
       form.reset({
         ...defaultValues,
         ...currentCharacter,
-         // Ensure backstory and imageUrl are explicitly set or cleared
         backstory: currentCharacter.backstory || '',
         imageUrl: currentCharacter.imageUrl || 'https://placehold.co/400x400.png',
       });
@@ -117,16 +124,16 @@ export function CharacterForm({
        form.reset(defaultValues);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCharacter, form.reset, isDialog]); 
+  }, [currentCharacter, form.reset, isDialog]);
 
   const onSubmit = (data: CharacterFormData) => {
-    onSave(data); 
+    onSave(data);
   };
-  
+
   const FormContent = (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="space-y-4 py-4 max-h-[calc(80vh-12rem)] overflow-y-auto pr-2"> 
+        <div className="space-y-4 py-4 max-h-[calc(80vh-12rem)] overflow-y-auto pr-2">
           <FormField
             control={form.control}
             name="name"
@@ -169,7 +176,7 @@ export function CharacterForm({
                   <FormLabel>Class</FormLabel>
                    <Select onValueChange={(value) => {
                       field.onChange(value);
-                      form.setValue('subclass', ''); 
+                      form.setValue('subclass', '');
                     }} value={field.value || ''}>
                     <FormControl>
                       <SelectTrigger>
@@ -228,7 +235,7 @@ export function CharacterForm({
               )}
             />
           </div>
-          
+
           <FormField
             control={form.control}
             name="level"
@@ -299,7 +306,34 @@ export function CharacterForm({
               )}
             />
           </div>
-
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="currentExp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Award className="mr-1.5 h-4 w-4 text-amber-500" /> Current EXP</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="nextLevelExp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Award className="mr-1.5 h-4 w-4 text-amber-700" /> EXP for Next Level</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="1000" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 1)} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}
@@ -334,7 +368,7 @@ export function CharacterForm({
           />
         </div>
         {isDialog && (
-          <DialogFooter className="pt-4 border-t"> 
+          <DialogFooter className="pt-4 border-t">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
@@ -349,11 +383,11 @@ export function CharacterForm({
 
   if (isDialog) {
     return (
-      <DialogContent className="sm:max-w-2xl"> 
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{currentCharacter?.id ? 'Edit Character' : 'Create New Character'}</span>
-            <div className="flex items-center space-x-2"> 
+            <div className="flex items-center space-x-2">
               <Button onClick={onRandomize} disabled={isRandomizing} variant="default" size="sm">
                 {isRandomizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
                 {isRandomizing ? 'Randomizing...' : 'Randomize'}
@@ -384,7 +418,7 @@ export function CharacterForm({
             <Button type="button" variant="outline" onClick={onClose} className="mr-2">
               Cancel
             </Button>
-            <Button form={form.formState.id} type="submit"> 
+            <Button form={form.formState.id} type="submit">
               <Save className="mr-2 h-4 w-4" /> {currentCharacter?.id ? 'Save Changes' : 'Create Character'}
             </Button>
           </div>

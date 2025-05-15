@@ -14,8 +14,8 @@ export interface Character {
   name: string;
   race?: string;
   class?: string;
-  subclass?: string; 
-  background?: string; 
+  subclass?: string;
+  background?: string;
   level?: number; // Added level
   backstory?: string;
   imageUrl?: string; // URL or data URI
@@ -23,6 +23,8 @@ export interface Character {
   maxHp?: number;
   armorClass?: number;
   initiativeModifier?: number;
+  currentExp?: number; // Added for EXP tracking
+  nextLevelExp?: number; // Added for EXP tracking
   // Optional: stats, inventory, notes
 }
 

@@ -17,10 +17,10 @@ interface CampaignContextType {
   addCharacter: (characterData: Omit<Character, 'id' | 'campaignId'>) => void;
   updateCharacter: (character: Character) => void;
   deleteCharacter: (characterId: string) => void;
-  selectedCharacterForProfile: Character | null; 
-  isProfileOpen: boolean; 
-  openProfileDialog: (character: Character) => void; 
-  closeProfileDialog: () => void; 
+  selectedCharacterForProfile: Character | null;
+  isProfileOpen: boolean;
+  openProfileDialog: (character: Character) => void;
+  closeProfileDialog: () => void;
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -32,53 +32,59 @@ const initialMockCampaigns: Campaign[] = [
 ];
 
 const initialMockCharacters: Character[] = [
-    { 
-      id: 'char1', 
-      campaignId: '1', 
-      name: 'Elara Meadowlight', 
-      race: 'Elf', 
-      class: 'Wizard', 
-      subclass: 'School of Evocation', 
-      background: 'Sage', 
-      level: 5, 
-      backstory: 'A curious elf seeking ancient lore. She has a keen mind and a quicker wit, often finding herself in trouble due to her insatiable thirst for knowledge.', 
+    {
+      id: 'char1',
+      campaignId: '1',
+      name: 'Elara Meadowlight',
+      race: 'Elf',
+      class: 'Wizard',
+      subclass: 'School of Evocation',
+      background: 'Sage',
+      level: 5,
+      backstory: 'A curious elf seeking ancient lore. She has a keen mind and a quicker wit, often finding herself in trouble due to her insatiable thirst for knowledge.',
       imageUrl: `https://placehold.co/400x400.png`,
       currentHp: 28,
       maxHp: 28,
       armorClass: 12,
       initiativeModifier: 2,
+      currentExp: 6500,
+      nextLevelExp: 14000,
     },
-    { 
-      id: 'char2', 
-      campaignId: '1', 
-      name: 'Grom Stonefist', 
-      race: 'Orc', 
-      class: 'Barbarian', 
-      subclass: 'Path of the Totem Warrior', 
-      background: 'Outlander', 
-      level: 5, 
-      backstory: 'A fierce warrior from the wilds, driven by a primal connection to nature and a desire to protect his kin.', 
+    {
+      id: 'char2',
+      campaignId: '1',
+      name: 'Grom Stonefist',
+      race: 'Orc',
+      class: 'Barbarian',
+      subclass: 'Path of the Totem Warrior',
+      background: 'Outlander',
+      level: 5,
+      backstory: 'A fierce warrior from the wilds, driven by a primal connection to nature and a desire to protect his kin.',
       imageUrl: `https://placehold.co/400x400.png`,
       currentHp: 52,
       maxHp: 52,
       armorClass: 15,
       initiativeModifier: 1,
+      currentExp: 7200,
+      nextLevelExp: 14000,
     },
-    { 
-      id: 'char3', 
-      campaignId: '2', 
+    {
+      id: 'char3',
+      campaignId: '2',
       name: 'Seraphina Moonwhisper',
-      race: 'Human', 
-      class: 'Cleric', 
-      subclass: 'Life Domain', 
-      background: 'Acolyte', 
-      level: 4, 
-      backstory: 'A devout healer on a holy mission to bring light to the darkest corners of the world.', 
+      race: 'Human',
+      class: 'Cleric',
+      subclass: 'Life Domain',
+      background: 'Acolyte',
+      level: 4,
+      backstory: 'A devout healer on a holy mission to bring light to the darkest corners of the world.',
       imageUrl: `https://placehold.co/400x400.png`,
       currentHp: 30,
       maxHp: 30,
       armorClass: 16,
       initiativeModifier: 0,
+      currentExp: 2700,
+      nextLevelExp: 6500,
     },
 ];
 
@@ -96,7 +102,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedCampaigns = localStorage.getItem('campaigns');
     const storedCharacters = localStorage.getItem('characters');
-    
+
     if (storedCampaigns) {
       setCampaignsState(JSON.parse(storedCampaigns));
     } else {
@@ -185,6 +191,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       maxHp: characterData.maxHp || 10,
       armorClass: characterData.armorClass || 10,
       initiativeModifier: characterData.initiativeModifier || 0,
+      currentExp: characterData.currentExp || 0,
+      nextLevelExp: characterData.nextLevelExp || 1000, // Default to 1000 for next level
       imageUrl: characterData.imageUrl || `https://placehold.co/400x400.png`,
     };
     setCharactersState(prev => [newCharacter, ...prev]);
@@ -211,15 +219,15 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     setIsProfileOpen(false);
   }, []);
 
-  if (isLoading && typeof window === 'undefined') { 
-    return null; 
+  if (isLoading && typeof window === 'undefined') {
+    return null;
   }
 
   return (
-    <CampaignContext.Provider value={{ 
+    <CampaignContext.Provider value={{
       campaigns, activeCampaign, setCampaignActive, addCampaign, updateCampaign, deleteCampaign, isLoading,
       characters, addCharacter, updateCharacter, deleteCharacter,
-      selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog 
+      selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog
     }}>
       {children}
     </CampaignContext.Provider>

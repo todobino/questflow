@@ -5,20 +5,20 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button'; // Import Button
-import Link from 'next/link'; // Import Link
+import { Button } from '@/components/ui/button'; 
+import Link from 'next/link'; 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Shield as ShieldIcon, Heart } from 'lucide-react';
+import { Shield as ShieldIcon, Award } from 'lucide-react'; // Changed Heart to Award
 
 export function PartySheet() {
   const {
     activeCampaign,
     characters,
     isLoading: isCampaignLoading,
-    openProfileDialog // Get from context
+    openProfileDialog 
   } = useCampaignContext();
   const [partyMembers, setPartyMembers] = useState<Character[]>([]);
 
@@ -38,54 +38,59 @@ export function PartySheet() {
     <div className="h-full flex flex-col">
       <ScrollArea className="flex-grow">
         <div className="space-y-3 pr-1">
-          {partyMembers.map((member) => (
-            <Card
-              key={member.id}
-              className="shadow-lg relative hover:border-primary transition-colors cursor-pointer"
-              onClick={() => openProfileDialog(member)}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center space-x-3 mb-2">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage
-                      src={member.imageUrl || `https://placehold.co/64x64.png`}
-                      alt={member.name}
-                      data-ai-hint={`${member.race || ''} ${member.class || ''} portrait`}
-                    />
-                    <AvatarFallback>{member.name.substring(0, 1).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+          {partyMembers.map((member) => {
+            const expPercentage = (member.nextLevelExp && member.nextLevelExp > 0 && member.currentExp !== undefined)
+              ? (member.currentExp / member.nextLevelExp) * 100
+              : 0;
+            return (
+              <Card
+                key={member.id}
+                className="shadow-lg relative hover:border-primary transition-colors cursor-pointer"
+                onClick={() => openProfileDialog(member)}
+              >
+                <CardContent className="p-3">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage
+                        src={member.imageUrl || `https://placehold.co/64x64.png`}
+                        alt={member.name}
+                        data-ai-hint={`${member.race || ''} ${member.class || ''} portrait`}
+                      />
+                      <AvatarFallback>{member.name.substring(0, 1).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-md">{member.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Lvl {member.level || 1} {member.race || 'N/A'} {member.class || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {member.armorClass !== undefined && (
+                    <div className="absolute top-2 right-2 flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-1 rounded-md shadow-sm text-xs">
+                      <ShieldIcon className="h-3.5 w-3.5 mr-1 text-foreground" />
+                      <span className="font-semibold text-foreground">{member.armorClass}</span>
+                    </div>
+                  )}
+
                   <div>
-                    <p className="font-semibold text-md">{member.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Lvl {member.level || 1} {member.race || 'N/A'} {member.class || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                {member.armorClass !== undefined && (
-                  <div className="absolute top-2 right-2 flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-1 rounded-md shadow-sm text-xs">
-                    <ShieldIcon className="h-3.5 w-3.5 mr-1 text-foreground" />
-                    <span className="font-semibold text-foreground">{member.armorClass}</span>
-                  </div>
-                )}
-
-                <div>
-                  <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
-                    <span className="flex items-center">
-                      <Heart className="h-3 w-3 mr-1 text-red-500" />
-                      {member.currentHp ?? 'N/A'} / {member.maxHp ?? 'N/A'}
-                    </span>
-                    {member.maxHp && member.maxHp > 0 && member.currentHp !== undefined && (
-                       <span>{Math.round((member.currentHp / member.maxHp) * 100)}%</span>
+                    <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
+                      <span className="flex items-center">
+                        <Award className="h-3 w-3 mr-1 text-amber-500" /> {/* Changed icon */}
+                        EXP: {member.currentExp ?? '0'} / {member.nextLevelExp ?? '?'}
+                      </span>
+                      {member.nextLevelExp && member.nextLevelExp > 0 && member.currentExp !== undefined && (
+                         <span>{Math.round(expPercentage)}%</span>
+                      )}
+                    </div>
+                    {member.nextLevelExp && member.nextLevelExp > 0 && member.currentExp !== undefined && (
+                        <Progress value={expPercentage} className="h-1.5" />
                     )}
                   </div>
-                  {member.maxHp && member.maxHp > 0 && member.currentHp !== undefined && (
-                      <Progress value={(member.currentHp / member.maxHp) * 100} className="h-1.5" />
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
            {partyMembers.length === 0 && activeCampaign && (
               <p className="text-sm text-muted-foreground text-center py-4">No party members for this campaign.</p>
           )}
@@ -94,7 +99,7 @@ export function PartySheet() {
           )}
         </div>
       </ScrollArea>
-      <div className="mt-auto pt-3"> {/* Ensure button is at the bottom and has some top margin */}
+      <div className="mt-auto pt-3"> 
         <Button asChild className="w-full">
           <Link href="/party">Manage Party</Link>
         </Button>
