@@ -44,7 +44,7 @@ interface RollSegment {
 
 interface RollResultDetails {
   id: string;
-  total: number | string;
+  total: number | string; // Can be number for dice, string for "Heads"/"Tails"
   breakdown: string;
   isCritical?: 'success' | 'failure';
   diceType: RollType;
@@ -113,7 +113,7 @@ export function DiceRollerTool() {
 
   const getRollDetailsDisplayForFormula = (result: IndividualDieRollResult): React.ReactNode => {
     if (result.isD20AdvDis && result.physicalRolls.length === 2) {
-      const rolls = [...result.physicalRolls].sort((a, b) => a - b); // Sort for consistent display
+      const rolls = [...result.physicalRolls].sort((a, b) => a - b); 
       const isAdv = result.advantageState === 'advantage';
       const isDis = result.advantageState === 'disadvantage';
 
@@ -190,6 +190,7 @@ export function DiceRollerTool() {
       );
     }
     setActiveRollFormulaDisplay(<div className="flex flex-wrap items-center justify-center gap-x-0.5">{parts}</div>);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [diceChain, modifier]);
 
 
@@ -344,10 +345,18 @@ export function DiceRollerTool() {
       const finalTotalWithModifier = currentTotalSum + modifier;
       const rollId = String(Date.now() + Math.random());
 
-      const historyBreakdownString = outputRollSegments.map(segment => {
-        const rollsSum = segment.results.reduce((sum, r) => sum + r.chosenRoll, 0);
-        return `${segment.count > 1 ? segment.count : ''}${segment.die}(${segment.results.map(r => r.chosenRoll).join('+')})`;
-      }).join(' + ') + (modifier !== 0 ? (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`) : '') + ` = ${finalTotalWithModifier}`;
+      const historyBreakdownParts = outputRollSegments.map(segment => {
+        const rollsSum = segment.results.map(r => r.chosenRoll).join('+');
+        return `${segment.count > 1 ? segment.count : ''}${segment.die}(${rollsSum})`;
+      });
+      
+      let historyBreakdownString = historyBreakdownParts.join(' + ');
+      if (modifier !== 0) {
+        historyBreakdownString += (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`);
+      } else if (historyBreakdownParts.length === 0 && modifier === 0) { // Only modifier, no dice
+        historyBreakdownString = String(modifier);
+      }
+      historyBreakdownString += ` = ${finalTotalWithModifier}`;
 
 
       const resultDetails: RollResultDetails = {
@@ -460,7 +469,7 @@ export function DiceRollerTool() {
           </Button>
         </CardHeader>
 
-        <CardContent className="space-y-4 px-4 pt-4 pb-4">
+        <CardContent className="space-y-4 px-4 pt-4 pb-0">
             <div className="mb-4 flex min-h-[90px] flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner">
                 {isRolling ? (
                     <Disc3 className="h-10 w-10 animate-spin text-accent" />
@@ -519,7 +528,7 @@ export function DiceRollerTool() {
                         className={cn(
                             "font-semibold transition-transform hover:scale-105 active:scale-95",
                             "h-auto aspect-square flex flex-col items-center justify-center p-1 text-xs",
-                            "border-primary text-primary-foreground" // Ensure text is white for default button
+                            "border-primary text-primary-foreground"
                         )}
                         variant="default" 
                         disabled={isRolling}
@@ -565,7 +574,7 @@ export function DiceRollerTool() {
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1">
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
