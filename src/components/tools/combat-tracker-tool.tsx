@@ -349,19 +349,19 @@ export function CombatTrackerTool() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex-grow flex flex-col min-h-0"> {/* Replaces Card */}
-        <div className="p-1.5 flex-shrink-0"> {/* Replaces CardHeader */}
-          <h3 className="flex items-center text-lg font-semibold"> {/* Replaces CardTitle */}
+      <div className="flex-grow flex flex-col min-h-0">
+        <div className="p-1.5 flex-shrink-0">
+          <h3 className="flex items-center text-lg font-semibold">
             <Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order
           </h3>
         </div>
-        <div className="p-1.5 flex-grow overflow-y-auto"> {/* Replaces CardContent */}
+        <div className="p-1.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
             <ul className="space-y-2">
               {sortedCombatants.map((c) => (
-                <li key={c.id} className={`rounded-md border p-2.5 text-xs transition-all duration-300 ${c.id === currentTurnCombatantId ? 'ring-2 ring-primary shadow-md scale-[1.01]' : 'opacity-90 hover:opacity-100'}`}>
+                <li key={c.id} className={`rounded-md border p-2.5 text-xs transition-all duration-300 shadow-md ${c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.01]' : 'opacity-90 hover:opacity-100'}`}>
                   <div className="flex items-center justify-between mb-1.5">
                     <h4 className={`font-semibold ${c.type === 'player' ? 'text-blue-600' : 'text-red-600'}`}>{c.name}</h4>
                     <div className="flex items-center gap-1.5">
