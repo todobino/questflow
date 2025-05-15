@@ -292,7 +292,7 @@ export function CombatTrackerTool() {
         </div>
         {!combatStarted && (
           <Button onClick={handleRollEntirePartyInitiative} className="w-full" size="sm" variant="default">
-            <Users className="mr-2 h-4 w-4" /> Roll Entire Party Initiative
+            <Users className="mr-2 h-4 w-4" /> Add Party
           </Button>
         )}
       </div>
@@ -390,7 +390,7 @@ export function CombatTrackerTool() {
             )}
           </h3>
         </div>
-        <div className="p-1.5 flex-grow overflow-y-auto">
+        <div className="py-1.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -399,7 +399,7 @@ export function CombatTrackerTool() {
                 <li 
                   key={c.id} 
                   className={cn(
-                    'flex items-center gap-3 p-2.5 rounded-lg border shadow-lg transition-all duration-300',
+                    'flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300',
                     c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
                     c.displayColor || 'bg-card' // Fallback to card background
                   )}
@@ -496,3 +496,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
