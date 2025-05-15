@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, ArrowRight, Play, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, ChevronDown, Heart } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowRight, Play, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, ChevronDown, Heart, MinusCircle } from 'lucide-react';
 import type { Combatant, Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -33,7 +33,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger as ShadAlertDialogTrigger,
+  AlertDialogTrigger as ShadAlertDialogTrigger, 
 } from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
@@ -41,8 +41,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress'; // Added Progress import
+import { Progress } from '@/components/ui/progress';
 
 const initialCombatants: Combatant[] = [];
 
@@ -75,6 +80,12 @@ export function CombatTrackerTool() {
   const [round, setRound] = useState(0);
   const [turnIndex, setTurnIndex] = useState(0);
   const [combatStarted, setCombatStarted] = useState(false);
+
+  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
+  const [hitHealAmount, setHitHealAmount] = useState('');
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [combatantToDeleteId, setCombatantToDeleteId] = useState<string | null>(null);
+
 
   const { toast } = useToast();
 
@@ -149,8 +160,9 @@ export function CombatTrackerTool() {
         return;
     }
 
-    const playerIndex = partyCharacters.findIndex(p => p.id === characterToAdd.id);
-    const displayColor = playerColorClasses[playerIndex % playerColorClasses.length];
+    const pcIndex = partyCharacters.findIndex(pc => pc.id === characterToAdd.id);
+    const displayColor = playerColorClasses[pcIndex % playerColorClasses.length];
+
 
     const newPlayerCombatant: Combatant = {
       id: String(Date.now() + Math.random()),
@@ -172,69 +184,86 @@ export function CombatTrackerTool() {
     setIsAddPlayerDialogOpen(false);
   };
 
-  const handleAddPartyToCombat = () => {
+ const handleAddPartyToCombat = () => {
     if (!activeCampaign || !partyCharacters) {
       return;
     }
-  
+
     let updatedCombatants = [...combatants];
-  
-    partyCharacters
-      .filter(char => char.campaignId === activeCampaign.id)
-      .forEach((char, index) => {
-        const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
-        const existingCombatantIndex = updatedCombatants.findIndex(c => c.originalCharacterId === char.id);
-        
-        const pcIndex = partyCharacters.findIndex(pc => pc.id === char.id);
-        const displayColor = playerColorClasses[pcIndex % playerColorClasses.length];
-  
-        if (existingCombatantIndex !== -1) {
-          updatedCombatants[existingCombatantIndex] = {
-            ...updatedCombatants[existingCombatantIndex],
-            initiative: newInitiative,
-            hp: char.currentHp ?? char.maxHp ?? updatedCombatants[existingCombatantIndex].hp,
-            maxHp: char.maxHp ?? updatedCombatants[existingCombatantIndex].maxHp,
-            armorClass: char.armorClass,
-            displayColor: updatedCombatants[existingCombatantIndex].displayColor || displayColor, 
-          };
-        } else {
-          updatedCombatants.push({
-            id: String(Date.now() + Math.random() + index),
-            name: char.name,
-            type: 'player',
-            hp: char.currentHp ?? char.maxHp ?? 10,
-            maxHp: char.maxHp ?? 10,
-            initiative: newInitiative,
-            conditions: [],
-            initiativeModifier: char.initiativeModifier ?? 0,
-            isPlayerCharacter: true,
-            originalCharacterId: char.id,
-            armorClass: char.armorClass,
-            displayColor: displayColor,
-          });
-        }
-      });
+    const partyCharactersToAdd = partyCharacters.filter(char => char.campaignId === activeCampaign.id);
+
+    partyCharactersToAdd.forEach((char, index) => {
+      const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
+      const existingCombatantIndex = updatedCombatants.findIndex(c => c.originalCharacterId === char.id);
+      
+      const pcIndex = partyCharacters.findIndex(pc => pc.id === char.id); 
+      const displayColor = playerColorClasses[pcIndex % playerColorClasses.length];
+
+      if (existingCombatantIndex !== -1) {
+        updatedCombatants[existingCombatantIndex] = {
+          ...updatedCombatants[existingCombatantIndex],
+          initiative: newInitiative,
+          hp: char.currentHp ?? char.maxHp ?? updatedCombatants[existingCombatantIndex].hp,
+          maxHp: char.maxHp ?? updatedCombatants[existingCombatantIndex].maxHp,
+          armorClass: char.armorClass,
+          initiativeModifier: char.initiativeModifier ?? 0,
+          displayColor: updatedCombatants[existingCombatantIndex].displayColor || displayColor, 
+        };
+      } else {
+        updatedCombatants.push({
+          id: String(Date.now() + Math.random() + index),
+          name: char.name,
+          type: 'player',
+          hp: char.currentHp ?? char.maxHp ?? 10,
+          maxHp: char.maxHp ?? 10,
+          initiative: newInitiative,
+          conditions: [],
+          initiativeModifier: char.initiativeModifier ?? 0,
+          isPlayerCharacter: true,
+          originalCharacterId: char.id,
+          armorClass: char.armorClass,
+          displayColor: displayColor,
+        });
+      }
+    });
     setCombatants(updatedCombatants);
   };
 
-
-  const handleRemoveCombatant = (id: string) => {
+  const removeCombatant = (id: string) => {
     setCombatants(prev => prev.filter(c => c.id !== id));
   };
 
-  const handleHpChange = (id: string, newHpString: string) => {
-    const newHp = parseInt(newHpString, 10);
-    if (isNaN(newHp) && newHpString !== "") return; // Allow clearing input, but not NaN
+  const confirmDeleteCombatant = () => {
+    if (combatantToDeleteId) {
+      removeCombatant(combatantToDeleteId);
+    }
+    setIsDeleteConfirmOpen(false);
+    setCombatantToDeleteId(null);
+    setOpenPopoverId(null); 
+  };
+
+
+  const handleApplyHitOrHeal = (combatantId: string, type: 'hit' | 'heal') => {
+    const amount = parseInt(hitHealAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: "Invalid Amount", description: "Please enter a positive number.", variant: "destructive" });
+      return;
+    }
 
     setCombatants(prev => prev.map(c => {
-      if (c.id === id) {
-        const validatedHp = newHpString === "" ? c.hp : Math.max(0, Math.min(c.maxHp ?? Infinity, newHp));
-        return { ...c, hp: validatedHp };
+      if (c.id === combatantId) {
+        let newHp;
+        if (type === 'hit') {
+          newHp = Math.max(0, c.hp - amount);
+        } else { 
+          newHp = Math.min(c.maxHp, c.hp + amount);
+        }
+        return { ...c, hp: newHp };
       }
       return c;
     }));
+    setOpenPopoverId(null); 
   };
-  
 
   const handleInitiativeChange = (id: string, newInitiativeVal: string) => {
      const newInitiative = newInitiativeVal === '' ? undefined : parseInt(newInitiativeVal, 10);
@@ -286,27 +315,27 @@ export function CombatTrackerTool() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 mb-2 space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full hover:bg-background hover:border-primary hover:text-primary">
-                Add Combatant <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
-              <DropdownMenuItem onClick={() => {setIsAddPlayerDialogOpen(true); setSelectedPlayerCharacterId(undefined); setPlayerInitiativeInput('');}}>
-                <UserPlus className="mr-2 h-4 w-4" /> Player Character
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsAddEnemyDialogOpen(true)}>
-                <Bot className="mr-2 h-4 w-4" /> Enemy/NPC
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+      <div className="flex-shrink-0 mb-2">
+         <div className="grid grid-cols-2 gap-2">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full hover:bg-background hover:border-primary hover:text-primary">
+                    Add Combatant <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
+                <DropdownMenuItem onClick={() => {setIsAddPlayerDialogOpen(true); setSelectedPlayerCharacterId(undefined); setPlayerInitiativeInput('');}}>
+                    <UserPlus className="mr-2 h-4 w-4" /> Player Character
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsAddEnemyDialogOpen(true)}>
+                    <Bot className="mr-2 h-4 w-4" /> Enemy/NPC
+                </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
 
-          <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default">
-            <Users className="mr-2 h-4 w-4" /> Add Party
-          </Button>
+            <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default">
+                <Users className="mr-2 h-4 w-4" /> Add Party
+            </Button>
         </div>
       </div>
 
@@ -412,88 +441,141 @@ export function CombatTrackerTool() {
                 const hpPercentage = c.maxHp > 0 ? (c.hp / c.maxHp) * 100 : 0;
                 const isHpLow = hpPercentage < 20;
                 return (
-                <li
-                  key={c.id}
-                  className={cn(
-                    'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300',
-                    c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
-                    c.hp <= 0 ? 'opacity-50 grayscale' : '',
-                    c.displayColor || 'bg-card'
-                  )}
-                >
-                  <div className={cn(
-                      "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
-                      c.type === 'player' ? "bg-primary/90 text-primary-foreground dark:bg-primary-foreground dark:text-primary" : "bg-destructive/90 text-destructive-foreground dark:bg-destructive dark:text-destructive-foreground"
-                    )}
-                  >
-                    {c.initiative ?? '-'}
-                  </div>
+                <Popover key={c.id} open={openPopoverId === c.id} onOpenChange={(isOpen) => {
+                    if (!isOpen) setOpenPopoverId(null);
+                    else { setOpenPopoverId(c.id); setHitHealAmount(''); }
+                }}>
+                    <PopoverTrigger asChild>
+                        <li
+                        className={cn(
+                            'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300 cursor-pointer',
+                            c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
+                            c.hp <= 0 ? 'opacity-50 grayscale' : '',
+                            c.displayColor || 'bg-card'
+                        )}
+                        >
+                        <div className={cn(
+                            "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
+                            c.type === 'player' ? "bg-primary/90 text-primary-foreground dark:bg-primary-foreground dark:text-primary" : "bg-destructive/90 text-destructive-foreground dark:bg-destructive dark:text-destructive-foreground"
+                            )}
+                        >
+                            {c.initiative ?? '-'}
+                        </div>
 
-                  <div className="flex-grow flex flex-col">
-                    <h4 className={cn(
-                        "font-semibold text-md",
-                         c.type === 'player' ? 'text-primary-darker dark:text-foreground' : 'text-destructive-darker dark:text-foreground'
-                      )}
-                    >
-                      {c.name}
-                    </h4>
-                     {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
-                    {c.conditions.length > 0 && (
-                      <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left">
-                        {c.conditions.join(', ')}
-                      </span>
-                    )}
-                     <div className="mt-auto flex justify-end items-center gap-3 text-xs text-muted-foreground dark:text-gray-400">
-                        <div className="w-full mt-1">
-                          <div className="flex items-center justify-between text-xs mb-0.5">
-                            <span className="flex items-center">
-                              <Heart className="mr-1 h-3 w-3 text-red-500" /> 
-                              {c.hp} / {c.maxHp}
+                        <div className="flex-grow flex flex-col">
+                            <h4 className={cn(
+                                "font-semibold text-md",
+                                c.type === 'player' ? 'text-primary-darker dark:text-foreground' : 'text-destructive-darker dark:text-foreground'
+                            )}
+                            >
+                            {c.name}
+                            </h4>
+                           
+                            {c.conditions.length > 0 && (
+                            <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left">
+                                {c.conditions.join(', ')}
                             </span>
-                            <span>{Math.round(hpPercentage)}%</span>
-                          </div>
-                          <Progress 
-                            value={hpPercentage} 
-                            className={cn(
-                              "h-1.5 w-full [&>div]:bg-primary dark:[&>div]:bg-foreground",
-                              isHpLow && "[&>div]:bg-destructive"
-                            )} 
-                          />
+                            )}
+                             <div className="w-full mt-1">
+                                <div className="flex items-center justify-between text-xs mb-0.5 text-muted-foreground">
+                                    <span className="flex items-center">
+                                    <Heart className="mr-1 h-3 w-3 text-red-500" /> 
+                                    {c.hp} / {c.maxHp}
+                                    </span>
+                                    <span>{Math.round(hpPercentage)}%</span>
+                                </div>
+                                <Progress 
+                                    value={hpPercentage} 
+                                    className={cn(
+                                    "h-1.5 w-full [&>div]:bg-primary dark:[&>div]:bg-foreground",
+                                    isHpLow && "[&>div]:bg-destructive"
+                                    )} 
+                                />
+                            </div>
                         </div>
-                    </div>
-                  </div>
 
-                  <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                    {c.armorClass !== undefined && (
-                        <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
-                        <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                        <span className="font-semibold">{c.armorClass}</span>
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+                            {c.armorClass !== undefined && (
+                                <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
+                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                                <span className="font-semibold">{c.armorClass}</span>
+                                </div>
+                            )}
                         </div>
-                    )}
-                    <AlertDialog>
-                        <ShadAlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                        </ShadAlertDialogTrigger>
-                        <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>Remove {c.name}?</AlertDialogTitle></AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleRemoveCombatant(c.id)}>Remove</AlertDialogAction>
-                        </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </li>
+                        </li>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3" side="bottom" align="end">
+                        <div className="space-y-3">
+                           <ShadAlertDialogTrigger asChild>
+                                <Button 
+                                    variant="destructive" 
+                                    className="w-full" 
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation(); 
+                                        setCombatantToDeleteId(c.id);
+                                        setIsDeleteConfirmOpen(true);
+                                    }}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
+                                </Button>
+                            </ShadAlertDialogTrigger>
+                            <div className="space-y-1">
+                                <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
+                                <Input 
+                                    id={`hit-heal-${c.id}`}
+                                    type="number" 
+                                    value={hitHealAmount} 
+                                    onChange={(e) => setHitHealAmount(e.target.value)}
+                                    placeholder="e.g., 10"
+                                    bsSize="sm"
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <Button 
+                                    variant="destructive" 
+                                    size="sm" 
+                                    className="flex-1"
+                                    onClick={() => handleApplyHitOrHeal(c.id, 'hit')}
+                                >
+                                    <MinusCircle className="mr-2 h-4 w-4" /> Hit
+                                </Button>
+                                <Button 
+                                    variant="success" 
+                                    size="sm" 
+                                    className="flex-1"
+                                    onClick={() => handleApplyHitOrHeal(c.id, 'heal')}
+                                >
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Heal
+                                </Button>
+                            </div>
+                        </div>
+                    </PopoverContent>
+                </Popover>
               )})}
             </ul>
           )}
         </div>
       </div>
 
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {combatants.find(cb => cb.id === combatantToDeleteId)?.name || 'Combatant'}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCombatantToDeleteId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteCombatant}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       {combatants.length > 0 && (
-        <div className="shadow-md mt-2 flex-shrink-0 bg-card border-t">
+        <div className="shadow-md mt-auto flex-shrink-0 bg-card border-t">
             <div className="p-2 flex items-center gap-2">
                 {!combatStarted ? (
                     <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
@@ -518,3 +600,6 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
+
+    
