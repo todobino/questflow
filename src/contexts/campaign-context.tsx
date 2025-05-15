@@ -27,6 +27,12 @@ interface CampaignContextType {
   currentSession: SessionLog | null;
   startNewSession: () => void;
   endCurrentSession: () => void;
+  pauseCurrentSession: () => void;
+  resumeSession: () => void;
+  requestSwitchCampaign: (targetCampaignId: string) => void;
+  confirmSwitchCampaign: () => void;
+  cancelSwitchCampaign: () => void;
+  isSwitchCampaignDialogVisible: boolean;
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -132,6 +138,10 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const [selectedCharacterForProfile, setSelectedCharacterForProfile] = useState<Character | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  // State for campaign switch confirmation
+  const [isSwitchCampaignDialogVisible, setIsSwitchCampaignDialogVisible] = useState(false);
+  const [targetCampaignIdToSwitch, setTargetCampaignIdToSwitch] = useState<string | null>(null);
+
   useEffect(() => {
     const storedCampaigns = localStorage.getItem('campaigns');
     const storedCharacters = localStorage.getItem('characters');
@@ -139,11 +149,21 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     const storedFactionReputations = localStorage.getItem('factionReputations');
     const storedSessionLogs = localStorage.getItem('sessionLogs');
 
+    let initialActiveCampaignId: string | null = null;
+
     if (storedCampaigns) {
-      setCampaignsState(JSON.parse(storedCampaigns));
+      const parsedCampaigns: Campaign[] = JSON.parse(storedCampaigns);
+      setCampaignsState(parsedCampaigns);
+      initialActiveCampaignId = parsedCampaigns.find(c => c.isActive)?.id || parsedCampaigns[0]?.id || null;
     } else {
       setCampaignsState(initialMockCampaigns);
+      initialActiveCampaignId = initialMockCampaigns.find(c => c.isActive)?.id || initialMockCampaigns[0]?.id || null;
     }
+    
+    if (initialActiveCampaignId) {
+        setActiveCampaignState(campaigns.find(c => c.id === initialActiveCampaignId) || null);
+    }
+
 
     if (storedCharacters) {
       setCharactersState(JSON.parse(storedCharacters));
@@ -166,44 +186,28 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     if (storedSessionLogs) {
       const parsedLogs = JSON.parse(storedSessionLogs) as SessionLog[];
       setSessionLogsState(parsedLogs);
-      const activeLog = parsedLogs.find(log => log.status === 'active' && log.campaignId === (activeCampaign?.id || ''));
-      setCurrentSessionState(activeLog || null);
+      if (initialActiveCampaignId) {
+        const activeOrPausedLog = parsedLogs
+          .filter(log => log.campaignId === initialActiveCampaignId && (log.status === 'active' || log.status === 'paused'))
+          .sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()) // latest first
+          .sort((a,b) => (a.status === 'active' ? -1 : 1) - (b.status === 'active' ? -1 : 1)); // 'active' before 'paused'
+        setCurrentSessionState(activeOrPausedLog[0] || null);
+      }
     } else {
       setSessionLogsState(initialMockSessionLogs);
     }
 
-
     setIsLoading(false);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Ran once on mount
+
 
   useEffect(() => {
     if (!isLoading) {
       localStorage.setItem('campaigns', JSON.stringify(campaigns));
-      const currentActive = campaigns.find(c => c.isActive) || campaigns[0] || null;
-      setActiveCampaignState(currentActive);
-      
-      // When active campaign changes, find if there's an active session for it
-      if (currentActive) {
-          const activeLogForNewCampaign = sessionLogs.find(log => log.status === 'active' && log.campaignId === currentActive.id);
-          setCurrentSessionState(activeLogForNewCampaign || null);
-      } else {
-          setCurrentSessionState(null); // No active campaign, no active session
-      }
-
+      // Active campaign is set by setCampaignActive or initial load
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaigns, isLoading]); 
-
-   useEffect(() => {
-    // This effect ensures that if activeCampaign changes, currentSession updates accordingly.
-    if (!isLoading && activeCampaign) {
-      const activeLogForCurrentCampaign = sessionLogs.find(log => log.status === 'active' && log.campaignId === activeCampaign.id);
-      setCurrentSessionState(activeLogForCurrentCampaign || null);
-    } else if (!isLoading && !activeCampaign) {
-       setCurrentSessionState(null);
-    }
-  }, [activeCampaign, sessionLogs, isLoading]);
-
+  }, [campaigns, isLoading]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -236,8 +240,39 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       setCampaignsState(prevCampaigns =>
         prevCampaigns.map(c => ({ ...c, isActive: c.id === campaignId }))
       );
+      setActiveCampaignState(selectedCampaign);
+
+      // Find latest active or paused session for the new campaign
+      const relevantLogs = sessionLogs
+        .filter(log => log.campaignId === campaignId && (log.status === 'active' || log.status === 'paused'))
+        .sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()) // latest first
+        .sort((a,b) => (a.status === 'active' ? -1 : 1) - (b.status === 'active' ? -1 : 1)); // 'active' before 'paused'
+      setCurrentSessionState(relevantLogs[0] || null);
     }
-  }, [campaigns]);
+  }, [campaigns, sessionLogs]);
+
+  const requestSwitchCampaign = useCallback((targetId: string) => {
+    if (currentSession && currentSession.status === 'active' && currentSession.campaignId === activeCampaign?.id) {
+      setTargetCampaignIdToSwitch(targetId);
+      setIsSwitchCampaignDialogVisible(true);
+    } else {
+      setCampaignActive(targetId);
+    }
+  }, [currentSession, activeCampaign, setCampaignActive]);
+
+  const confirmSwitchCampaign = useCallback(() => {
+    if (targetCampaignIdToSwitch) {
+      setCampaignActive(targetCampaignIdToSwitch);
+    }
+    setIsSwitchCampaignDialogVisible(false);
+    setTargetCampaignIdToSwitch(null);
+  }, [targetCampaignIdToSwitch, setCampaignActive]);
+
+  const cancelSwitchCampaign = useCallback(() => {
+    setIsSwitchCampaignDialogVisible(false);
+    setTargetCampaignIdToSwitch(null);
+  }, []);
+
 
   const addCampaign = useCallback((campaignData: Omit<Campaign, 'id' | 'bannerImageUrl'> & { bannerImageUrl?: string }) => {
     const newCampaign: Campaign = {
@@ -249,6 +284,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       let newCampaigns = [newCampaign, ...prev];
       if (newCampaign.isActive) {
         newCampaigns = newCampaigns.map(c => c.id === newCampaign.id ? c : {...c, isActive: false});
+        setActiveCampaignState(newCampaign); // Also set as active
       }
       return newCampaigns;
     });
@@ -259,23 +295,38 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       let newCampaigns = prev.map(c => c.id === updatedCampaign.id ? updatedCampaign : c);
       if (updatedCampaign.isActive) {
          newCampaigns = newCampaigns.map(c => c.id === updatedCampaign.id ? c : {...c, isActive: false});
+         setActiveCampaignState(updatedCampaign); // Update active campaign state
+      } else if (activeCampaign?.id === updatedCampaign.id && !updatedCampaign.isActive) {
+          // If the currently active campaign is being deactivated, find a new one or set to null
+          const nextActive = newCampaigns.find(c => c.isActive) || newCampaigns[0] || null;
+          setActiveCampaignState(nextActive);
+          if(nextActive) { // Ensure isActive flag is consistent
+             newCampaigns = newCampaigns.map(c => ({...c, isActive: c.id === nextActive.id}));
+          }
       }
       return newCampaigns;
     });
-  }, []);
+  }, [activeCampaign]);
 
   const deleteCampaign = useCallback((campaignId: string) => {
     setCampaignsState(prev => prev.filter(c => c.id !== campaignId));
     setCharactersState(prevChars => prevChars.filter(char => char.campaignId !== campaignId));
     setFactionsState(prevFactions => prevFactions.filter(f => f.campaignId !== campaignId));
     setFactionReputationsState(prevReps => prevReps.filter(r => r.campaignId !== campaignId));
-    setSessionLogsState(prevLogs => prevLogs.filter(log => log.campaignId !== campaignId)); // Also clear session logs for deleted campaign
-    
-  }, []);
+    setSessionLogsState(prevLogs => prevLogs.filter(log => log.campaignId !== campaignId));
+    if (activeCampaign?.id === campaignId) {
+        const remainingCampaigns = campaigns.filter(c => c.id !== campaignId);
+        const newActive = remainingCampaigns.find(c=>c.isActive) || remainingCampaigns[0] || null;
+        setActiveCampaignState(newActive);
+        if(newActive) {
+             setCampaignsState(prev => prev.map(c => ({...c, isActive: c.id === newActive.id})));
+        }
+    }
+  }, [activeCampaign, campaigns]);
 
   const addCharacter = useCallback((characterData: Omit<Character, 'id' | 'campaignId'>) => {
     if (!activeCampaign) {
-      
+      toast({ title: "Error", description: "No active campaign to save character to.", variant: "destructive" });
       return;
     }
     const newCharacter: Character = {
@@ -314,24 +365,22 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
 
   const startNewSession = useCallback(() => {
     if (!activeCampaign) {
-      
+      toast({ title: "No Campaign Active", description: "Please select an active campaign.", variant: "destructive" });
       return;
     }
-    if (currentSession && currentSession.campaignId === activeCampaign.id && currentSession.status === 'active') {
-      
-      return;
+    // Check for existing active or paused session for THIS campaign
+    const existingSessionForCampaign = sessionLogs.find(log => log.campaignId === activeCampaign.id && (log.status === 'active' || log.status === 'paused'));
+    if (existingSessionForCampaign) {
+        if (existingSessionForCampaign.status === 'active') {
+            toast({ title: "Session Already Active", description: "A session is already running for this campaign.", variant: "destructive" });
+            return;
+        }
+        // If paused, the resume button should be used. Starting a new one here might be an option with further prompting,
+        // for now, prevent starting a new one if one is paused.
+        toast({ title: "Paused Session Exists", description: "Please resume or end the paused session for this campaign.", variant: "destructive" });
+        return;
     }
 
-    // End any other active session for potentially different campaign
-    if (currentSession && currentSession.status === 'active') {
-        setSessionLogsState(prevLogs =>
-        prevLogs.map(log =>
-            log.id === currentSession.id
-            ? { ...log, endTime: new Date().toISOString(), status: 'completed' }
-            : log
-        )
-        );
-    }
 
     const campaignSessionLogs = sessionLogs.filter(log => log.campaignId === activeCampaign.id);
     const lastSessionNumber = campaignSessionLogs.reduce((max, log) => Math.max(max, log.sessionNumber), 0);
@@ -345,11 +394,11 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     };
     setSessionLogsState(prevLogs => [newSession, ...prevLogs]);
     setCurrentSessionState(newSession);
-  }, [activeCampaign, currentSession, sessionLogs, toast]);
+  }, [activeCampaign, sessionLogs, toast, currentSession]);
 
   const endCurrentSession = useCallback(() => {
     if (!currentSession || currentSession.status !== 'active') {
-      
+      toast({ title: "No Active Session", description: "There is no active session to end.", variant: "destructive" });
       return;
     }
     const endedSession = {
@@ -363,6 +412,38 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     setCurrentSessionState(null);
   }, [currentSession, toast]);
 
+  const pauseCurrentSession = useCallback(() => {
+    if (!currentSession || currentSession.status !== 'active') {
+        toast({ title: "No Active Session", description: "No active session to pause.", variant: "destructive" });
+        return;
+    }
+    const pausedSession: SessionLog = {
+        ...currentSession,
+        status: 'paused',
+        pausedTime: new Date().toISOString(),
+    };
+    setSessionLogsState(prevLogs => 
+        prevLogs.map(log => log.id === currentSession.id ? pausedSession : log)
+    );
+    setCurrentSessionState(pausedSession); // Keep currentSession pointing to it, but status is 'paused'
+  }, [currentSession, toast]);
+
+  const resumeSession = useCallback(() => {
+    if (!currentSession || currentSession.status !== 'paused') {
+        toast({ title: "No Paused Session", description: "No session is currently paused for this campaign.", variant: "destructive" });
+        return;
+    }
+    const resumedSession: SessionLog = {
+        ...currentSession,
+        status: 'active',
+        pausedTime: undefined, // Clear pausedTime
+    };
+    setSessionLogsState(prevLogs => 
+        prevLogs.map(log => log.id === currentSession.id ? resumedSession : log)
+    );
+    setCurrentSessionState(resumedSession);
+  }, [currentSession, toast]);
+
 
   if (isLoading && typeof window === 'undefined') {
     return null;
@@ -374,7 +455,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       characters, addCharacter, updateCharacter, deleteCharacter,
       selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog,
       factions, factionReputations,
-      sessionLogs, currentSession, startNewSession, endCurrentSession
+      sessionLogs, currentSession, startNewSession, endCurrentSession, pauseCurrentSession, resumeSession,
+      requestSwitchCampaign, confirmSwitchCampaign, cancelSwitchCampaign, isSwitchCampaignDialogVisible
     }}>
       {children}
     </CampaignContext.Provider>
@@ -388,3 +470,4 @@ export const useCampaignContext = () => {
   }
   return context;
 };
+

@@ -9,19 +9,26 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { useCampaignContext } from '@/contexts/campaign-context'; // Import context
 
 interface CampaignSwitcherProps {
-  activeCampaign: Campaign | null;
-  campaigns: Campaign[];
-  setCampaignActive: (campaignId: string) => void;
+  // Props now come from context, so direct props might not be needed
+  // activeCampaign: Campaign | null;
+  // campaigns: Campaign[];
+  // setCampaignActive: (campaignId: string) => void;
 }
 
-export function CampaignSwitcher({ activeCampaign, campaigns, setCampaignActive }: CampaignSwitcherProps) {
+export function CampaignSwitcher({ }: CampaignSwitcherProps) {
   const router = useRouter();
+  const { 
+    campaigns, 
+    activeCampaign, 
+    requestSwitchCampaign // Use requestSwitchCampaign from context
+  } = useCampaignContext();
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const handleCampaignSelect = (campaignId: string) => {
-    setCampaignActive(campaignId);
+    requestSwitchCampaign(campaignId); // Call requestSwitchCampaign
     setPopoverOpen(false);
   };
 
@@ -30,7 +37,7 @@ export function CampaignSwitcher({ activeCampaign, campaigns, setCampaignActive 
       <Button
         variant="ghost"
         size="sm"
-        className="h-auto px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground" // Removed font-semibold
+        className="h-auto px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground"
         onClick={() => router.push('/campaigns')}
       >
         Select Campaign
@@ -44,7 +51,7 @@ export function CampaignSwitcher({ activeCampaign, campaigns, setCampaignActive 
         <Button
           size="sm"
           className={cn(
-            "group flex items-center gap-1 px-2 py-1 h-auto border", // Removed font-semibold
+            "group flex items-center gap-1 px-2 py-1 h-auto border",
             "bg-muted text-neutral-600 dark:text-neutral-400 border-border",
             "hover:bg-muted hover:text-foreground hover:border-primary"
           )}
@@ -52,7 +59,7 @@ export function CampaignSwitcher({ activeCampaign, campaigns, setCampaignActive 
           <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400",
+              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 group-hover:opacity-100 opacity-100", // Always visible
               "group-hover:text-foreground" 
             )}
           />

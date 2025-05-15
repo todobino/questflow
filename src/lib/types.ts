@@ -103,6 +103,8 @@ export interface SessionLog {
   campaignId: string;
   sessionNumber: number;
   startTime: string; // ISO string
-  endTime?: string; // ISO string, optional if session is active
-  status: 'active' | 'completed';
+  endTime?: string; // ISO string, optional if session is active or paused
+  status: 'active' | 'completed' | 'paused'; // Added 'paused'
+  pausedTime?: string; // ISO string, set when session is paused
 }
+

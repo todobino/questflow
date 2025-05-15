@@ -14,7 +14,8 @@ import { Dices, Swords, Users } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
 import { CampaignSwitcher } from '@/components/shared/campaign-switcher';
-import { SessionTools } from '@/components/shared/session-tools'; // Import SessionTools
+import { SessionTools } from '@/components/shared/session-tools';
+import { SwitchCampaignDialog } from '@/components/shared/switch-campaign-dialog'; // Import new dialog
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -22,13 +23,18 @@ interface MainLayoutProps {
 
 function MainLayoutContent({ children }: MainLayoutProps) {
   const {
-    campaigns,
+    campaigns, // Keep if SidebarNav needs full list for some reason, otherwise can remove
     activeCampaign,
-    setCampaignActive: handleSetCampaignActive,
+    // setCampaignActive, // Handled by CampaignSwitcher via context now
     isLoading,
     selectedCharacterForProfile,
     isProfileOpen,
-    closeProfileDialog
+    closeProfileDialog,
+    isSwitchCampaignDialogVisible, // For the dialog
+    pauseCurrentSession,
+    endCurrentSession,
+    confirmSwitchCampaign,
+    cancelSwitchCampaign
   } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
 
@@ -36,10 +42,10 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     setMounted(true);
   }, []);
 
-  if (!mounted && typeof window !== 'undefined' && isLoading) {
-    return null;
+  if (!isLoading && !mounted && typeof window !== 'undefined') {
+    return null; // Or a global loader
   }
-  if (!mounted) { // Prevents rendering on server or during first client pass if not ready
+  if (!mounted) {
     return null;
   }
 
@@ -49,9 +55,11 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
         {mounted && (
           <SidebarNav
-            campaigns={campaigns}
+            // Pass necessary props if SidebarNav directly uses them,
+            // or it can also consume from context if preferred for cleanliness
+            campaigns={campaigns} 
             activeCampaign={activeCampaign}
-            handleSetCampaignActive={handleSetCampaignActive}
+            // handleSetCampaignActive={setCampaignActive} // No longer needed here
           />
         )}
 
@@ -60,16 +68,10 @@ function MainLayoutContent({ children }: MainLayoutProps) {
             <SidebarTrigger />
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign.name}</h1>}
           </header>
-
+          
           {/* SessionHeader */}
           <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center justify-between border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
-            {mounted && campaigns && (
-              <CampaignSwitcher
-                activeCampaign={activeCampaign}
-                campaigns={campaigns}
-                setCampaignActive={handleSetCampaignActive}
-              />
-            )}
+            {mounted && <CampaignSwitcher />}
             {mounted && <SessionTools />}
           </header>
 
@@ -80,14 +82,14 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
         <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground p-4 hidden md:flex flex-col overflow-hidden">
           <Tabs defaultValue="party" className="w-full flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-3 shrink-0">
-              <TabsTrigger value="party" className="text-xs px-1 py-1.5 h-auto">
+            <TabsList className="grid w-full grid-cols-3 shrink-0 border border-border">
+              <TabsTrigger value="party" className="text-xs px-1 py-1.5 h-auto font-bold text-muted-foreground data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Users className="h-4 w-4 mr-1 md:mr-2" />Party
               </TabsTrigger>
-              <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto">
+              <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold text-muted-foreground data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Dices className="h-4 w-4 mr-1 md:mr-2" />Dice
               </TabsTrigger>
-              <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto">
+              <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto font-bold text-muted-foreground data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
               </TabsTrigger>
             </TabsList>
@@ -112,6 +114,20 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           onClose={closeProfileDialog}
         />
       )}
+      {mounted && (
+        <SwitchCampaignDialog
+          isOpen={isSwitchCampaignDialogVisible}
+          onClose={cancelSwitchCampaign}
+          onPauseAndSwitch={() => {
+            pauseCurrentSession();
+            confirmSwitchCampaign();
+          }}
+          onEndAndSwitch={() => {
+            endCurrentSession();
+            confirmSwitchCampaign();
+          }}
+        />
+      )}
     </SidebarProvider>
   );
 }
@@ -133,3 +149,4 @@ export function MainLayout({ children }: MainLayoutProps) {
     </CampaignProvider>
   )
 }
+
