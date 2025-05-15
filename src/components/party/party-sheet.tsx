@@ -50,9 +50,7 @@ export function PartySheet() {
             <p className="text-xs text-muted-foreground">{Math.round(partyStrengthPercentage)}%</p>
           </div>
           <Progress value={partyStrengthPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
-           <p className="text-xs text-muted-foreground mt-1 text-center">
-            HP: {totalCurrentHp} / {totalMaxHp}
-          </p>
+           {/* Removed HP text display below progress bar */}
         </div>
       )}
 
