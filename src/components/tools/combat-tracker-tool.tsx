@@ -5,7 +5,20 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, ShieldPlus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetClose,
+  SheetFooter as SheetModalFooter, // Renamed to avoid conflict
+} from '@/components/ui/sheet';
+import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus } from 'lucide-react';
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -20,7 +33,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+  DialogFooter, // Renamed to avoid conflict
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,9 +43,10 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
+  AlertDialogFooter as ShadAlertDialogFooter, // Renamed to avoid conflict
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
@@ -47,17 +61,6 @@ import {
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetClose,
-  SheetFooter,
-} from '@/components/ui/sheet';
 
 const initialCombatants: Combatant[] = [];
 
@@ -126,9 +129,13 @@ export function CombatTrackerTool() {
         return;
     }
     
-    let initiativeModifierValue = parseInt(enemyInitiative.trim(), 10);
-    if (isNaN(initiativeModifierValue)) { 
-        initiativeModifierValue = 0;
+    let initiativeModifierValue = 0;
+    if(enemyInitiative.trim() !== '') {
+        initiativeModifierValue = parseInt(enemyInitiative.trim(), 10);
+        if (isNaN(initiativeModifierValue)) { 
+            toast({ title: 'Invalid Initiative Modifier', description: 'Initiative Modifier must be a number.', variant: 'destructive' });
+            return;
+        }
     }
 
 
@@ -168,16 +175,18 @@ export function CombatTrackerTool() {
       
       const combatantType = newCombatantTypeForDialog;
       let displayColor = ENEMY_COLOR;
+      let typeForCombatant: 'enemy' | 'player' = 'enemy';
 
       if (combatantType === 'ally') {
         displayColor = ALLY_COLOR;
+        typeForCombatant = 'player'; // Allies are considered 'player' type but not player characters
       }
 
 
       const newCombatant: Combatant = {
         id: String(Date.now() + Math.random() + i),
         name: combatantName,
-        type: combatantType, 
+        type: typeForCombatant, 
         hp: currentHpValue,
         maxHp: maxHpValue,
         armorClass: acValue,
@@ -262,13 +271,12 @@ export function CombatTrackerTool() {
 
     let updatedCombatantsList = [...combatants];
 
-    partyCharacters.forEach((char) => {
+    partyCharacters.forEach((char, index) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
         
         if (existingCombatantIndex !== -1) {
-          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -279,7 +287,6 @@ export function CombatTrackerTool() {
             displayColor: PLAYER_CHARACTER_COLOR,
           };
         } else {
-          // Add new player character
           updatedCombatantsList.push({
             id: String(Date.now() + Math.random() + updatedCombatantsList.length), 
             name: char.name,
@@ -548,27 +555,29 @@ export function CombatTrackerTool() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex-grow flex flex-col min-h-0">
-        <div className="p-1.5 flex-shrink-0 flex items-center justify-between">
-          <h3 className="flex items-center text-lg font-semibold">
-            <UsersIcon className="mr-2 h-5 w-5 text-primary" /> Initiative Order
-            {combatStarted && round > 0 && (
-              <span className="ml-2 text-sm text-muted-foreground font-medium">
-                (Round {round})
-              </span>
-            )}
-          </h3>
-           <Button variant="ghost" size="icon-sm" onClick={() => setIsHistorySheetOpen(true)} className="h-7 w-7">
-            <History className="h-4 w-4" />
-            <span className="sr-only">Encounter History</span>
-          </Button>
-        </div>
-        <div className="px-2 py-1.5 flex-grow overflow-y-auto">
-          {sortedCombatants.length === 0 ? (
+      <Card className="shadow-md flex-grow flex flex-col min-h-0">
+        <CardHeader className="p-1.5 flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center text-lg">
+                <UsersIcon className="mr-2 h-5 w-5 text-primary" />
+                Initiative Order
+                {combatStarted && round > 0 && (
+                <span className="ml-2 text-sm text-muted-foreground font-medium">
+                    (Round {round})
+                </span>
+                )}
+            </CardTitle>
+            <Button variant="ghost" size="icon-sm" onClick={() => setIsHistorySheetOpen(true)} className="h-7 w-7">
+                <History className="h-4 w-4" />
+                <span className="sr-only">Encounter History</span>
+            </Button>
+        </CardHeader>
+        <Separator />
+        <CardContent className="p-1.5 flex-grow overflow-y-auto">
+            {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
-          ) : (
+            ) : (
             <ul className="space-y-2.5">
-              {sortedCombatants.map((c) => {
+                {sortedCombatants.map((c) => {
                 const hpPercentage = c.maxHp > 0 ? (c.hp / c.maxHp) * 100 : 0;
                 const isHpLow = hpPercentage < 20;
                 return (
@@ -608,11 +617,10 @@ export function CombatTrackerTool() {
                             </span>
                             )}
                             
-                             <div className="w-full mt-1">
+                            <div className="w-full mt-1">
                                 <div className="flex items-center justify-between text-xs mb-0.5">
                                     <span className="flex items-center text-muted-foreground">
-                                      <Heart className="mr-1 h-3 w-3 text-red-500" /> 
-                                      {c.hp} / {c.maxHp} ({Math.round(hpPercentage)}%)
+                                        {c.hp} / {c.maxHp} ({Math.round(hpPercentage)}%)
                                     </span>
                                 </div>
                                 <Progress 
@@ -632,24 +640,23 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
+                            <Button 
+                                variant="ghost" 
+                                size="icon-sm"
+                                className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
+                                onClick={(e) => {
+                                    e.stopPropagation(); 
+                                    setCombatantToDeleteId(c.id);
+                                    setIsDeleteConfirmOpen(true);
+                                }}
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                         </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
-                             <Button 
-                                variant="destructive" 
-                                className="w-full"
-                                size="sm"
-                                onClick={(e) => {
-                                    e.stopPropagation(); // Important to prevent popover from closing
-                                    setCombatantToDeleteId(c.id);
-                                    setIsDeleteConfirmOpen(true);
-                                    setOpenPopoverId(null);
-                                }}
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
-                            </Button>
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
@@ -684,9 +691,32 @@ export function CombatTrackerTool() {
                 </Popover>
               )})}
             </ul>
-          )}
-        </div>
-      </div>
+            )}
+        </CardContent>
+        {combatants.length > 0 && (
+            <CardFooter className="p-2 border-t">
+                <div className="flex items-center gap-2 w-full">
+                    {!combatStarted ? (
+                        <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
+                            <PlusCircle className="mr-2 h-4 w-4" /> Start Combat
+                        </Button>
+                    ) : (
+                        <Button onClick={nextTurn} className="flex-1" size="sm">
+                            Next Turn <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    )}
+                    <Button
+                        onClick={endCombat}
+                        variant="outline"
+                        className="bg-muted border-border text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+                        size="sm"
+                    >
+                        <ShieldX className="mr-2 h-4 w-4" /> End Combat
+                    </Button>
+                </div>
+            </CardFooter>
+        )}
+      </Card>
 
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <AlertDialogContent>
@@ -696,10 +726,10 @@ export function CombatTrackerTool() {
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <ShadAlertDialogFooter>
             <AlertDialogCancel onClick={() => setCombatantToDeleteId(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteCombatant}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
+          </ShadAlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
@@ -746,40 +776,13 @@ export function CombatTrackerTool() {
               )}
             </div>
           </ScrollArea>
-           <SheetFooter className="p-4 border-t">
+           <SheetModalFooter className="p-4 border-t">
             <SheetClose asChild>
               <Button variant="outline">Close</Button>
             </SheetClose>
-          </SheetFooter>
+          </SheetModalFooter>
         </SheetContent>
       </Sheet>
-
-
-      {combatants.length > 0 && (
-         <div className="shadow-md flex-shrink-0 bg-card border-t p-2 mt-auto">
-            <div className="flex items-center gap-2">
-                {!combatStarted ? (
-                    <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
-                        <PlusCircle className="mr-2 h-4 w-4" /> Start Combat
-                    </Button>
-                ) : (
-                    <Button onClick={nextTurn} className="flex-1" size="sm">
-                        Next Turn <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                )}
-                  <Button
-                    onClick={endCombat}
-                    variant="outline"
-                    className="bg-muted border-border text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
-                    size="sm"
-                  >
-                    <ShieldX className="mr-2 h-4 w-4" /> End Combat
-                </Button>
-            </div>
-        </div>
-      )}
     </div>
   );
 }
-
-
