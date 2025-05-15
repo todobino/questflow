@@ -105,8 +105,8 @@ export function CombatTrackerTool() {
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddEnemyOrAlly = () => {
-    if (!enemyName || !enemyHp || !enemyMaxHp || !enemyAC || !enemyQuantity) {
-      toast({ title: 'Missing Info', description: 'Name, Current HP, Max HP, AC, and Quantity are required.', variant: 'destructive' });
+    if (!enemyName || !enemyHp || !enemyInitiative) {
+      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative are required.', variant: 'destructive' });
       return;
     }
     const quantity = parseInt(enemyQuantity, 10);
@@ -115,17 +115,45 @@ export function CombatTrackerTool() {
       return;
     }
 
+    const currentHpValue = parseInt(enemyHp, 10);
+    if (isNaN(currentHpValue)) {
+        toast({ title: 'Invalid Current HP', description: 'Current HP must be a number.', variant: 'destructive' });
+        return;
+    }
+    const initiativeValue = parseInt(enemyInitiative, 10);
+     if (isNaN(initiativeValue)) {
+        toast({ title: 'Invalid Initiative', description: 'Initiative must be a number.', variant: 'destructive' });
+        return;
+    }
+
+    const maxHpValue = enemyMaxHp !== '' ? parseInt(enemyMaxHp, 10) : currentHpValue;
+    if (isNaN(maxHpValue)) {
+        toast({ title: 'Invalid Max HP', description: 'Max HP must be a number or empty (will default to Current HP).', variant: 'destructive' });
+        return;
+    }
+    if (currentHpValue > maxHpValue) {
+        toast({ title: 'Invalid HP', description: 'Current HP cannot exceed Max HP.', variant: 'destructive' });
+        return;
+    }
+
+    const acValue = enemyAC !== '' ? parseInt(enemyAC, 10) : undefined;
+    if (enemyAC !== '' && isNaN(acValue!)) {
+        toast({ title: 'Invalid AC', description: 'Armor Class must be a number or empty.', variant: 'destructive' });
+        return;
+    }
+
+
     const newCombatantsBatch: Combatant[] = [];
     for (let i = 0; i < quantity; i++) {
       const combatantName = quantity > 1 ? `${enemyName} ${i + 1}` : enemyName;
       const newCombatant: Combatant = {
         id: String(Date.now() + Math.random() + i),
         name: combatantName,
-        type: newCombatantTypeForDialog === 'ally' ? 'player' : 'enemy',
-        hp: parseInt(enemyHp),
-        maxHp: parseInt(enemyMaxHp),
-        armorClass: parseInt(enemyAC),
-        initiative: enemyInitiative ? parseInt(enemyInitiative) : undefined,
+        type: newCombatantTypeForDialog === 'ally' ? 'player' : 'enemy', // Allies are 'player' type for color, distinguished by isPlayerCharacter
+        hp: currentHpValue,
+        maxHp: maxHpValue,
+        armorClass: acValue,
+        initiative: initiativeValue,
         conditions: [],
         isPlayerCharacter: false, 
       };
@@ -447,17 +475,17 @@ export function CombatTrackerTool() {
                 <Input id="new-combatant-hp" type="number" value={enemyHp} onChange={e => setEnemyHp(e.target.value)} placeholder="30" bsSize="sm"/>
               </div>
               <div>
-                <Label htmlFor="new-combatant-maxHp" className="text-xs">Max HP</Label>
+                <Label htmlFor="new-combatant-maxHp" className="text-xs">Max HP (Optional)</Label>
                 <Input id="new-combatant-maxHp" type="number" value={enemyMaxHp} onChange={e => setEnemyMaxHp(e.target.value)} placeholder="30" bsSize="sm"/>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <Label htmlFor="new-combatant-ac" className="text-xs">Armor Class (AC)</Label>
+                    <Label htmlFor="new-combatant-ac" className="text-xs">Armor Class (AC) (Optional)</Label>
                     <Input id="new-combatant-ac" type="number" value={enemyAC} onChange={e => setEnemyAC(e.target.value)} placeholder="15" bsSize="sm"/>
                 </div>
                 <div>
-                    <Label htmlFor="new-combatant-initiative" className="text-xs">Initiative (Optional)</Label>
+                    <Label htmlFor="new-combatant-initiative" className="text-xs">Initiative</Label>
                     <Input id="new-combatant-initiative" type="number" value={enemyInitiative} onChange={e => setEnemyInitiative(e.target.value)} placeholder="12" bsSize="sm"/>
                 </div>
             </div>
@@ -468,7 +496,7 @@ export function CombatTrackerTool() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddEnemyDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddEnemyOrAlly}>Add {newCombatantTypeForDialog === 'ally' ? 'Ally' : 'Enemies'}</Button>
+            <Button onClick={handleAddEnemyOrAlly}>Add {quantity > 1 && newCombatantTypeForDialog === 'enemy' ? 'Enemies' : newCombatantTypeForDialog.charAt(0).toUpperCase() + newCombatantTypeForDialog.slice(1)}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -500,7 +528,7 @@ export function CombatTrackerTool() {
                     <PopoverTrigger asChild>
                         <li
                         className={cn(
-                            'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300 cursor-pointer',
+                            'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-lg transition-all duration-300 cursor-pointer',
                             c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
                             c.hp <= 0 ? 'opacity-50 grayscale' : '',
                             c.isPlayerCharacter ? c.displayColor : (c.type === 'enemy' ? 'bg-red-100 dark:bg-red-800/70' : 'bg-green-100 dark:bg-green-800/70') 
@@ -522,7 +550,7 @@ export function CombatTrackerTool() {
                             >
                             {c.name}
                             </h4>
-                            {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
+                             {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
                            
                             {c.conditions.length > 0 && (
                             <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left truncate">
@@ -530,32 +558,36 @@ export function CombatTrackerTool() {
                             </span>
                             )}
                             
+                            <div className="mt-auto flex justify-end items-center gap-3 text-xs text-muted-foreground dark:text-gray-400">
+                                <div className="flex items-center">
+                                    <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
+                                     {c.hp} / {c.maxHp}
+                                </div>
+                            </div>
                             <div className="w-full mt-1">
                                 <div className="flex items-center justify-between text-xs mb-0.5">
                                     <span className="flex items-center">
                                     <Heart className="mr-1 h-3 w-3 text-red-500" /> 
-                                    {c.hp} / {c.maxHp}
+                                    {c.hp} / {c.maxHp} ({Math.round(hpPercentage)}%)
                                     </span>
-                                    <span>{Math.round(hpPercentage)}%</span>
                                 </div>
                                 <Progress 
                                     value={hpPercentage} 
                                     className={cn(
                                     "h-1.5 w-full",
-                                     c.type === 'player' ? (isHpLow ? '[&>div]:bg-destructive' : '[&>div]:bg-primary dark:[&>div]:bg-foreground') : '[&>div]:bg-destructive dark:[&>div]:bg-destructive',
+                                     c.type === 'player' ? (isHpLow ? '[&>div]:bg-destructive' : '[&>div]:bg-primary dark:[&>div]:bg-foreground') : (isHpLow ? '[&>div]:bg-destructive' : '[&>div]:bg-destructive dark:[&>div]:bg-destructive')
                                     )} 
                                 />
                             </div>
                         </div>
                         
-                         <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
                             {c.armorClass !== undefined && (
                                 <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
                                 <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
-                             {/* Removed direct delete button, actions are in popover */}
                         </div>
                         </li>
                     </PopoverTrigger>
@@ -654,3 +686,5 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
+    
