@@ -33,7 +33,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger as ShadAlertDialogTrigger, 
+  // Removed: AlertDialogTrigger as ShadAlertDialogTrigger, 
 } from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
@@ -470,6 +470,7 @@ export function CombatTrackerTool() {
                             >
                             {c.name}
                             </h4>
+                            {c.isPlayerCharacter && <p className="text-xs text-muted-foreground -mt-0.5">Player</p>}
                            
                             {c.conditions.length > 0 && (
                             <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left">
@@ -501,25 +502,37 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
+                             <Button 
+                                variant="ghost" 
+                                size="icon-sm" 
+                                className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
+                                onClick={(e) => {
+                                    e.stopPropagation(); 
+                                    setCombatantToDeleteId(c.id);
+                                    setIsDeleteConfirmOpen(true);
+                                    setOpenPopoverId(null); // Close popover when delete dialog opens for better UX
+                                }}
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                         </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
-                           <ShadAlertDialogTrigger asChild>
-                                <Button 
-                                    variant="destructive" 
-                                    className="w-full" 
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); 
-                                        setCombatantToDeleteId(c.id);
-                                        setIsDeleteConfirmOpen(true);
-                                    }}
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
-                                </Button>
-                            </ShadAlertDialogTrigger>
+                           <Button 
+                                variant="destructive" 
+                                className="w-full" 
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation(); 
+                                    setCombatantToDeleteId(c.id);
+                                    setIsDeleteConfirmOpen(true);
+                                    setOpenPopoverId(null); 
+                                }}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
+                            </Button>
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
@@ -575,7 +588,7 @@ export function CombatTrackerTool() {
 
 
       {combatants.length > 0 && (
-        <div className="shadow-md mt-auto flex-shrink-0 bg-card border-t">
+        <div className="shadow-md flex-shrink-0 bg-card border-t">
             <div className="p-2 flex items-center gap-2">
                 {!combatStarted ? (
                     <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
@@ -600,6 +613,3 @@ export function CombatTrackerTool() {
     </div>
   );
 }
-
-
-    
