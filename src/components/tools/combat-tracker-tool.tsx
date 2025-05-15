@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, Trash2, MinusCircle, History, Users as UsersIcon, ShieldPlus, ArrowRight, Heart } from 'lucide-react'; // Added ArrowRight, Heart
+import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, ShieldPlus } from 'lucide-react';
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -103,15 +103,15 @@ export function CombatTrackerTool() {
 
   const sortedCombatants = useMemo(() => {
       return [...combatants].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
-  }, [combatants]); 
+  }, [combatants]);
 
   const currentTurnCombatantId = combatStarted && sortedCombatants.length > 0 ? sortedCombatants[turnIndex]?.id : null;
 
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddEnemyOrAlly = () => {
-    if (!enemyName || !enemyHp || !enemyInitiative) { 
-      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
+    if (!enemyName || !enemyHp) {
+      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
       return;
     }
     const quantity = parseInt(enemyQuantity, 10);
@@ -126,15 +126,14 @@ export function CombatTrackerTool() {
         return;
     }
     
-    const initiativeModifierValue = parseInt(enemyInitiative, 10);
-     if (isNaN(initiativeModifierValue)) {
-        toast({ title: 'Invalid Initiative Modifier', description: 'Initiative Modifier must be a number.', variant: 'destructive' });
-        return;
+    let initiativeModifierValue = parseInt(enemyInitiative.trim(), 10);
+    if (isNaN(initiativeModifierValue)) { 
+        initiativeModifierValue = 0;
     }
 
 
-    const maxHpValue = enemyMaxHp !== '' ? parseInt(enemyMaxHp, 10) : currentHpValue;
-    if (enemyMaxHp !== '' && isNaN(maxHpValue)) {
+    const maxHpValue = enemyMaxHp.trim() !== '' ? parseInt(enemyMaxHp, 10) : currentHpValue;
+    if (enemyMaxHp.trim() !== '' && isNaN(maxHpValue)) {
         toast({ title: 'Invalid Max HP', description: 'Max HP must be a number or empty (will default to Current HP).', variant: 'destructive' });
         return;
     }
@@ -143,8 +142,8 @@ export function CombatTrackerTool() {
         return;
     }
 
-    const acValue = enemyAC !== '' ? parseInt(enemyAC, 10) : undefined;
-    if (enemyAC !== '' && (isNaN(acValue!) || acValue! < 0) ) {
+    const acValue = enemyAC.trim() !== '' ? parseInt(enemyAC, 10) : undefined;
+    if (enemyAC.trim() !== '' && (acValue === undefined || isNaN(acValue) || acValue < 0) ) {
         toast({ title: 'Invalid AC', description: 'Armor Class must be a non-negative number or empty.', variant: 'destructive' });
         return;
     }
@@ -167,13 +166,11 @@ export function CombatTrackerTool() {
           finalInitiative = roll1d20() + initiativeModifierValue;
       }
       
-      const combatantType = newCombatantTypeForDialog; 
+      const combatantType = newCombatantTypeForDialog;
       let displayColor = ENEMY_COLOR;
-      let isPlayerType = false; 
 
       if (combatantType === 'ally') {
         displayColor = ALLY_COLOR;
-        isPlayerType = false; // Allies are not player characters
       }
 
 
@@ -186,7 +183,7 @@ export function CombatTrackerTool() {
         armorClass: acValue,
         initiative: finalInitiative,
         conditions: [],
-        isPlayerCharacter: false, // Only player characters are true isPlayerCharacter
+        isPlayerCharacter: false,
         displayColor: displayColor,
       };
       newCombatantsBatch.push(newCombatant);
@@ -231,8 +228,8 @@ export function CombatTrackerTool() {
       return;
     }
 
-    const initiativeValue = playerInitiativeInput !== '' ? parseInt(playerInitiativeInput, 10) : undefined;
-    if (playerInitiativeInput !== '' && isNaN(initiativeValue!)) {
+    const initiativeValue = playerInitiativeInput.trim() !== '' ? parseInt(playerInitiativeInput, 10) : undefined;
+    if (playerInitiativeInput.trim() !== '' && (initiativeValue === undefined || isNaN(initiativeValue))) {
         toast({ title: "Invalid Initiative", description: "Initiative must be a number.", variant: "destructive" });
         return;
     }
@@ -265,13 +262,12 @@ export function CombatTrackerTool() {
 
     let updatedCombatantsList = [...combatants];
 
-    partyCharacters.forEach((char) => {
+    partyCharacters.forEach((char, index) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
         
         if (existingCombatantIndex !== -1) {
-          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -279,12 +275,11 @@ export function CombatTrackerTool() {
             maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
             initiativeModifier: char.initiativeModifier ?? 0, 
-            displayColor: PLAYER_CHARACTER_COLOR, 
+            displayColor: PLAYER_CHARACTER_COLOR,
           };
         } else {
-          // Add new player character
           updatedCombatantsList.push({
-            id: String(Date.now() + Math.random() + Math.random()), 
+            id: String(Date.now() + Math.random() + index), 
             name: char.name,
             type: 'player',
             hp: char.currentHp ?? char.maxHp ?? 10,
@@ -612,12 +607,12 @@ export function CombatTrackerTool() {
                             )}
                             
                              <div className="w-full mt-1">
-                                <div className="flex items-center justify-between text-xs mb-0.5 text-muted-foreground">
-                                    <span className="flex items-center">
+                                <div className="flex items-center justify-between text-xs mb-0.5">
+                                    <span className="flex items-center text-muted-foreground">
                                       <Heart className="mr-1 h-3 w-3 text-red-500" /> 
                                       {c.hp} / {c.maxHp}
                                     </span>
-                                    <span>{Math.round(hpPercentage)}%</span>
+                                    <span className="text-muted-foreground">{Math.round(hpPercentage)}%</span>
                                 </div>
                                 <Progress 
                                     value={hpPercentage} 
@@ -636,22 +631,25 @@ export function CombatTrackerTool() {
                                 <span className="font-semibold">{c.armorClass}</span>
                                 </div>
                             )}
+                             <Button 
+                                variant="ghost" 
+                                size="icon-sm" 
+                                className="h-7 w-7 p-0 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCombatantToDeleteId(c.id);
+                                    setIsDeleteConfirmOpen(true);
+                                    setOpenPopoverId(null); // Close popover when opening delete dialog
+                                }}
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span className="sr-only">Delete {c.name}</span>
+                            </Button>
                         </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
-                           <Button 
-                                variant="destructive" 
-                                className="w-full"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setCombatantToDeleteId(c.id);
-                                    setIsDeleteConfirmOpen(true);
-                                }}
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
-                            </Button>
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
