@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Shield as ShieldIcon, Award, Users } from 'lucide-react';
+import { Shield as ShieldIcon, Award, Users, Heart } from 'lucide-react';
 
 export function PartySheet() {
   const {
@@ -50,7 +50,6 @@ export function PartySheet() {
             <p className="text-xs text-muted-foreground">{Math.round(partyStrengthPercentage)}%</p>
           </div>
           <Progress value={partyStrengthPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
-           
         </div>
       )}
 
@@ -84,12 +83,21 @@ export function PartySheet() {
                     </div>
                   </div>
 
-                  {member.armorClass !== undefined && (
-                    <div className="absolute top-2 right-2 flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-1 rounded-md shadow-sm text-xs">
-                      <ShieldIcon className="h-3.5 w-3.5 mr-1 text-foreground" />
-                      <span className="font-semibold text-foreground">{member.armorClass}</span>
-                    </div>
-                  )}
+                  <div className="absolute top-2 right-2 flex flex-col items-end space-y-1">
+                    {member.armorClass !== undefined && (
+                      <div className="flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm text-xs">
+                        <ShieldIcon className="h-3.5 w-3.5 mr-1 text-foreground" />
+                        <span className="font-semibold text-foreground">{member.armorClass}</span>
+                      </div>
+                    )}
+                    {member.currentHp !== undefined && member.maxHp !== undefined && (
+                      <div className="flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm text-xs">
+                        <Heart className="h-3.5 w-3.5 mr-1 text-red-500" />
+                        <span className="font-semibold text-foreground">{member.currentHp}/{member.maxHp}</span>
+                      </div>
+                    )}
+                  </div>
+
 
                   <div>
                     <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
@@ -125,4 +133,3 @@ export function PartySheet() {
     </div>
   );
 }
-
