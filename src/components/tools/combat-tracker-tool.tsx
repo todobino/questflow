@@ -319,33 +319,6 @@ export function CombatTrackerTool() {
         </DialogContent>
       </Dialog>
       
-      {combatants.length > 0 && (
-        <Card className="shadow-md">
-            <CardHeader>
-                <CardTitle className="text-lg">Combat Controls</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-                {!combatStarted ? (
-                    <Button onClick={startCombat} className="w-full bg-success text-success-foreground hover:bg-success/90" size="sm">
-                        <Play className="mr-2 h-4 w-4" /> Start Combat
-                    </Button>
-                ) : (
-                    <Button onClick={nextTurn} className="w-full" size="sm">
-                        Next Turn <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                )}
-                  <Button onClick={resetCombat} variant="outline" className="w-full" size="sm">
-                    <RotateCcw className="mr-2 h-4 w-4" /> Reset Combat
-                </Button>
-            </CardContent>
-              {combatStarted && (
-                <CardFooter className="text-xs text-muted-foreground pt-2 justify-center">
-                    Round: {round}
-                </CardFooter>
-            )}
-        </Card>
-      )}
-
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center text-lg"><Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order</CardTitle>
@@ -413,6 +386,31 @@ export function CombatTrackerTool() {
           )}
         </CardContent>
       </Card>
+
+      {combatants.length > 0 && (
+        <Card className="shadow-md">
+            {/* CardHeader removed */}
+            <CardContent className="space-y-2 pt-4"> {/* Added pt-4 since header is removed */}
+                {!combatStarted ? (
+                    <Button onClick={startCombat} className="w-full bg-success text-success-foreground hover:bg-success/90" size="sm">
+                        <Play className="mr-2 h-4 w-4" /> Start Combat
+                    </Button>
+                ) : (
+                    <Button onClick={nextTurn} className="w-full" size="sm">
+                        Next Turn <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )}
+                  <Button onClick={resetCombat} variant="outline" className="w-full" size="sm">
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset Combat
+                </Button>
+            </CardContent>
+              {combatStarted && (
+                <CardFooter className="text-xs text-muted-foreground pt-2 justify-center">
+                    Round: {round}
+                </CardFooter>
+            )}
+        </Card>
+      )}
     </div>
   );
 }
