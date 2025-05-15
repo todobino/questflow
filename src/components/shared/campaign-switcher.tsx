@@ -25,76 +25,76 @@ export function CampaignSwitcher({ activeCampaign, campaigns, setCampaignActive 
     setPopoverOpen(false);
   };
 
+  if (!activeCampaign) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-auto px-2 py-1 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+        onClick={() => router.push('/campaigns')}
+      >
+        Select Campaign
+      </Button>
+    );
+  }
+
   return (
-    <div className="flex items-center h-full">
-      {activeCampaign ? (
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              size="sm"
-              className={cn(
-                "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border",
-                "bg-muted text-neutral-600 dark:text-neutral-400 border-border",
-                "hover:bg-muted hover:text-foreground hover:border-primary"
-              )}
-            >
-              <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 opacity-0 transition-opacity group-hover:opacity-100",
-                   popoverOpen && "opacity-100", // Keep chevron visible when popover is open
-                   "group-hover:text-foreground" 
-                )}
-              />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[250px] p-0">
-            <Command>
-              <CommandInput placeholder="Search campaigns..." />
-              <CommandList>
-                <CommandEmpty>No campaigns found.</CommandEmpty>
-                <CommandGroup>
-                  {campaigns.map((campaign) => (
-                    <CommandItem
-                      key={campaign.id}
-                      value={campaign.name}
-                      onSelect={() => handleCampaignSelect(campaign.id)}
-                      className="cursor-pointer flex justify-between items-center"
-                    >
-                      <span>{campaign.name}</span>
-                      {campaign.id === activeCampaign.id && (
-                        <span className="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-success">
-                          <Check className="h-3.5 w-3.5 text-success-foreground" />
-                        </span>
-                      )}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-                <CommandGroup>
-                  <CommandItem
-                    onSelect={() => {
-                      router.push('/campaigns');
-                      setPopoverOpen(false);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    Manage All Campaigns
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      ) : (
+    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <PopoverTrigger asChild>
         <Button
-          variant="ghost"
           size="sm"
-          className="h-auto px-2 py-1 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
-          onClick={() => router.push('/campaigns')}
+          className={cn(
+            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border",
+            "bg-muted text-neutral-600 dark:text-neutral-400 border-border",
+            "hover:bg-muted hover:text-foreground hover:border-primary"
+          )}
         >
-          Select Campaign
+          <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400", // Default: gray, always visible
+              "group-hover:text-foreground" // On button hover: black
+            )}
+          />
         </Button>
-      )}
-    </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-[250px] p-0">
+        <Command>
+          <CommandInput placeholder="Search campaigns..." />
+          <CommandList>
+            <CommandEmpty>No campaigns found.</CommandEmpty>
+            <CommandGroup>
+              {campaigns.map((campaign) => (
+                <CommandItem
+                  key={campaign.id}
+                  value={campaign.name}
+                  onSelect={() => handleCampaignSelect(campaign.id)}
+                  className="cursor-pointer flex justify-between items-center"
+                >
+                  <span>{campaign.name}</span>
+                  {campaign.id === activeCampaign.id && (
+                     <span className="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-success">
+                        <Check className="h-3.5 w-3.5 text-success-foreground" />
+                      </span>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandGroup>
+              <CommandItem
+                onSelect={() => {
+                  router.push('/campaigns');
+                  setPopoverOpen(false);
+                }}
+                className="cursor-pointer"
+              >
+                Manage All Campaigns
+              </CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
+
