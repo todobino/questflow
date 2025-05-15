@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed CardDescription
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2, ChevronDown, Play, ShieldAlert, HeartCrack, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices } from 'lucide-react';
@@ -148,7 +148,7 @@ export function CombatTrackerTool() {
     };
     setCombatants(prev => [...prev, newPlayerCombatant]);
     setSelectedPlayerCharacterId(undefined);
-    setPlayerInitiativeInput(''); 
+    setPlayerInitiativeInput('');
     setIsAddPlayerDialogOpen(false);
   };
 
@@ -273,11 +273,11 @@ export function CombatTrackerTool() {
             <DialogDescription>Select a player character from your active party.</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
-            <Select 
+            <Select
               onValueChange={(value) => {
                 setSelectedPlayerCharacterId(value);
-                setPlayerInitiativeInput(''); 
-              }} 
+                setPlayerInitiativeInput('');
+              }}
               value={selectedPlayerCharacterId}
             >
               <SelectTrigger>
@@ -294,12 +294,12 @@ export function CombatTrackerTool() {
               </SelectContent>
             </Select>
             <div className="flex items-center gap-2">
-              <Input 
-                id="player-initiative" 
-                type="number" 
-                value={playerInitiativeInput} 
-                onChange={e => setPlayerInitiativeInput(e.target.value)} 
-                placeholder="Initiative" 
+              <Input
+                id="player-initiative"
+                type="number"
+                value={playerInitiativeInput}
+                onChange={e => setPlayerInitiativeInput(e.target.value)}
+                placeholder="Initiative"
                 bsSize="sm"
                 className="flex-grow"
               />
@@ -349,11 +349,13 @@ export function CombatTrackerTool() {
       </Dialog>
 
       <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle className="flex items-center text-lg"><Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order</CardTitle>
-          <CardDescription className="text-xs">{combatStarted ? `Round ${round} - ${sortedCombatants[turnIndex]?.name || 'Nobody'}'s turn.` : "Order by initiative once combat starts."}</CardDescription>
+        <CardHeader className="p-1.5">
+          <CardTitle className="flex items-center text-lg">
+            <Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order
+          </CardTitle>
+          {/* Description removed as per request */}
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-1.5">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -374,7 +376,6 @@ export function CombatTrackerTool() {
                             />
                           )}
                           {combatStarted && <span className="text-xs font-medium text-muted-foreground">Init: {c.initiative ?? 'N/A'}</span>}
-
                         <AlertDialog>
                           <ShadAlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive h-6 w-6">
@@ -418,7 +419,7 @@ export function CombatTrackerTool() {
 
       {combatants.length > 0 && (
         <Card className="shadow-md">
-            <CardContent className="space-y-2 pt-6"> {/* Adjusted pt-6 to pt-4 if CardHeader was removed, keeping pt-4 */}
+            <CardContent className="space-y-2 pt-4">
                 {!combatStarted ? (
                     <Button onClick={startCombat} className="w-full bg-success text-success-foreground hover:bg-success/90" size="sm">
                         <Play className="mr-2 h-4 w-4" /> Start Combat
@@ -437,4 +438,3 @@ export function CombatTrackerTool() {
     </div>
   );
 }
-
