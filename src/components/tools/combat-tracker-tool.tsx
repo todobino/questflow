@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed CardDescription
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2, ChevronDown, Play, ShieldAlert, HeartCrack, RotateCcw, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices } from 'lucide-react';
@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger as ShadAlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ScrollArea } from '@/components/ui/scroll-area';
+// ScrollArea is no longer needed here as CardContent will handle scrolling for initiative list
 
 const initialCombatants: Combatant[] = [];
 
@@ -251,20 +251,22 @@ export function CombatTrackerTool() {
 
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2">
-        <Button onClick={() => {setIsAddPlayerDialogOpen(true); setSelectedPlayerCharacterId(undefined); setPlayerInitiativeInput('');}} variant="outline" size="sm">
-          <UserPlus className="mr-2 h-4 w-4" /> Add Player
-        </Button>
-        <Button onClick={() => setIsAddEnemyDialogOpen(true)} variant="outline" size="sm">
-          <Bot className="mr-2 h-4 w-4" /> Add Enemy
-        </Button>
+    <div className="flex flex-col h-full">
+      <div className="flex-shrink-0 mb-2 space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <Button onClick={() => {setIsAddPlayerDialogOpen(true); setSelectedPlayerCharacterId(undefined); setPlayerInitiativeInput('');}} variant="outline" size="sm">
+            <UserPlus className="mr-2 h-4 w-4" /> Add Player
+          </Button>
+          <Button onClick={() => setIsAddEnemyDialogOpen(true)} variant="outline" size="sm">
+            <Bot className="mr-2 h-4 w-4" /> Add Enemy
+          </Button>
+        </div>
+        {!combatStarted && (
+          <Button onClick={handleRollEntirePartyInitiative} className="w-full" size="sm" variant="default">
+            <Users className="mr-2 h-4 w-4" /> Roll Entire Party Initiative
+          </Button>
+        )}
       </div>
-      {!combatStarted && (
-        <Button onClick={handleRollEntirePartyInitiative} className="w-full" size="sm" variant="default">
-          <Users className="mr-2 h-4 w-4" /> Roll Entire Party Initiative
-        </Button>
-      )}
 
       <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
         <DialogContent>
@@ -348,34 +350,32 @@ export function CombatTrackerTool() {
         </DialogContent>
       </Dialog>
 
-      <Card className="shadow-md">
-        <CardHeader className="p-1.5">
+      <Card className="shadow-md flex-grow flex flex-col min-h-0">
+        <CardHeader className="p-1.5 flex-shrink-0">
           <CardTitle className="flex items-center text-lg">
             <Users className="mr-2 h-5 w-5 text-primary" /> Initiative Order
           </CardTitle>
-          {/* Description removed as per request */}
         </CardHeader>
-        <CardContent className="p-1.5">
+        <CardContent className="p-1.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
-            <ScrollArea className="h-[250px] pr-2">
-              <ul className="space-y-2">
-                {sortedCombatants.map((c) => (
-                  <li key={c.id} className={`rounded-md border p-2.5 text-xs transition-all duration-300 ${c.id === currentTurnCombatantId ? 'ring-2 ring-primary shadow-md scale-[1.01]' : 'opacity-90 hover:opacity-100'}`}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <h4 className={`font-semibold ${c.type === 'player' ? 'text-blue-600' : 'text-red-600'}`}>{c.name}</h4>
-                      <div className="flex items-center gap-1.5">
-                          {!combatStarted && (
-                            <Input
-                              type="text"
-                              value={c.initiative === undefined ? '' : String(c.initiative)}
-                              onChange={(e) => handleInitiativeChange(c.id, e.target.value)}
-                              placeholder="Init"
-                              className="w-12 h-7 text-xs p-1"
-                            />
-                          )}
-                          {combatStarted && <span className="text-xs font-medium text-muted-foreground">Init: {c.initiative ?? 'N/A'}</span>}
+            <ul className="space-y-2">
+              {sortedCombatants.map((c) => (
+                <li key={c.id} className={`rounded-md border p-2.5 text-xs transition-all duration-300 ${c.id === currentTurnCombatantId ? 'ring-2 ring-primary shadow-md scale-[1.01]' : 'opacity-90 hover:opacity-100'}`}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h4 className={`font-semibold ${c.type === 'player' ? 'text-blue-600' : 'text-red-600'}`}>{c.name}</h4>
+                    <div className="flex items-center gap-1.5">
+                        {!combatStarted && (
+                          <Input
+                            type="text"
+                            value={c.initiative === undefined ? '' : String(c.initiative)}
+                            onChange={(e) => handleInitiativeChange(c.id, e.target.value)}
+                            placeholder="Init"
+                            className="w-12 h-7 text-xs p-1"
+                          />
+                        )}
+                        {combatStarted && <span className="text-xs font-medium text-muted-foreground">Init: {c.initiative ?? 'N/A'}</span>}
                         <AlertDialog>
                           <ShadAlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive h-6 w-6">
@@ -391,35 +391,34 @@ export function CombatTrackerTool() {
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center">
+                        {c.hp <= 0 ? <HeartCrack className="mr-1 h-3.5 w-3.5 text-destructive" /> : <ShieldAlert className="mr-1 h-3.5 w-3.5 text-green-500" />}
+                        HP:
+                        <Input
+                          type="number"
+                          value={String(c.hp)}
+                          onChange={(e) => handleHpChange(c.id, parseInt(e.target.value))}
+                          className="w-12 h-6 ml-1 mr-1 text-xs p-1"
+                          min="0"
+                          max={c.maxHp}
+                        /> / {c.maxHp}
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center">
-                          {c.hp <= 0 ? <HeartCrack className="mr-1 h-3.5 w-3.5 text-destructive" /> : <ShieldAlert className="mr-1 h-3.5 w-3.5 text-green-500" />}
-                          HP:
-                          <Input
-                            type="number"
-                            value={String(c.hp)}
-                            onChange={(e) => handleHpChange(c.id, parseInt(e.target.value))}
-                            className="w-12 h-6 ml-1 mr-1 text-xs p-1"
-                            min="0"
-                            max={c.maxHp}
-                          /> / {c.maxHp}
-                      </div>
-                      {c.conditions.length > 0 && (
-                        <span className="text-[10px] text-yellow-600 bg-yellow-100 dark:bg-yellow-900/50 px-1.5 py-0.5 rounded-full">{c.conditions.join(', ')}</span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
+                    {c.conditions.length > 0 && (
+                      <span className="text-[10px] text-yellow-600 bg-yellow-100 dark:bg-yellow-900/50 px-1.5 py-0.5 rounded-full">{c.conditions.join(', ')}</span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </CardContent>
       </Card>
 
       {combatants.length > 0 && (
-        <Card className="shadow-md">
-            <CardContent className="space-y-2 pt-4">
+        <Card className="shadow-md mt-2 flex-shrink-0">
+            <CardContent className="p-2 space-y-2">
                 {!combatStarted ? (
                     <Button onClick={startCombat} className="w-full bg-success text-success-foreground hover:bg-success/90" size="sm">
                         <Play className="mr-2 h-4 w-4" /> Start Combat
@@ -438,3 +437,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
