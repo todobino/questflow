@@ -290,7 +290,7 @@ export function CombatTrackerTool() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="w-full">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Combatant <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
+                Add Combatant <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
@@ -505,4 +505,5 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
 
