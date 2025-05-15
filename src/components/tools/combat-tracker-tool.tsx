@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, ArrowRight, Play, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, ChevronDown } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowRight, Play, Users, Edit3, UserPlus, ShieldPlus, Bot, Dices, ShieldX, Shield as ShieldIcon, ChevronDown, Heart } from 'lucide-react';
 import type { Combatant, Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -505,3 +505,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
