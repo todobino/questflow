@@ -3,11 +3,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed CardFooter
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Minus, Disc3, Dices, History, RotateCcw, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -110,22 +111,23 @@ export function DiceRollerTool() {
     }
   }, [criticalMessage]);
 
-  const getRollDetailsDisplay = (result: IndividualDieRollResult): React.ReactNode => {
+  const getRollDetailsDisplayForFormula = (result: IndividualDieRollResult): React.ReactNode => {
     if (result.isD20AdvDis && result.physicalRolls.length === 2) {
-      const rolls = [...result.physicalRolls].sort((a, b) => a - b);
+      const rolls = [...result.physicalRolls].sort((a, b) => a - b); // Sort for consistent display
       const isAdv = result.advantageState === 'advantage';
+      const isDis = result.advantageState === 'disadvantage';
 
       const firstRollStyle = cn(
-        (isAdv && result.chosenRoll === rolls[0]) || (!isAdv && result.chosenRoll === rolls[0] && result.advantageState === 'disadvantage') ? 'font-bold' : '',
+        (isAdv && result.chosenRoll === rolls[0]) || (isDis && result.chosenRoll === rolls[0]) ? 'font-bold' : '',
         isAdv && result.chosenRoll === rolls[0] ? 'text-destructive' : '',
-        !isAdv && result.chosenRoll === rolls[0] && result.advantageState === 'disadvantage' ? 'text-success' : ''
+        isDis && result.chosenRoll === rolls[0] ? 'text-success' : ''
       );
       const secondRollStyle = cn(
-        (isAdv && result.chosenRoll === rolls[1]) || (!isAdv && result.chosenRoll === rolls[1] && result.advantageState === 'disadvantage') ? 'font-bold' : '',
+        (isAdv && result.chosenRoll === rolls[1]) || (isDis && result.chosenRoll === rolls[1]) ? 'font-bold' : '',
         isAdv && result.chosenRoll === rolls[1] ? 'text-success' : '',
-        !isAdv && result.chosenRoll === rolls[1] && result.advantageState === 'disadvantage' ? 'text-destructive' : ''
+        isDis && result.chosenRoll === rolls[1] ? 'text-destructive' : ''
       );
-
+      
       return (
         <>
           (<span className={firstRollStyle}>{rolls[0]}</span>,<span className={secondRollStyle}>{rolls[1]}</span>)
@@ -152,7 +154,7 @@ export function DiceRollerTool() {
               variant="ghost"
               size="sm"
               className="h-auto px-2 py-1 text-xl font-bold text-primary hover:bg-destructive hover:text-destructive-foreground transition-colors"
-              onClick={() => handleRemoveChainPart({ type: 'die', die: item.die })}
+              onClick={() => { setLastRollOutput(null); handleRemoveChainPart({ type: 'die', die: item.die }); }}
             >
               {item.count > 1 ? `${item.count}${item.die}` : item.die}
             </Button>
@@ -176,7 +178,7 @@ export function DiceRollerTool() {
               variant="ghost"
               size="sm"
               className="h-auto px-2 py-1 text-xl font-bold text-primary hover:bg-destructive hover:text-destructive-foreground transition-colors"
-              onClick={() => handleRemoveChainPart({ type: 'modifier' })}
+              onClick={() => { setLastRollOutput(null); handleRemoveChainPart({ type: 'modifier' }); }}
             >
               {modifier > 0 ? `+${modifier}` : modifier}
             </Button>
@@ -262,8 +264,21 @@ export function DiceRollerTool() {
 
   const executeDiceChainRoll = () => {
     if (diceChain.length === 0 && modifier === 0) {
+       const rollId = String(Date.now() + Math.random());
+       const zeroResult: RollResultDetails = {
+        id: rollId,
+        total: 0,
+        breakdown: "0 = 0",
+        diceType: 'd6', // Placeholder
+        rollSegments: [],
+        modifier: 0,
+        formula: "0"
+      };
+      setLastRollOutput(zeroResult);
+      setRollHistory(prev => [{...zeroResult, timestamp: new Date()}, ...prev.slice(0, 19)]);
       return;
     }
+
 
     setIsRolling(true);
     setCriticalMessage(null);
@@ -275,7 +290,7 @@ export function DiceRollerTool() {
 
       let primaryDiceTypeForOutput: DiceType = 'd6';
       if (diceChain.length > 0) {
-        primaryDiceTypeForOutput = diceChain.sort((a, b) => DICE_CONFIG.find(dc => dc.type === b.die)!.sides - DICE_CONFIG.find(dc => dc.type === a.die)!.sides)[0].die;
+        primaryDiceTypeForOutput = diceChain.sort((a,b) => DICE_CONFIG.find(dc => dc.type === b.die)!.sides - DICE_CONFIG.find(dc => dc.type === a.die)!.sides)[0].die;
       }
 
 
@@ -362,14 +377,12 @@ export function DiceRollerTool() {
       }
 
       setIsRolling(false);
-      // setDiceChain([]); // Keep chain for subsequent rolls if desired, clear with reset
-      // setModifier(0);
-      // setModifierInput('0');
     }, 300);
   };
 
   const handleCoinFlip = () => {
     setIsRolling(true);
+    // Reset dice chain and modifiers for a clean coin flip
     setDiceChain([]);
     setModifier(0);
     setModifierInput('0');
@@ -403,7 +416,7 @@ export function DiceRollerTool() {
     setModifier(0);
     setModifierInput('0');
     setAdvantageState(null);
-    setLastRollOutput(null);
+    setLastRollOutput(null); 
   };
 
   const groupRollsByDay = (history: HistoryEntry[]): Record<string, HistoryEntry[]> => {
@@ -447,28 +460,28 @@ export function DiceRollerTool() {
           </Button>
         </CardHeader>
 
-        <CardContent className="space-y-4 px-4 pt-4 pb-0">
-            <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
+        <CardContent className="space-y-4 px-4 pt-4 pb-4">
+            <div className="mb-4 flex min-h-[90px] flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner">
                 {isRolling ? (
-                <Disc3 className="h-10 w-10 animate-spin text-accent" />
+                    <Disc3 className="h-10 w-10 animate-spin text-accent" />
                 ) : lastRollOutput ? (
-                <div className="flex items-center justify-center gap-2">
-                    {lastRollOutput.diceType === 'coin' ? (
-                    <Disc3 className="h-10 w-10 text-foreground" />
-                    ) : (
-                    <Dices className="h-10 w-10 text-foreground" />
-                    )}
-                    <span
-                    key={lastRollOutput.id} // Key for animation re-trigger
-                    className="text-5xl font-bold text-foreground animate-roll-burst"
-                    >
-                    {lastRollOutput.total}
-                    </span>
-                </div>
+                    <div className="flex items-center justify-center gap-2">
+                        {lastRollOutput.diceType === 'coin' ? (
+                             <Disc3 className="h-10 w-10 text-foreground" />
+                        ) : (
+                            <Dices className="h-10 w-10 text-foreground" />
+                        )}
+                        <span
+                            key={lastRollOutput.id} 
+                            className="text-5xl font-bold text-foreground animate-roll-burst"
+                        >
+                            {lastRollOutput.total}
+                        </span>
+                    </div>
                 ) : (
-                <TooltipProvider>
+                  <TooltipProvider>
                     {activeRollFormulaDisplay}
-                </TooltipProvider>
+                  </TooltipProvider>
                 )}
             </div>
 
@@ -482,7 +495,7 @@ export function DiceRollerTool() {
                   onClick={() => addDieToChain(type)}
                   className={cn(
                     "font-semibold transition-transform hover:scale-105 active:scale-95",
-                    "h-auto aspect-square w-full flex flex-col items-center justify-center p-1 text-xs",
+                    "h-auto aspect-square flex flex-col items-center justify-center p-1 text-xs",
                     currentDieCount > 0 ? 'border-primary shadow-md' : 'border-input'
                   )}
                   variant="outline"
@@ -504,11 +517,11 @@ export function DiceRollerTool() {
                         key="coin"
                         onClick={handleCoinFlip}
                         className={cn(
-                        "font-semibold transition-transform hover:scale-105 active:scale-95",
-                        "h-auto aspect-square w-full flex flex-col items-center justify-center p-1 text-xs",
-                        "border-primary" 
+                            "font-semibold transition-transform hover:scale-105 active:scale-95",
+                            "h-auto aspect-square flex flex-col items-center justify-center p-1 text-xs",
+                            "border-primary text-primary-foreground" // Ensure text is white for default button
                         )}
-                        variant="default"
+                        variant="default" 
                         disabled={isRolling}
                         aria-label="Flip a coin"
                     >
@@ -523,7 +536,7 @@ export function DiceRollerTool() {
             </TooltipProvider>
           </div>
 
-          <div className="flex flex-row flex-wrap items-center gap-2 pt-1">
+          <div className="flex flex-row flex-wrap items-center justify-between gap-2 pt-1">
             <div className="flex items-center gap-1">
               <Button variant="outline" size="icon" onClick={() => handleModifierValueChange(-1)} disabled={isRolling} className="h-8 w-8">
                 <Minus className="h-4 w-4" />
@@ -552,61 +565,80 @@ export function DiceRollerTool() {
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                       <Button
-                            onClick={() => handleAdvantageToggle('advantage')}
-                            disabled={isRolling}
-                            className={cn(
-                                "text-xs px-3 py-1.5 h-8 transition-colors duration-150 flex-1 font-bold",
-                                advantageState === 'advantage'
-                                ? "bg-success text-success-foreground border-success"
-                                : "border-success text-success hover:bg-success hover:text-success-foreground"
-                            )}
-                            variant={advantageState === 'advantage' ? 'success' : 'outline'}
-                            aria-pressed={advantageState === 'advantage'}
-                            >
-                            ADV.
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Higher of 2d20</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-             <TooltipProvider>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            onClick={() => handleAdvantageToggle('disadvantage')}
-                            disabled={isRolling}
-                            className={cn(
-                                "text-xs px-3 py-1.5 h-8 transition-colors duration-150 flex-1 font-bold",
-                                advantageState === 'disadvantage'
-                                ? "bg-destructive text-destructive-foreground border-destructive"
-                                : "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                            )}
-                            variant={advantageState === 'disadvantage' ? 'destructive' : 'outline'}
-                            aria-pressed={advantageState === 'disadvantage'}
-                            >
-                            DIS.
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Lower of 2d20</p></TooltipContent>
-                 </Tooltip>
-            </TooltipProvider>
+            <div className="flex items-center gap-2">
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button
+                                onClick={() => handleAdvantageToggle('advantage')}
+                                disabled={isRolling}
+                                className={cn(
+                                    "text-xs px-3 py-1.5 h-8 transition-colors duration-150 flex-1 font-bold",
+                                    advantageState === 'advantage'
+                                    ? "bg-success text-success-foreground border-success"
+                                    : "border-success text-success hover:bg-success hover:text-success-foreground"
+                                )}
+                                variant={advantageState === 'advantage' ? 'success' : 'outline'}
+                                aria-pressed={advantageState === 'advantage'}
+                                >
+                                ADV.
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Higher of 2d20</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                onClick={() => handleAdvantageToggle('disadvantage')}
+                                disabled={isRolling}
+                                className={cn(
+                                    "text-xs px-3 py-1.5 h-8 transition-colors duration-150 flex-1 font-bold",
+                                    advantageState === 'disadvantage'
+                                    ? "bg-destructive text-destructive-foreground border-destructive"
+                                    : "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                )}
+                                variant={advantageState === 'disadvantage' ? 'destructive' : 'outline'}
+                                aria-pressed={advantageState === 'disadvantage'}
+                                >
+                                DIS.
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Lower of 2d20</p></TooltipContent>
+                     </Tooltip>
+                </TooltipProvider>
+            </div>
           </div>
 
-          <div className="mt-3 space-y-2"> {/* Added space-y-2 for gap */}
-            <Button onClick={executeDiceChainRoll} className="w-full" disabled={isRolling || (diceChain.length === 0 && modifier === 0)}>
+          <div className="mt-3 space-y-2">
+            <Button onClick={executeDiceChainRoll} className="w-full" disabled={isRolling || (diceChain.length === 0 && modifier === 0 && !lastRollOutput)}>
               Roll Dice
             </Button>
-             <Button onClick={handleResetDice} variant="outline" className="w-full" size="sm">
+            <Button onClick={handleResetDice} variant="outline" className="w-full" size="sm">
                 <RotateCcw className="mr-2 h-4 w-4" /> Reset Dice
             </Button>
+            {lastRollOutput && (
+              <div className="pt-2">
+                <Label className="text-xs text-muted-foreground">Last Roll:</Label>
+                <div className="mt-1 rounded-md bg-muted/50 p-2 text-xs text-foreground">
+                  {(() => {
+                    const separator = lastRollOutput.diceType === 'coin' ? ': ' : ' = ';
+                    const parts = lastRollOutput.breakdown.split(separator);
+                    const formulaPart = parts.length > 1 ? parts.slice(0, -1).join(separator) + separator : '';
+                    const totalPart = parts.length > 1 ? parts[parts.length - 1] : lastRollOutput.breakdown;
+                    return (
+                      <span>
+                        {formulaPart}
+                        <strong>{totalPart}</strong>
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
-
-        {/* Removed Separator and CardFooter */}
       </Card>
 
       <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
