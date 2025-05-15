@@ -5,20 +5,20 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button'; 
-import Link from 'next/link'; 
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Shield as ShieldIcon, Award } from 'lucide-react'; // Changed Heart to Award
+import { Shield as ShieldIcon, Award } from 'lucide-react';
 
 export function PartySheet() {
   const {
     activeCampaign,
     characters,
     isLoading: isCampaignLoading,
-    openProfileDialog 
+    openProfileDialog
   } = useCampaignContext();
   const [partyMembers, setPartyMembers] = useState<Character[]>([]);
 
@@ -76,7 +76,7 @@ export function PartySheet() {
                   <div>
                     <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                       <span className="flex items-center">
-                        <Award className="h-3 w-3 mr-1 text-amber-500" /> {/* Changed icon */}
+                        <Award className="h-3 w-3 mr-1 text-amber-500" />
                         EXP: {member.currentExp ?? '0'} / {member.nextLevelExp ?? '?'}
                       </span>
                       {member.nextLevelExp && member.nextLevelExp > 0 && member.currentExp !== undefined && (
@@ -84,7 +84,7 @@ export function PartySheet() {
                       )}
                     </div>
                     {member.nextLevelExp && member.nextLevelExp > 0 && member.currentExp !== undefined && (
-                        <Progress value={expPercentage} className="h-1.5" />
+                        <Progress value={expPercentage} className="h-2" />
                     )}
                   </div>
                 </CardContent>
@@ -99,7 +99,7 @@ export function PartySheet() {
           )}
         </div>
       </ScrollArea>
-      <div className="mt-auto pt-3"> 
+      <div className="mt-auto pt-3">
         <Button asChild className="w-full">
           <Link href="/party">Manage Party</Link>
         </Button>
