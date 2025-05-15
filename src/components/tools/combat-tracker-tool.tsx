@@ -49,7 +49,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
   SheetContent,
@@ -62,16 +61,9 @@ import {
 
 const initialCombatants: Combatant[] = [];
 
-const playerColorClasses = [
-  'bg-sky-100 dark:bg-sky-800/70',
-  'bg-emerald-100 dark:bg-emerald-800/70',
-  'bg-rose-100 dark:bg-rose-800/70',
-  'bg-amber-100 dark:bg-amber-800/70',
-  'bg-violet-100 dark:bg-violet-800/70',
-  'bg-pink-100 dark:bg-pink-800/70',
-  'bg-teal-100 dark:bg-teal-800/70',
-  'bg-fuchsia-100 dark:bg-fuchsia-800/70',
-];
+const PLAYER_CHARACTER_COLOR = 'bg-emerald-100 dark:bg-emerald-800/70';
+const ALLY_COLOR = 'bg-slate-200 dark:bg-slate-700/70';
+const ENEMY_COLOR = 'bg-red-100 dark:bg-red-800/70';
 
 
 export function CombatTrackerTool() {
@@ -83,7 +75,7 @@ export function CombatTrackerTool() {
   const [enemyName, setEnemyName] = useState('');
   const [enemyHp, setEnemyHp] = useState('');
   const [enemyMaxHp, setEnemyMaxHp] = useState('');
-  const [enemyInitiative, setEnemyInitiative] = useState(''); // Now stores modifier
+  const [enemyInitiative, setEnemyInitiative] = useState(''); // Stores modifier
   const [enemyAC, setEnemyAC] = useState('');
   const [enemyQuantity, setEnemyQuantity] = useState('1');
   const [initiativeRollType, setInitiativeRollType] = useState<'group' | 'individual'>('individual');
@@ -175,16 +167,20 @@ export function CombatTrackerTool() {
           finalInitiative = roll1d20() + initiativeModifierValue;
       }
       
+      const combatantType = newCombatantTypeForDialog === 'ally' ? 'player' : 'enemy';
+      const displayColor = combatantType === 'player' ? ALLY_COLOR : ENEMY_COLOR;
+
       const newCombatant: Combatant = {
         id: String(Date.now() + Math.random() + i),
         name: combatantName,
-        type: newCombatantTypeForDialog === 'ally' ? 'player' : 'enemy', 
+        type: combatantType,
         hp: currentHpValue,
         maxHp: maxHpValue,
         armorClass: acValue,
         initiative: finalInitiative,
         conditions: [],
-        isPlayerCharacter: newCombatantTypeForDialog === 'ally' ? false : false, // Allies are not player characters
+        isPlayerCharacter: false, // Allies and Enemies are not player characters by default
+        displayColor: displayColor,
       };
       newCombatantsBatch.push(newCombatant);
     }
@@ -234,10 +230,6 @@ export function CombatTrackerTool() {
         return;
     }
 
-    const pcIndexInParty = partyCharacters.filter(pc => pc.campaignId === activeCampaign?.id).findIndex(pc => pc.id === characterToAdd.id); 
-    const displayColor = playerColorClasses[pcIndexInParty % playerColorClasses.length];
-
-
     const newPlayerCombatant: Combatant = {
       id: String(Date.now() + Math.random()),
       name: characterToAdd.name,
@@ -250,7 +242,7 @@ export function CombatTrackerTool() {
       isPlayerCharacter: true,
       originalCharacterId: characterToAdd.id,
       armorClass: characterToAdd.armorClass,
-      displayColor: displayColor,
+      displayColor: PLAYER_CHARACTER_COLOR,
     };
     setCombatants(prev => [...prev, newPlayerCombatant].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity)));
     setSelectedPlayerCharacterId(undefined);
@@ -266,16 +258,12 @@ export function CombatTrackerTool() {
 
     let updatedCombatantsList = [...combatants];
 
-    partyCharacters.forEach((char, index) => {
+    partyCharacters.forEach((char) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
         
-        const pcIndexInParty = partyCharacters.filter(pc => pc.campaignId === activeCampaign.id).findIndex(pc => pc.id === char.id); 
-        const displayColor = playerColorClasses[pcIndexInParty % playerColorClasses.length];
-
         if (existingCombatantIndex !== -1) {
-          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -283,12 +271,11 @@ export function CombatTrackerTool() {
             maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
             initiativeModifier: char.initiativeModifier ?? 0, 
-            displayColor: updatedCombatantsList[existingCombatantIndex].displayColor || displayColor,
+            displayColor: PLAYER_CHARACTER_COLOR,
           };
         } else {
-          // Add new player character
           updatedCombatantsList.push({
-            id: String(Date.now() + Math.random() + index),
+            id: String(Date.now() + Math.random() + Math.random()), // Ensure more unique ID
             name: char.name,
             type: 'player',
             hp: char.currentHp ?? char.maxHp ?? 10,
@@ -299,7 +286,7 @@ export function CombatTrackerTool() {
             isPlayerCharacter: true,
             originalCharacterId: char.id,
             armorClass: char.armorClass,
-            displayColor: displayColor,
+            displayColor: PLAYER_CHARACTER_COLOR,
           });
         }
       }
@@ -373,7 +360,6 @@ export function CombatTrackerTool() {
   };
 
   const endCombat = () => {
-    // Create log entry
     const newLogEntry: EncounterLogEntry = {
       id: String(Date.now()),
       timestamp: new Date().toISOString(),
@@ -388,11 +374,10 @@ export function CombatTrackerTool() {
     };
     setEncounterLog(prevLog => [newLogEntry, ...prevLog]);
 
-    // Reset combat state
     setRound(0);
     setTurnIndex(0);
     setCombatStarted(false);
-    setCombatants([]); // Clear combatants
+    setCombatants([]); 
   };
 
   useEffect(() => {
@@ -591,15 +576,15 @@ export function CombatTrackerTool() {
                     <PopoverTrigger asChild>
                         <li
                         className={cn(
-                            'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300 cursor-pointer',
+                            'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-lg transition-all duration-300 cursor-pointer',
                             c.id === currentTurnCombatantId ? 'ring-2 ring-primary scale-[1.02]' : 'opacity-90 hover:opacity-100',
                             c.hp <= 0 ? 'opacity-50 grayscale' : '',
-                            c.isPlayerCharacter && c.displayColor ? c.displayColor : (c.type === 'enemy' ? 'bg-red-100 dark:bg-red-800/70' : 'bg-green-100 dark:bg-green-800/70') 
+                            c.displayColor || (c.type === 'enemy' ? ENEMY_COLOR : ALLY_COLOR) 
                         )}
                         >
                         <div className={cn(
                             "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
-                            c.type === 'player' ? "bg-primary/90 text-primary-foreground dark:bg-primary-foreground dark:text-primary" : "bg-destructive/90 text-destructive-foreground dark:bg-destructive dark:text-destructive-foreground"
+                            c.type === 'player' && c.isPlayerCharacter ? "bg-primary/90 text-primary-foreground dark:bg-primary-foreground dark:text-primary" : "bg-slate-600/90 text-slate-50 dark:bg-slate-300 dark:text-slate-800"
                             )}
                         >
                             {c.initiative ?? '-'}
@@ -608,7 +593,7 @@ export function CombatTrackerTool() {
                         <div className="flex-grow flex flex-col min-w-0">
                             <h4 className={cn(
                                 "font-semibold text-md truncate",
-                                c.type === 'player' ? 'text-primary-darker dark:text-foreground' : 'text-destructive-darker dark:text-foreground'
+                                c.type === 'player' && c.isPlayerCharacter ? 'text-primary-darker dark:text-foreground' : 'text-foreground'
                             )}
                             >
                             {c.name}
@@ -632,25 +617,37 @@ export function CombatTrackerTool() {
                                     value={hpPercentage} 
                                     className={cn(
                                     "h-1.5 w-full",
-                                     c.type === 'player' ? (isHpLow ? '[&>div]:bg-destructive' : '[&>div]:bg-primary dark:[&>div]:bg-foreground') : (isHpLow ? '[&>div]:bg-destructive' : '[&>div]:bg-destructive dark:[&>div]:bg-destructive')
+                                     isHpLow ? '[&>div]:bg-destructive' : (c.type === 'player' && c.isPlayerCharacter ? '[&>div]:bg-primary dark:[&>div]:bg-foreground' : '[&>div]:bg-slate-600 dark:[&>div]:bg-slate-400')
                                     )} 
                                 />
                             </div>
-                             <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                                {c.armorClass !== undefined && (
-                                    <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
-                                    <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                                    <span className="font-semibold">{c.armorClass}</span>
-                                    </div>
-                                )}
-                            </div>
                         </div>
                         
-                       
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+                            {c.armorClass !== undefined && (
+                                <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
+                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                                <span className="font-semibold">{c.armorClass}</span>
+                                </div>
+                            )}
+                        </div>
                         </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end">
                         <div className="space-y-3">
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCombatantToDeleteId(c.id);
+                                    setIsDeleteConfirmOpen(true);
+                                    setOpenPopoverId(null); // Close popover
+                                }}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
+                            </Button>
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
@@ -680,19 +677,6 @@ export function CombatTrackerTool() {
                                     <PlusCircle className="mr-2 h-4 w-4" /> Heal
                                 </Button>
                             </div>
-                             <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="w-full hover:bg-destructive hover:text-destructive-foreground"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setCombatantToDeleteId(c.id);
-                                        setIsDeleteConfirmOpen(true);
-                                        setOpenPopoverId(null); // Close popover
-                                    }}
-                                >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete {c.name}
-                            </Button>
                         </div>
                     </PopoverContent>
                 </Popover>
@@ -725,7 +709,7 @@ export function CombatTrackerTool() {
               A log of your past combat encounters for the active campaign.
             </SheetDescription>
           </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-120px)]"> {/* Adjust height as needed */}
+          <ScrollArea className="h-[calc(100vh-120px)]"> 
             <div className="p-4 space-y-4">
               {encounterLog.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No encounters logged yet.</p>
@@ -795,3 +779,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
