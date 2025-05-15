@@ -56,14 +56,14 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                   size="sm"
                   className={cn(
                     "group flex items-center gap-1 px-2 py-1 h-auto font-semibold",
-                    "bg-muted text-foreground border border-border", // Default: light gray bg, black text, gray border
-                    "hover:bg-muted hover:text-foreground hover:border-primary" // Hover: light gray bg, black text, black border
+                    "bg-muted text-muted-foreground border border-border", 
+                    "hover:bg-muted hover:text-foreground hover:border-primary" 
                   )}
                 >
                   <span>{activeCampaign.name}</span>
                   <ChevronDown
                     className={cn(
-                      "h-4 w-4 text-foreground opacity-0 group-hover:opacity-100 transition-opacity" // Black icon, visible on hover
+                      "h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-foreground transition-opacity" 
                     )}
                   />
                 </Button>
