@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress'; // Added Progress import
 
 const initialCombatants: Combatant[] = [];
 
@@ -177,7 +178,6 @@ export function CombatTrackerTool() {
     }
   
     let updatedCombatants = [...combatants];
-    const partyCombatantIds = new Set(updatedCombatants.filter(c => c.isPlayerCharacter).map(c => c.originalCharacterId));
   
     partyCharacters
       .filter(char => char.campaignId === activeCampaign.id)
@@ -185,21 +185,19 @@ export function CombatTrackerTool() {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatants.findIndex(c => c.originalCharacterId === char.id);
         
-        const displayColor = playerColorClasses[partyCharacters.findIndex(pc => pc.id === char.id) % playerColorClasses.length];
+        const pcIndex = partyCharacters.findIndex(pc => pc.id === char.id);
+        const displayColor = playerColorClasses[pcIndex % playerColorClasses.length];
   
         if (existingCombatantIndex !== -1) {
-          // Update existing player combatant
           updatedCombatants[existingCombatantIndex] = {
             ...updatedCombatants[existingCombatantIndex],
             initiative: newInitiative,
             hp: char.currentHp ?? char.maxHp ?? updatedCombatants[existingCombatantIndex].hp,
             maxHp: char.maxHp ?? updatedCombatants[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
-            // ensure displayColor is set if it wasn't before
             displayColor: updatedCombatants[existingCombatantIndex].displayColor || displayColor, 
           };
         } else {
-          // Add new player combatant
           updatedCombatants.push({
             id: String(Date.now() + Math.random() + index),
             name: char.name,
@@ -216,7 +214,6 @@ export function CombatTrackerTool() {
           });
         }
       });
-  
     setCombatants(updatedCombatants);
   };
 
@@ -225,9 +222,19 @@ export function CombatTrackerTool() {
     setCombatants(prev => prev.filter(c => c.id !== id));
   };
 
-  const handleHpChange = (id: string, newHp: number) => {
-    setCombatants(prev => prev.map(c => c.id === id ? { ...c, hp: Math.max(0, Math.min(c.maxHp ?? Infinity, newHp)) } : c));
+  const handleHpChange = (id: string, newHpString: string) => {
+    const newHp = parseInt(newHpString, 10);
+    if (isNaN(newHp) && newHpString !== "") return; // Allow clearing input, but not NaN
+
+    setCombatants(prev => prev.map(c => {
+      if (c.id === id) {
+        const validatedHp = newHpString === "" ? c.hp : Math.max(0, Math.min(c.maxHp ?? Infinity, newHp));
+        return { ...c, hp: validatedHp };
+      }
+      return c;
+    }));
   };
+  
 
   const handleInitiativeChange = (id: string, newInitiativeVal: string) => {
      const newInitiative = newInitiativeVal === '' ? undefined : parseInt(newInitiativeVal, 10);
@@ -401,7 +408,10 @@ export function CombatTrackerTool() {
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
             <ul className="space-y-2.5">
-              {sortedCombatants.map((c) => (
+              {sortedCombatants.map((c) => {
+                const hpPercentage = c.maxHp > 0 ? (c.hp / c.maxHp) * 100 : 0;
+                const isHpLow = hpPercentage < 20;
+                return (
                 <li
                   key={c.id}
                   className={cn(
@@ -434,9 +444,21 @@ export function CombatTrackerTool() {
                       </span>
                     )}
                      <div className="mt-auto flex justify-end items-center gap-3 text-xs text-muted-foreground dark:text-gray-400">
-                        <div className="flex items-center">
-                            <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
-                             {c.hp} / {c.maxHp}
+                        <div className="w-full mt-1">
+                          <div className="flex items-center justify-between text-xs mb-0.5">
+                            <span className="flex items-center">
+                              <Heart className="mr-1 h-3 w-3 text-red-500" /> 
+                              {c.hp} / {c.maxHp}
+                            </span>
+                            <span>{Math.round(hpPercentage)}%</span>
+                          </div>
+                          <Progress 
+                            value={hpPercentage} 
+                            className={cn(
+                              "h-1.5 w-full [&>div]:bg-primary dark:[&>div]:bg-foreground",
+                              isHpLow && "[&>div]:bg-destructive"
+                            )} 
+                          />
                         </div>
                     </div>
                   </div>
@@ -464,7 +486,7 @@ export function CombatTrackerTool() {
                     </AlertDialog>
                   </div>
                 </li>
-              ))}
+              )})}
             </ul>
           )}
         </div>
@@ -496,5 +518,3 @@ export function CombatTrackerTool() {
     </div>
   );
 }
-
-      
