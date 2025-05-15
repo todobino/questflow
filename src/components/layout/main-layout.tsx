@@ -13,6 +13,7 @@ import { PartySheet } from '@/components/party/party-sheet';
 import { Dices, Swords, Users } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 
 
 interface MainLayoutProps {
@@ -53,9 +54,15 @@ function MainLayoutContent({ children }: MainLayoutProps) {
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign?.name || 'QuestFlow'}</h1>}
           </header>
 
-          {/* <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center bg-background/95 px-6 backdrop-blur-sm md:flex">
-            {mounted && <Breadcrumbs activeCampaign={activeCampaign} />}
-          </header> */}
+          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
+            {mounted && activeCampaign && campaigns && (
+              <Breadcrumbs 
+                activeCampaign={activeCampaign} 
+                campaigns={campaigns} 
+                setCampaignActive={handleSetCampaignActive} 
+              />
+            )}
+          </header>
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
             {children}
