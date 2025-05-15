@@ -48,9 +48,8 @@ export interface Combatant {
   initiativeModifier?: number; // For players, from character sheet
   isPlayerCharacter?: boolean; // True if this combatant represents a Character from the party
   originalCharacterId?: string; // ID of the Character if isPlayerCharacter is true
-  armorClass?: number; // Added Armor Class
-  displayColor?: string; // Added for player-specific tile background color
-  // Optional: attackBonus, damage
+  armorClass?: number;
+  displayColor?: string;
 }
 
 export interface OverworldMapData {
@@ -70,3 +69,18 @@ export interface PartyMember { // This might be redundant if Character type now 
   dataAiHint?: string;
 }
 
+export interface EncounterLogEntry {
+  id: string;
+  timestamp: string; // ISO date string
+  campaignId?: string;
+  roundsFought: number;
+  survivingPlayerCharacters: Array<{
+    name: string;
+    currentHp: number;
+    maxHp: number;
+  }>;
+  defeatedCombatants: Array<{
+    name:string;
+    type: 'enemy' | 'player'; // 'player' can represent non-PC allies too
+  }>;
+}
