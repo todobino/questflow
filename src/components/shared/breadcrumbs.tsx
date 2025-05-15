@@ -40,9 +40,8 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  variant="ghost"
                   size="sm"
-                  className="group flex items-center gap-1 px-2 py-1 h-auto font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="group flex items-center gap-1 px-2 py-1 h-auto font-semibold bg-muted text-muted-foreground hover:bg-border hover:text-foreground"
                 >
                   <span>{activeCampaign.name}</span>
                   <ChevronDown
@@ -103,3 +102,4 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
     </nav>
   );
 }
+
