@@ -3,10 +3,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'; // Added CardFooter
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed CardFooter
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Minus, Disc3, Dices, History, RotateCcw } from 'lucide-react'; // Added RotateCcw
+import { Plus, Minus, Disc3, Dices, History, RotateCcw, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,7 +17,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetClose,
-  SheetFooter as SheetModalFooter, // Aliased to avoid conflict
+  SheetFooter as SheetModalFooter,
 } from '@/components/ui/sheet';
 import { format, isToday, isYesterday, parseISO, formatISO } from 'date-fns';
 
@@ -362,6 +362,9 @@ export function DiceRollerTool() {
       }
 
       setIsRolling(false);
+      // setDiceChain([]); // Keep chain for subsequent rolls if desired, clear with reset
+      // setModifier(0);
+      // setModifierInput('0');
     }, 300);
   };
 
@@ -401,7 +404,6 @@ export function DiceRollerTool() {
     setModifierInput('0');
     setAdvantageState(null);
     setLastRollOutput(null);
-    // setActiveRollFormulaDisplay is handled by the useEffect for diceChain/modifier
   };
 
   const groupRollsByDay = (history: HistoryEntry[]): Record<string, HistoryEntry[]> => {
@@ -446,45 +448,29 @@ export function DiceRollerTool() {
         </CardHeader>
 
         <CardContent className="space-y-4 px-4 pt-4 pb-0">
-          <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
-            {isRolling ? (
-              <Disc3 className="h-10 w-10 animate-spin text-accent" />
-            ) : lastRollOutput ? (
-              <div className="flex flex-col items-center justify-center">
-                <div className="flex items-center gap-2">
-                 {lastRollOutput.diceType === 'coin' ?
-                    <Disc3 className="h-10 w-10 text-foreground" /> :
+            <div className="mb-4 flex flex-col items-center justify-center rounded-lg border border-dashed border-primary/50 bg-muted/20 p-4 text-primary shadow-inner min-h-[90px]">
+                {isRolling ? (
+                <Disc3 className="h-10 w-10 animate-spin text-accent" />
+                ) : lastRollOutput ? (
+                <div className="flex items-center justify-center gap-2">
+                    {lastRollOutput.diceType === 'coin' ? (
+                    <Disc3 className="h-10 w-10 text-foreground" />
+                    ) : (
                     <Dices className="h-10 w-10 text-foreground" />
-                  }
-                  <span
-                    key={lastRollOutput.id}
-                    className="text-5xl font-bold text-foreground animate-roll-burst"
-                  >
-                    {lastRollOutput.total}
-                  </span>
-                </div>
-                 {lastRollOutput.diceType !== 'coin' && lastRollOutput.rollSegments && typeof lastRollOutput.total === 'number' && (
-                   <p className="text-xs text-muted-foreground mt-1 text-center">
-                    {lastRollOutput.rollSegments.map((segment, segIdx) => (
-                      <React.Fragment key={`${lastRollOutput.id}-seg-${segIdx}`}>
-                        {segIdx > 0 ? ' + ' : ''}
-                        {segment.count > 1 ? `${segment.count}` : ''}{segment.die}
-                        {segment.results.map((res) => getRollDetailsDisplay(res))}
-                      </React.Fragment>
-                    ))}
-                    {lastRollOutput.modifier !== undefined && lastRollOutput.modifier !== 0 && (
-                      ` ${lastRollOutput.modifier! > 0 ? '+' : '-'} ${Math.abs(lastRollOutput.modifier!)}`
                     )}
-                     = {lastRollOutput.total}
-                  </p>
+                    <span
+                    key={lastRollOutput.id} // Key for animation re-trigger
+                    className="text-5xl font-bold text-foreground animate-roll-burst"
+                    >
+                    {lastRollOutput.total}
+                    </span>
+                </div>
+                ) : (
+                <TooltipProvider>
+                    {activeRollFormulaDisplay}
+                </TooltipProvider>
                 )}
-              </div>
-            ) : (
-              <TooltipProvider>
-                {activeRollFormulaDisplay}
-              </TooltipProvider>
-            )}
-          </div>
+            </div>
 
           <div className="grid grid-cols-4 gap-2">
             {DICE_CONFIG.map(({ type }) => {
@@ -519,8 +505,8 @@ export function DiceRollerTool() {
                         onClick={handleCoinFlip}
                         className={cn(
                         "font-semibold transition-transform hover:scale-105 active:scale-95",
-                        "h-auto aspect-square w-full flex flex-col items-center justify-center p-1 text-xs text-primary-foreground",
-                        "border-primary"
+                        "h-auto aspect-square w-full flex flex-col items-center justify-center p-1 text-xs",
+                        "border-primary" 
                         )}
                         variant="default"
                         disabled={isRolling}
@@ -569,7 +555,7 @@ export function DiceRollerTool() {
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button
+                       <Button
                             onClick={() => handleAdvantageToggle('advantage')}
                             disabled={isRolling}
                             className={cn(
@@ -610,22 +596,17 @@ export function DiceRollerTool() {
             </TooltipProvider>
           </div>
 
-          <div className="mt-3 mb-4">
+          <div className="mt-3 space-y-2"> {/* Added space-y-2 for gap */}
             <Button onClick={executeDiceChainRoll} className="w-full" disabled={isRolling || (diceChain.length === 0 && modifier === 0)}>
               Roll Dice
+            </Button>
+             <Button onClick={handleResetDice} variant="outline" className="w-full" size="sm">
+                <RotateCcw className="mr-2 h-4 w-4" /> Reset Dice
             </Button>
           </div>
         </CardContent>
 
-        <Separator className="my-0" /> {/* Ensure this separator is always visible */}
-
-        <CardFooter className="p-2">
-          <Button onClick={handleResetDice} variant="outline" className="w-full" size="sm">
-            <RotateCcw className="mr-2 h-4 w-4" /> Reset Dice
-          </Button>
-        </CardFooter>
-
-
+        {/* Removed Separator and CardFooter */}
       </Card>
 
       <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
@@ -679,3 +660,4 @@ export function DiceRollerTool() {
     </div>
   );
 }
+
