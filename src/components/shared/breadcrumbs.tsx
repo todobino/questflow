@@ -3,7 +3,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Check } from 'lucide-react'; // Added Check icon
 import type { Campaign } from '@/lib/types';
 import { CAMPAIGN_MENU_NAV_ITEMS, SITE_NAV_ITEMS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -31,7 +31,7 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
   } else if (pathname === '/campaigns') {
     pageTitle = 'Campaign Manager';
   } else if (pathname === '/') {
-    pageTitle = 'Dashboard'; // Or whatever your root page title is
+    pageTitle = 'Campaign Manager'; // Default to campaigns if root
   }
   else {
     const pathSegments = pathname.split('/');
@@ -58,14 +58,15 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                   size="sm"
                   className={cn(
                     "group flex items-center gap-1 px-2 py-1 h-auto font-semibold",
-                    "bg-muted text-neutral-600 dark:text-neutral-400 border border-border", 
-                    "hover:bg-muted hover:text-foreground hover:border-primary" 
+                    "bg-muted text-neutral-600 dark:text-neutral-400 border border-border",
+                    "hover:bg-muted hover:text-foreground hover:border-primary"
                   )}
                 >
                   <span>{activeCampaign.name}</span>
                   <ChevronDown
                     className={cn(
-                      "h-4 w-4 text-neutral-600 dark:text-neutral-400 group-hover:text-foreground"
+                      "h-4 w-4 text-neutral-600 dark:text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity",
+                      "group-hover:text-foreground"
                     )}
                   />
                 </Button>
@@ -81,10 +82,14 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
                           key={campaign.id}
                           value={campaign.name}
                           onSelect={() => handleCampaignSelect(campaign.id)}
-                          className="cursor-pointer"
+                          className="cursor-pointer flex justify-between items-center"
                         >
-                          {campaign.name}
-                          {campaign.id === activeCampaign.id && <span className="ml-auto text-xs text-primary">(Active)</span>}
+                          <span>{campaign.name}</span>
+                          {campaign.id === activeCampaign.id && (
+                            <span className="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-success">
+                              <Check className="h-3.5 w-3.5 text-success-foreground" />
+                            </span>
+                          )}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -106,7 +111,7 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
           </li>
         )}
 
-        {activeCampaign && pathname !== '/campaigns' && (
+        {activeCampaign && (
           <li className="flex items-center">
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </li>
@@ -115,7 +120,7 @@ export function Breadcrumbs({ activeCampaign, campaigns, setCampaignActive }: Br
         <li>
           <span className={cn(
             "px-2 py-1 font-semibold capitalize",
-            activeCampaign && pathname !== '/campaigns' ? "text-foreground" : "text-foreground" // Ensures current page is always foreground
+            "text-foreground"
           )}>
             {pageTitle}
           </span>
