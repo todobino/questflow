@@ -15,7 +15,7 @@ import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-contex
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
 import { CampaignSwitcher } from '@/components/shared/campaign-switcher';
 import { SessionTools } from '@/components/shared/session-tools';
-import { SwitchCampaignDialog } from '@/components/shared/switch-campaign-dialog'; // Import new dialog
+import { SwitchCampaignDialog } from '@/components/shared/switch-campaign-dialog';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -23,14 +23,12 @@ interface MainLayoutProps {
 
 function MainLayoutContent({ children }: MainLayoutProps) {
   const {
-    campaigns, // Keep if SidebarNav needs full list for some reason, otherwise can remove
     activeCampaign,
-    // setCampaignActive, // Handled by CampaignSwitcher via context now
     isLoading,
     selectedCharacterForProfile,
     isProfileOpen,
     closeProfileDialog,
-    isSwitchCampaignDialogVisible, // For the dialog
+    isSwitchCampaignDialogVisible,
     pauseCurrentSession,
     endCurrentSession,
     confirmSwitchCampaign,
@@ -42,25 +40,20 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     setMounted(true);
   }, []);
 
-  if (!isLoading && !mounted && typeof window !== 'undefined') {
-    return null; // Or a global loader
+  if (!isLoading && typeof window !== 'undefined' && !mounted ) {
+    return null; 
   }
-  if (!mounted) {
+   if (!mounted) {
     return null;
   }
 
+
   return (
     <SidebarProvider defaultOpen>
-      <div className="flex h-screen w-full bg-background text-foreground">
+      <div className="group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar">
 
         {mounted && (
-          <SidebarNav
-            // Pass necessary props if SidebarNav directly uses them,
-            // or it can also consume from context if preferred for cleanliness
-            campaigns={campaigns} 
-            activeCampaign={activeCampaign}
-            // handleSetCampaignActive={setCampaignActive} // No longer needed here
-          />
+          <SidebarNav />
         )}
 
         <div className="w-[calc(100vw-var(--sidebar-width)-25vw)] md:w-[calc(100vw-var(--sidebar-width)-25vw)] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
@@ -70,7 +63,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           </header>
           
           {/* SessionHeader */}
-          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center justify-between border-b bg-background/95 px-6 backdrop-blur-sm md:flex">
+          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
             {mounted && <CampaignSwitcher />}
             {mounted && <SessionTools />}
           </header>
@@ -149,4 +142,3 @@ export function MainLayout({ children }: MainLayoutProps) {
     </CampaignProvider>
   )
 }
-
