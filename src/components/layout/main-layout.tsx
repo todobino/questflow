@@ -40,10 +40,10 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     setMounted(true);
   }, []);
 
-  if (!isLoading && typeof window !== 'undefined' && !mounted ) {
-    return null; 
+  if (!mounted && typeof window !== 'undefined' ) { // Stricter check for initial client render
+    return null;
   }
-   if (!mounted) {
+   if (!mounted) { // Fallback for pure SSR or if above fails
     return null;
   }
 
@@ -63,7 +63,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           </header>
           
           {/* SessionHeader */}
-          <header className="sticky top-0 z-10 hidden h-11 shrink-0 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
+          <header className="sticky top-0 z-10 hidden h-14 shrink-0 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
             {mounted && <CampaignSwitcher />}
             {mounted && <SessionTools />}
           </header>
@@ -76,13 +76,13 @@ function MainLayoutContent({ children }: MainLayoutProps) {
         <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground p-4 hidden md:flex flex-col overflow-hidden">
           <Tabs defaultValue="party" className="w-full flex-1 flex flex-col min-h-0">
             <TabsList className="grid w-full grid-cols-3 shrink-0 border border-border">
-              <TabsTrigger value="party" className="text-xs px-1 py-1.5 h-auto font-bold text-muted-foreground data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
+              <TabsTrigger value="party" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Users className="h-4 w-4 mr-1 md:mr-2" />Party
               </TabsTrigger>
-              <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold text-muted-foreground data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
+              <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Dices className="h-4 w-4 mr-1 md:mr-2" />Dice
               </TabsTrigger>
-              <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto font-bold text-muted-foreground data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
+              <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
               </TabsTrigger>
             </TabsList>
