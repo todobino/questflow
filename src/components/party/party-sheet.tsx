@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Shield as ShieldIcon, Award, Users, Heart, Zap } from 'lucide-react'; // Added Zap
+import { Shield as ShieldIcon, Award, Users, Heart, Zap } from 'lucide-react';
 
 export function PartySheet() {
   const {
@@ -30,9 +30,22 @@ export function PartySheet() {
     }
   }, [activeCampaign, characters]);
 
-  const totalCurrentHp = partyMembers.reduce((sum, member) => sum + (member.currentHp ?? 0), 0);
-  const totalMaxHp = partyMembers.reduce((sum, member) => sum + (member.maxHp ?? 1), 0); 
-  const partyStaminaPercentage = totalMaxHp > 0 ? (totalCurrentHp / totalMaxHp) * 100 : 0;
+  const calculatePartyStamina = () => {
+    if (partyMembers.length === 0) {
+      return 0;
+    }
+    const individualHealthPercentages = partyMembers.map(member => {
+      const currentHp = member.currentHp ?? 0;
+      const maxHp = member.maxHp ?? 1; // Avoid division by zero if maxHp is 0 or undefined
+      if (maxHp === 0) return 0; // If maxHp is truly 0, health percentage is 0
+      return (currentHp / maxHp) * 100;
+    });
+    const totalPercentageSum = individualHealthPercentages.reduce((sum, percentage) => sum + percentage, 0);
+    return totalPercentageSum / partyMembers.length;
+  };
+
+  const partyStaminaPercentage = calculatePartyStamina();
+
 
   if (isCampaignLoading) {
     return <p className="text-sm text-muted-foreground text-center py-4">Loading party...</p>;
@@ -62,7 +75,7 @@ export function PartySheet() {
             return (
               <Card
                 key={member.id}
-                className="shadow-lg relative hover:border-primary transition-colors cursor-pointer"
+                className="shadow-lg relative hover:border-primary transition-colors cursor-pointer bg-card"
                 onClick={() => openProfileDialog(member)}
               >
                 <CardContent className="p-3">
@@ -125,7 +138,6 @@ export function PartySheet() {
         </div>
       </ScrollArea>
       
-      {/* Removed duplicate Party Stamina section from here */}
     </div>
   );
 }
