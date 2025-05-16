@@ -55,6 +55,8 @@ export function SidebarNav() {
   const { activeCampaign, campaigns, setCampaignActive } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
   const [campaignSwitcherOpen, setCampaignSwitcherOpen] = useState(false);
+  const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false);
+
 
   useEffect(() => {
     setMounted(true);
@@ -63,14 +65,13 @@ export function SidebarNav() {
   const campaignNavItems = getFilteredCampaignNavItems();
   const AppLogoComponent = APP_LOGO_ICON;
   const searchNavItem = SITE_NAV_ITEMS.find(item => item.title === 'Search');
-  const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false);
 
 
   return (
     <Sidebar>
       <SidebarHeader className="px-2 pt-4 pb-2">
         <Link href="/campaigns" className="flex items-center gap-2 px-2 text-foreground hover:text-foreground">
-          <AppLogoComponent className="h-6 w-6 text-primary" />
+          <AppLogoComponent className="h-6 w-6 text-primary dark:text-sidebar-foreground" />
           {(sidebarState === 'expanded' || isMobile) && (
             <span className="font-extrabold text-xl">{APP_NAME}</span>
           )}
