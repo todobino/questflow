@@ -46,6 +46,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useCampaignContext } from '@/contexts/campaign-context';
+import { SearchSheet } from '@/components/search/search-sheet';
 
 
 export function SidebarNav() {
@@ -67,7 +68,7 @@ export function SidebarNav() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="px-2 pt-4 pb-2"> {/* Increased pt from p-2 */}
+      <SidebarHeader className="px-2 pt-4 pb-2">
         <Link href="/campaigns" className="flex items-center gap-2 px-2 text-foreground hover:text-foreground">
           <AppLogoComponent className="h-6 w-6 text-primary" />
           {(sidebarState === 'expanded' || isMobile) && (
@@ -102,7 +103,7 @@ export function SidebarNav() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="mt-auto p-2 border-t border-sidebar-border">
+      <SidebarFooter className="mt-auto p-2 border-t border-sidebar-border bg-muted">
         <SidebarMenu className="px-0">
           {searchNavItem && (
             <SidebarMenuItem>
@@ -135,8 +136,7 @@ export function SidebarNav() {
             </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      {/* SearchSheet is rendered here but controlled by SidebarNav's state */}
-      {/* <SearchSheet isOpen={isSearchSheetOpen} onOpenChange={setIsSearchSheetOpen} /> */}
+      <SearchSheet isOpen={isSearchSheetOpen} onOpenChange={setIsSearchSheetOpen} />
     </Sidebar>
   );
 }
