@@ -18,7 +18,7 @@ import {
   SheetClose,
   SheetFooter as SheetModalFooter,
 } from '@/components/ui/sheet';
-import { UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus, Cat, X, Swords, PlusCircle } from 'lucide-react';
+import { UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus, Cat, X, Swords, PlusCircle, Skull } from 'lucide-react';
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -109,8 +109,8 @@ export function CombatTrackerTool() {
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddAllyOrEnemyFromDialog = () => {
-    if (!newCombatantName || !newCombatantHp || !newCombatantInitiativeModifier) {
-      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
+    if (!newCombatantName || !newCombatantHp) {
+      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
       return;
     }
   
@@ -258,20 +258,22 @@ export function CombatTrackerTool() {
     setPlayerInitiativeInput('');
   };
 
-  const handleAddPartyToCombat = () => {
+ const handleAddPartyToCombat = () => {
     if (!activeCampaign || !partyCharacters) {
+      toast({ title: "No Campaign/Party", description: "An active campaign with party members is needed.", variant: "destructive" });
       return;
     }
-  
+
     let updatedCombatantsList = [...combatants];
     const newCombatantsToAdd: Combatant[] = [];
-  
-    partyCharacters.forEach((char) => {
+
+    partyCharacters.forEach((char, index) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
-  
+
         if (existingCombatantIndex !== -1) {
+          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -279,9 +281,10 @@ export function CombatTrackerTool() {
             maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
             initiativeModifier: char.initiativeModifier ?? 0,
-            displayColor: PLAYER_CHARACTER_COLOR, 
+            displayColor: PLAYER_CHARACTER_COLOR,
           };
         } else {
+          // Add new player character
           newCombatantsToAdd.push({
             id: String(Date.now() + Math.random() + updatedCombatantsList.length + newCombatantsToAdd.length),
             name: char.name,
@@ -294,13 +297,14 @@ export function CombatTrackerTool() {
             isPlayerCharacter: true,
             originalCharacterId: char.id,
             armorClass: char.armorClass,
-            displayColor: PLAYER_CHARACTER_COLOR, 
+            displayColor: PLAYER_CHARACTER_COLOR,
           });
         }
       }
     });
-  
+
     updatedCombatantsList = [...updatedCombatantsList, ...newCombatantsToAdd];
+    // Sort all combatants by initiative after adding/updating
     updatedCombatantsList.sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
     setCombatants(updatedCombatantsList);
   };
@@ -507,7 +511,7 @@ export function CombatTrackerTool() {
               )}
               <ShadDialogFooter className="pt-4">
                 <Button variant="outline" onClick={() => setIsAddCombatantDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddAllyOrEnemyFromDialog}>Add {parseInt(newCombatantQuantity) > 1 && addCombatantDialogTab === 'enemy' ? 'Enemies' : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}</Button>
+                <Button onClick={handleAddAllyOrEnemyFromDialog}>Add {parseInt(enemyQuantity) > 1 && addCombatantDialogTab === 'enemy' ? 'Enemies' : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}</Button>
               </ShadDialogFooter>
             </TabsContent>
             <TabsContent value="ally" className="py-4 space-y-3">
@@ -560,7 +564,7 @@ export function CombatTrackerTool() {
               )}
               <ShadDialogFooter className="pt-4">
                 <Button variant="outline" onClick={() => setIsAddCombatantDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddAllyOrEnemyFromDialog}>Add {parseInt(newCombatantQuantity) > 1 && addCombatantDialogTab === 'ally' ? 'Allies' : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}</Button>
+                <Button onClick={handleAddAllyOrEnemyFromDialog}>Add {parseInt(enemyQuantity) > 1 && addCombatantDialogTab === 'ally' ? 'Allies' : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}</Button>
               </ShadDialogFooter>
             </TabsContent>
             <TabsContent value="player" className="py-4 space-y-4">
@@ -638,7 +642,7 @@ export function CombatTrackerTool() {
                 } else if (hpPercentage <= 50) {
                   hpBarColorClass = 'bg-yellow-500';
                 } else {
-                  hpBarColorClass = 'bg-primary';
+                  hpBarColorClass = 'bg-primary dark:bg-foreground';
                 }
 
 
@@ -650,6 +654,16 @@ export function CombatTrackerTool() {
                     } else if (c.isPlayerCharacter && c.type === 'player') {
                         turnBorderClass = 'ring-success';
                     }
+                }
+
+                let initiativeBgColor = 'bg-slate-700 dark:bg-slate-200';
+                let initiativeTextColor = 'text-white dark:text-slate-800';
+                 if (c.isPlayerCharacter && c.type === 'player') {
+                    initiativeBgColor = 'bg-success';
+                    initiativeTextColor = 'text-success-foreground';
+                } else if (c.type === 'enemy') {
+                    initiativeBgColor = 'bg-destructive';
+                    initiativeTextColor = 'text-destructive-foreground';
                 }
 
 
@@ -669,12 +683,10 @@ export function CombatTrackerTool() {
                       >
                         <div className={cn(
                           "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
-                           c.type === 'enemy' ? 'bg-destructive text-destructive-foreground' :
-                           (c.isPlayerCharacter && c.type === 'player') ? 'bg-success text-success-foreground' :
-                           'bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-800' 
+                           initiativeBgColor, initiativeTextColor
                         )}
                         >
-                          {c.initiative ?? '-'}
+                          {c.hp <= 0 ? <Skull className="h-6 w-6" /> : c.initiative ?? '-'}
                         </div>
 
                         <div className="flex-grow flex flex-col min-w-0">
@@ -687,17 +699,16 @@ export function CombatTrackerTool() {
                           >
                             {c.name}
                           </h4>
-                            {/* Conditions can be listed here if needed */}
-                            <div className="flex justify-between items-center text-xs mt-1">
-                                <div className="flex items-center text-muted-foreground dark:text-gray-400">
-                                    <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                                     AC: {c.armorClass ?? 'N/A'}
-                                </div>
-                                <div className="flex items-center text-muted-foreground dark:text-gray-400">
-                                    <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
-                                    {c.hp} / {c.maxHp}
-                                </div>
+                          <div className="flex justify-between items-center text-xs mt-1">
+                            <div className="flex items-center text-muted-foreground dark:text-gray-400">
+                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                                AC: {c.armorClass ?? 'N/A'}
                             </div>
+                            <div className="flex items-center text-muted-foreground dark:text-gray-400">
+                                <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
+                                {c.hp} / {c.maxHp}
+                            </div>
+                          </div>
                           <div className="w-full mt-1.5">
                             <Progress
                               value={hpPercentage}
@@ -707,8 +718,13 @@ export function CombatTrackerTool() {
                         </div>
                          <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
                             <AlertDialog>
-                                <AlertDialogTrigger asChild onClick={(e) => { e.stopPropagation(); }}>
-                                    <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0">
+                                <AlertDialogTrigger asChild>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon-sm" 
+                                        className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
+                                        onClick={(e) => { e.stopPropagation(); }}
+                                    >
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
                                 </AlertDialogTrigger>
@@ -863,4 +879,5 @@ export function CombatTrackerTool() {
     
 
     
+
 
