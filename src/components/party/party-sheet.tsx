@@ -44,8 +44,8 @@ export function PartySheet() {
         <div className="flex-shrink-0 mb-3 p-3 border rounded-lg bg-card shadow-md">
           <div className="flex justify-between items-center mb-1">
             <p className="text-sm font-semibold flex items-center">
-              <Zap className="h-4 w-4 mr-2 text-primary" /> {/* Changed icon to Zap */}
-              Party Stamina {/* Changed text */}
+              <Zap className="h-4 w-4 mr-2 text-primary" />
+              Party Stamina
             </p>
             <p className="text-xs text-muted-foreground">{Math.round(partyStaminaPercentage)}%</p>
           </div>
@@ -125,20 +125,7 @@ export function PartySheet() {
         </div>
       </ScrollArea>
       
-      <div className="flex-shrink-0 pt-3 mt-auto"> 
-         {activeCampaign && (
-          <div className="flex-shrink-0 mb-1 p-3 border rounded-lg bg-card shadow-md">
-              <div className="flex justify-between items-center mb-1">
-                <p className="text-sm font-semibold flex items-center">
-                  <Zap className="h-4 w-4 mr-2 text-primary" /> {/* Changed icon */}
-                  Party Stamina {/* Changed text */}
-                </p>
-                <p className="text-xs text-muted-foreground">{Math.round(partyStaminaPercentage)}%</p>
-              </div>
-              <Progress value={partyStaminaPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
-          </div>
-        )}
-      </div>
+      {/* Removed duplicate Party Stamina section from here */}
     </div>
   );
 }
