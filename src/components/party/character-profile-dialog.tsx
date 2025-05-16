@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Shield as ShieldIcon, Zap, BookOpen, UserCircle, Palette, Award, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, TrendingUp } from 'lucide-react';
+import { Heart, Shield as ShieldIcon, Zap, BookOpen, UserCircle, Palette, Award, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, TrendingUp, VenetianMask } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -74,7 +74,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
   ? (character.currentExp / character.nextLevelExp) * 100
   : 0;
 
-  const imageSizeClasses = "w-28 h-28"; // Approx 3 lines of text + progress bar
+  const imageSizeClasses = "w-28 h-28"; 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -92,8 +92,8 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                   <Image
                     src={character.imageUrl || 'https://placehold.co/400x400.png'}
                     alt={character.name}
-                    width={112} // Corresponds to w-28
-                    height={112} // Corresponds to h-28
+                    width={112} 
+                    height={112} 
                     className="object-cover w-full h-full"
                     data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
                     key={character.imageUrl} 
@@ -103,11 +103,19 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
 
               <div className="flex-1 flex flex-col space-y-1">
                 <DialogTitle className="text-2xl sm:text-3xl text-left">{character.name}</DialogTitle>
-                <p className="text-md text-muted-foreground text-left">
-                  Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
-                  {character.subclass ? ` (${character.subclass})` : ''}
-                </p>
-                {character.background && <p className="text-sm text-muted-foreground text-left">Background: {character.background}</p>}
+                <div className="text-md text-muted-foreground text-left flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                    <span className="inline-flex items-center">
+                        <VenetianMask className="mr-1.5 h-4 w-4 text-muted-foreground" />
+                        Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
+                        {character.subclass ? ` (${character.subclass})` : ''}
+                    </span>
+                    {character.background && (
+                        <span className="inline-flex items-center">
+                            <Puzzle className="mr-1.5 h-4 w-4 text-muted-foreground" />
+                            {character.background}
+                        </span>
+                    )}
+                </div>
                 <div className="pt-1">
                   <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                     <span className="flex items-center">
@@ -138,7 +146,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 ) : (
                   <Sparkles className="mr-2 h-4 w-4" />
                 )}
-                {isGeneratingImage ? 'Generating...' : 'New Portrait'}
+                New Portrait
               </Button>
             </div>
           </div>
@@ -146,9 +154,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
         
         <ScrollArea className="flex-grow min-h-0">
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Middle/Bottom Section: Stats, Goals/Backstory */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column: Stat Box */}
               <div className="space-y-4 p-4 border rounded-lg shadow-sm bg-background/30">
                 <h3 className="text-lg font-semibold flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Combat Stats</h3>
                 <div className="space-y-1.5">
@@ -164,7 +170,6 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                  <p className="text-sm text-muted-foreground italic">Feats and features tracking coming soon.</p>
               </div>
 
-              {/* Right Column: Goals, Backstory */}
               <div className="space-y-4">
                 <div className="p-4 border rounded-lg shadow-sm bg-background/30">
                     <h3 className="text-lg font-semibold flex items-center mb-2"><Target className="mr-2 h-5 w-5 text-primary"/>Character Goals</h3>
@@ -194,3 +199,4 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
     </Dialog>
   );
 }
+
