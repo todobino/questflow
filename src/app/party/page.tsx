@@ -6,8 +6,6 @@ import Image from 'next/image';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-// Dialog import is handled by MainLayout now
-// import { CharacterForm } from '@/components/character-creator/character-form'; // Handled by MainLayout
 import type { Character } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
 import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon, Award } from 'lucide-react';
@@ -33,8 +31,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-// RACES, CLASSES, SUBCLASSES, BACKGROUNDS, DND_NAMES are not directly used here anymore for randomization
-// Randomization logic is now in CampaignContext or passed to CharacterForm if needed for AI
 
 interface CharacterCardProps {
   character: Character;
@@ -45,13 +41,13 @@ interface CharacterCardProps {
 
 function CharacterCard({ character, onEdit, onDelete, onViewProfile }: CharacterCardProps) {
   return (
-    <Card 
+    <Card
       className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-colors hover:border-primary cursor-pointer h-auto min-h-[144px]"
       onClick={() => onViewProfile(character)}
     >
-      <div className="w-32 h-32 flex-shrink-0 bg-muted relative"> {/* Changed h-full to h-32 for square image */}
+      <div className="w-32 h-32 flex-shrink-0 bg-muted relative"> {/* Square image container */}
         <Image
-          src={character.imageUrl || `https://placehold.co/128x128.png`} {/* Updated placeholder to be square */}
+          src={character.imageUrl || `https://placehold.co/128x128.png`}
           alt={character.name}
           layout="fill"
           objectFit="cover"
@@ -64,7 +60,7 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
           Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
           {character.subclass ? ` (${character.subclass})` : ''}
         </CardDescription>
-        
+
         <div className="mt-1.5 grid grid-cols-2 gap-x-2 text-xs flex-grow">
           {/* Left Column */}
           <div className="space-y-1">
@@ -119,49 +115,39 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
 
 
 export default function PartyManagerPage() {
-  const { 
-    activeCampaign, 
-    characters, 
-    // addCharacter, // now handled by openCharacterForm(null)
-    // updateCharacter, // now handled by openCharacterForm(character)
-    deleteCharacter: deleteCharacterFromContext, 
+  const {
+    activeCampaign,
+    characters,
+    deleteCharacter: deleteCharacterFromContext,
     isLoading: isCampaignLoading,
     openProfileDialog,
-    openCharacterForm // Use this from context
+    openCharacterForm
   } = useCampaignContext();
-  
-  // Local state for form dialog itself is removed, now managed in CampaignContext/MainLayout
-  // const [isFormOpen, setIsFormOpen] = useState(false);
-  // const [editingCharacter, setEditingCharacter] = useState<Partial<Character> | null>(null);
+
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
-  // const [isRandomizing, setIsRandomizing] = useState(false); 
-  // const [randomizedData, setRandomizedData] = useState<Partial<Character>>({});
-  
-  const { toast } = useToast();
+  // const { toast } = useToast(); // toast is not used
 
   const partyMembers = characters.filter(char => char.campaignId === activeCampaign?.id);
 
   const handleAddCharacterClick = () => {
-    openCharacterForm(); // Open form for a new character
+    openCharacterForm();
   };
 
   const handleEditCharacter = (character: Character) => {
-    openCharacterForm(character); // Open form to edit existing character
+    openCharacterForm(character);
   };
 
   const handleDeleteCharacter = (characterId: string) => {
     deleteCharacterFromContext(characterId);
   };
-  
-  // handleSaveCharacter is now implicitly handled by CharacterForm dialog itself via context
-  
+
   const handleLevelUpParty = () => {
     // Placeholder for future functionality
     // toast({ title: "Level Up!", description: "Party level up functionality coming soon." });
   };
 
   const handleViewProfile = (character: Character) => {
-    openProfileDialog(character); 
+    openProfileDialog(character);
   };
 
   if (isCampaignLoading) {
@@ -172,7 +158,7 @@ export default function PartyManagerPage() {
       </div>
     );
   }
-  
+
   return (
     <>
       <PageHeader
@@ -230,17 +216,17 @@ export default function PartyManagerPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2"> 
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2">
           {partyMembers.map((character) => (
-            <CharacterCard 
-              key={character.id} 
-              character={character} 
-              onEdit={handleEditCharacter} 
+            <CharacterCard
+              key={character.id}
+              character={character}
+              onEdit={handleEditCharacter}
               onDelete={handleDeleteCharacter}
               onViewProfile={handleViewProfile}
             />
           ))}
-          <Card 
+          <Card
             onClick={handleAddCharacterClick}
             className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted min-h-[144px] cursor-pointer group"
             role="button"
@@ -252,9 +238,8 @@ export default function PartyManagerPage() {
           </Card>
         </div>
       )}
-
-      {/* CharacterForm Dialog is now managed by MainLayoutContent */}
     </>
   );
 }
 
+    
