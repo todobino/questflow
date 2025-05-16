@@ -40,10 +40,10 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     setMounted(true);
   }, []);
 
-  if (!mounted && typeof window !== 'undefined' ) { // Stricter check for initial client render
+  if (!mounted && typeof window !== 'undefined' ) { 
     return null;
   }
-   if (!mounted) { // Fallback for pure SSR or if above fails
+   if (!mounted) { 
     return null;
   }
 
@@ -62,7 +62,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign.name}</h1>}
           </header>
           
-          {/* SessionHeader */}
+          
           <header className="sticky top-0 z-10 hidden h-14 shrink-0 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
             {mounted && <CampaignSwitcher />}
             {mounted && <SessionTools />}
@@ -73,7 +73,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           </main>
         </div>
 
-        <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground p-4 hidden md:flex flex-col overflow-hidden">
+        <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground px-4 pt-2 pb-4 hidden md:flex flex-col overflow-hidden"> {/* Changed p-4 to px-4 pt-2 pb-4 */}
           <Tabs defaultValue="party" className="w-full flex-1 flex flex-col min-h-0">
             <TabsList className="grid w-full grid-cols-3 shrink-0 border border-border">
               <TabsTrigger value="party" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
