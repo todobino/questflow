@@ -16,7 +16,7 @@ import {
   SheetClose,
   SheetFooter as SheetModalFooter,
 } from '@/components/ui/sheet';
-import { UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, PlusCircle, Swords, X, PlayCircle, UserRound, Cat, Skull } from 'lucide-react';
+import { UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, PlusCircle, Swords, X, PlayCircle, UserRound, Cat, Skull, ShieldPlus } from 'lucide-react';
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -42,7 +42,7 @@ import {
   AlertDialogFooter as ShadAlertDialogFooter, 
   AlertDialogHeader as ShadAlertDialogHeader, 
   AlertDialogTitle as ShadAlertDialogTitle, 
-  AlertDialogTrigger as ShadAlertDialogTrigger,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger, TabsContent as ShadTabsContent } from '@/components/ui/tabs';
@@ -245,6 +245,7 @@ export function CombatTrackerTool() {
 
   const handleAddPartyToCombat = () => {
     if (!activeCampaign || !partyCharacters || partyCharacters.length === 0) {
+      toast({ title: "No Party", description: "No characters in the active campaign's party to add.", variant: "destructive"});
       return;
     }
 
@@ -289,16 +290,28 @@ export function CombatTrackerTool() {
     
     if (updatedCombatantsList.length === 0) {
         setCombatants([]);
+        if (combatStarted) { // If combat was started but now no one is left
+            endCombat(); // End combat if empty after trying to add party
+        }
         return;
     }
     
     const sortedList = updatedCombatantsList.sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
     setCombatants(sortedList);
     
-    if (sortedList.length > 0) { 
+    if (sortedList.length > 0 && !combatStarted) { // Only auto-start if not already started
       setRound(1);
       setTurnIndex(0);
       setCombatStarted(true);
+    } else if (sortedList.length > 0 && combatStarted) {
+      // If combat is already started and we're re-rolling/adding, re-sort and potentially adjust turnIndex if current turn is gone
+      const currentTurnCombatant = sortedCombatants[turnIndex];
+      const newIdxOfCurrent = currentTurnCombatant ? sortedList.findIndex(c => c.id === currentTurnCombatant.id) : -1;
+      if (newIdxOfCurrent !== -1) {
+          setTurnIndex(newIdxOfCurrent);
+      } else if (sortedList.length > 0) { // If current turn combatant removed, reset to first
+          setTurnIndex(0);
+      }
     }
   };
 
@@ -448,7 +461,7 @@ export function CombatTrackerTool() {
           </Button>
       </CardHeader>
       
-      <CardContent className="px-2.5 py-2 flex-grow overflow-y-auto">
+      <CardContent className="px-3 py-2.5 flex-grow overflow-y-auto">
         {combatants.length === 0 ? (
           <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
         ) : (
@@ -473,7 +486,7 @@ export function CombatTrackerTool() {
               } else if (c.type === 'enemy') {
                   initiativeBgColorClass = ENEMY_INITIATIVE_BG;
                     if(isCurrentTurn) turnBorderClass = 'ring-destructive';
-              } else if (c.type === 'player' && !c.isPlayerCharacter) { 
+              } else if (c.type === 'player' && !c.isPlayerCharacter) { // Ally
                   initiativeBgColorClass = ALLY_INITIATIVE_BG;
                   if(isCurrentTurn) turnBorderClass = 'ring-gray-500 dark:ring-gray-400';
               } else {
@@ -517,13 +530,13 @@ export function CombatTrackerTool() {
                                 {c.conditions.join(', ')}
                             </p>
                         )}
-                         <div className="flex justify-between items-center text-xs mt-1">
-                            <div className="flex items-center text-muted-foreground dark:text-gray-400">
+                        <div className="flex justify-between items-center text-xs mt-1">
+                           <div className="flex items-center text-muted-foreground dark:text-gray-400">
                                 <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" /> {c.armorClass ?? 'N/A'}
-                            </div>
-                            <div className="flex items-center text-muted-foreground dark:text-gray-400">
+                           </div>
+                           <div className="flex items-center text-muted-foreground dark:text-gray-400">
                                 <Heart className="mr-1 h-3.5 w-3.5 text-red-500" /> {c.hp} / {c.maxHp}
-                            </div>
+                           </div>
                         </div>
                         <div className="w-full mt-1.5">
                             <Progress
@@ -532,29 +545,30 @@ export function CombatTrackerTool() {
                             />
                         </div>
                       </div>
-                      <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                        <AlertDialog>
-                            <ShadAlertDialogTrigger asChild>
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon-sm" 
-                                    className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
-                                    onClick={(e) => { e.stopPropagation(); }}
-                                >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                            </ShadAlertDialogTrigger>
-                            <ShadAlertDialogContent onClick={(e) => e.stopPropagation()}>
-                                <ShadAlertDialogHeader>
-                                    <ShadAlertDialogTitle>Delete {c.name}?</ShadAlertDialogTitle>
-                                    <ShadAlertDialogDescription>This action cannot be undone.</ShadAlertDialogDescription>
-                                </ShadAlertDialogHeader>
-                                <ShadAlertDialogFooter>
-                                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={(e) => { e.stopPropagation(); setCombatantToDeleteId(c.id); setIsDeleteConfirmOpen(true); setOpenPopoverId(null); }}>Delete</AlertDialogAction>
-                                </ShadAlertDialogFooter>
-                            </ShadAlertDialogContent>
-                        </AlertDialog>
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+                           
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon-sm" 
+                                        className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
+                                        onClick={(e) => { e.stopPropagation(); }}
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete {c.name}?</AlertDialogTitle>
+                                        <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={(e) => { e.stopPropagation(); setCombatantToDeleteId(c.id); setIsDeleteConfirmOpen(true); setOpenPopoverId(null); }}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                        </div>
                     </li>
                   </PopoverTrigger>
@@ -785,7 +799,7 @@ export function CombatTrackerTool() {
       }}>
         <ShadAlertDialogContent>
           <ShadAlertDialogHeader>
-            <ShadAlertDialogTitle>Delete {combatants.find(cb => cb.id === combatantToDeleteId)?.name || 'Combatant'}?</ShadAlertDialogTitle>
+            <AlertDialogTitle>Delete {combatants.find(cb => cb.id === combatantToDeleteId)?.name || 'Combatant'}?</AlertDialogTitle>
             <ShadAlertDialogDescription>
               This action cannot be undone.
             </ShadAlertDialogDescription>
@@ -852,4 +866,5 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
 
