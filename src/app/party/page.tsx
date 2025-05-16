@@ -121,7 +121,7 @@ export default function PartyManagerPage() {
     deleteCharacter: deleteCharacterFromContext,
     isLoading: isCampaignLoading,
     openProfileDialog,
-    openCharacterForm
+    openCharacterForm // Added openCharacterForm here
   } = useCampaignContext();
 
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
