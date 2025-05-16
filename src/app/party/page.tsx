@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Character } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon, Award } from 'lucide-react';
+import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon, Award, Backpack, ScrollText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-// import { useToast } from '@/hooks/use-toast'; // Not used
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CharacterCardProps {
   character: Character;
@@ -125,7 +125,6 @@ export default function PartyManagerPage() {
   } = useCampaignContext();
 
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
-  // const { toast } = useToast(); // toast is not used
 
   const partyMembers = characters.filter(char => char.campaignId === activeCampaign?.id);
 
@@ -143,7 +142,6 @@ export default function PartyManagerPage() {
 
   const handleLevelUpParty = () => {
     // Placeholder for future functionality
-    // toast({ title: "Level Up!", description: "Party level up functionality coming soon." });
   };
 
   const handleViewProfile = (character: Character) => {
@@ -195,50 +193,89 @@ export default function PartyManagerPage() {
           </DropdownMenu>
         }
       />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Left Column: Character Roster */}
+      <div className="lg:col-span-2">
+        {!activeCampaign ? (
+          <Card className="text-center py-12">
+            <CardHeader>
+              <CardTitle>No Active Campaign</CardTitle>
+              <CardDescription>Please select or create an active campaign to manage its party.</CardDescription>
+            </CardHeader>
+          </Card>
+        ) : partyMembers.length === 0 ? (
+          <Card className="text-center py-12 min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed hover:border-primary transition-colors">
+            <CardHeader>
+              <CardTitle>Party is Empty</CardTitle>
+              <CardDescription className="mb-4">No characters in this party yet. Add your first hero!</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleAddCharacterClick} size="lg">
+                <PlusCircle className="mr-2 h-5 w-5" /> Add First Character
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {partyMembers.map((character) => (
+              <CharacterCard
+                key={character.id}
+                character={character}
+                onEdit={handleEditCharacter}
+                onDelete={handleDeleteCharacter}
+                onViewProfile={handleViewProfile}
+              />
+            ))}
+            <Card
+              onClick={handleAddCharacterClick}
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted h-32 cursor-pointer group"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddCharacterClick()}
+            >
+              <PlusCircle className="mb-2 h-10 w-10 text-muted-foreground group-hover:text-primary" />
+              <p className="font-semibold text-muted-foreground group-hover:text-primary">Add New Character</p>
+            </Card>
+          </div>
+        )}
+      </div>
 
-      {!activeCampaign ? (
-         <Card className="text-center py-12">
+      {/* Right Column: Party Inventory */}
+      <div className="lg:col-span-1">
+        <Card className="shadow-lg min-h-[calc(100vh-12rem)]"> {/* Adjust min-height as needed */}
           <CardHeader>
-            <CardTitle>No Active Campaign</CardTitle>
-            <CardDescription>Please select or create an active campaign to manage its party.</CardDescription>
-          </CardHeader>
-        </Card>
-      ) : partyMembers.length === 0 ? (
-        <Card className="text-center py-12 min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed hover:border-primary transition-colors">
-          <CardHeader>
-            <CardTitle>Party is Empty</CardTitle>
-            <CardDescription className="mb-4">No characters in this party yet. Add your first hero!</CardDescription>
+            <CardTitle className="flex items-center">
+              <Backpack className="mr-2 h-5 w-5 text-primary" />
+              Party Inventory
+            </CardTitle>
+            <CardDescription>Shared items and treasures of the party.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={handleAddCharacterClick} size="lg">
-              <PlusCircle className="mr-2 h-5 w-5" /> Add First Character
-            </Button>
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="weapons">Weapons</TabsTrigger>
+                <TabsTrigger value="potions">Potions</TabsTrigger>
+                {/* Add more tabs like Armor, Gear, Misc etc. */}
+              </TabsList>
+              <TabsContent value="all">
+                <div className="text-center text-muted-foreground py-8">
+                  <ScrollText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-2" />
+                  <p>No items in the party inventory yet.</p>
+                  <Button variant="outline" size="sm" className="mt-4">Add Item (Soon)</Button>
+                </div>
+              </TabsContent>
+              <TabsContent value="weapons">
+                <p className="text-center text-muted-foreground py-8">No weapons in inventory.</p>
+              </TabsContent>
+              <TabsContent value="potions">
+                <p className="text-center text-muted-foreground py-8">No potions in inventory.</p>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2">
-          {partyMembers.map((character) => (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              onEdit={handleEditCharacter}
-              onDelete={handleDeleteCharacter}
-              onViewProfile={handleViewProfile}
-            />
-          ))}
-          <Card
-            onClick={handleAddCharacterClick}
-            className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted h-32 cursor-pointer group"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddCharacterClick()}
-          >
-            <PlusCircle className="mb-2 h-10 w-10 text-muted-foreground group-hover:text-primary" />
-            <p className="font-semibold text-muted-foreground group-hover:text-primary">Add New Character</p>
-          </Card>
-        </div>
-      )}
+      </div>
+    </div>
     </>
   );
 }
-

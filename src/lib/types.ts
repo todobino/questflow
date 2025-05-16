@@ -147,3 +147,12 @@ export interface EncounterMonster extends MonsterListItem {
   // other quick access fields if needed
 }
 
+export interface InventoryItem {
+  id: string;
+  name: string;
+  type: 'weapon' | 'armor' | 'potion' | 'scroll' | 'gear' | 'treasure' | 'misc';
+  quantity: number;
+  description?: string;
+  notes?: string;
+  // Could also include: weight, cost, properties (e.g., for weapons/armor), rarity, attuned (boolean)
+}
