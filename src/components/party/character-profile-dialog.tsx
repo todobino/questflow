@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -74,61 +74,41 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
   ? (character.currentExp / character.nextLevelExp) * 100
   : 0;
 
+  const imageSizeClasses = "w-28 h-28"; // Approx 3 lines of text + progress bar
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-4 sm:p-6 border-b">
-          <DialogTitle className="text-2xl sm:text-3xl">{character.name}</DialogTitle>
-        </DialogHeader>
-        
-        <ScrollArea className="flex-grow min-h-0"> {/* Added min-h-0 */}
-          <div className="p-4 sm:p-6 space-y-6">
-            {/* Top Row: Image, Name/Level/Class/BG, EXP Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
-              <div className="w-full sm:w-1/3 md:w-1/4 flex-shrink-0 space-y-2">
-                <div className="aspect-square w-full bg-muted rounded-lg overflow-hidden shadow-md mx-auto max-w-xs sm:max-w-none">
-                  {isGeneratingImage && !character.imageUrl ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    </div>
-                  ) : (
-                    <Image
-                      src={character.imageUrl || 'https://placehold.co/400x400.png'}
-                      alt={character.name}
-                      width={400}
-                      height={400}
-                      className="object-cover w-full h-full"
-                      data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
-                      key={character.imageUrl} 
-                    />
-                  )}
-                </div>
-                <Button 
-                  onClick={handleGenerateNewPortrait} 
-                  disabled={isGeneratingImage}
-                  className="w-full"
-                  variant="outline"
-                  size="sm"
-                >
-                  {isGeneratingImage ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="mr-2 h-4 w-4" />
-                  )}
-                  {isGeneratingImage ? 'Generating...' : 'New Portrait'}
-                </Button>
+          <div className="flex items-start justify-between gap-4 sm:gap-6">
+            {/* Left Group: Image + Info */}
+            <div className="flex items-start gap-4 sm:gap-6 flex-1">
+              <div className={cn("flex-shrink-0 rounded-lg overflow-hidden shadow-md bg-muted", imageSizeClasses)}>
+                {isGeneratingImage && !character.imageUrl ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <Image
+                    src={character.imageUrl || 'https://placehold.co/400x400.png'}
+                    alt={character.name}
+                    width={112} // Corresponds to w-28
+                    height={112} // Corresponds to h-28
+                    className="object-cover w-full h-full"
+                    data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
+                    key={character.imageUrl} 
+                  />
+                )}
               </div>
 
-              <div className="flex-grow space-y-3">
-                <div className="space-y-0.5">
-                  <p className="text-lg text-muted-foreground">
-                    Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
-                    {character.subclass ? ` (${character.subclass})` : ''}
-                  </p>
-                  {character.background && <p className="text-sm text-muted-foreground">Background: {character.background}</p>}
-                </div>
-                
-                <div>
+              <div className="flex-1 flex flex-col space-y-1">
+                <DialogTitle className="text-2xl sm:text-3xl text-left">{character.name}</DialogTitle>
+                <p className="text-md text-muted-foreground text-left">
+                  Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
+                  {character.subclass ? ` (${character.subclass})` : ''}
+                </p>
+                {character.background && <p className="text-sm text-muted-foreground text-left">Background: {character.background}</p>}
+                <div className="pt-1">
                   <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                     <span className="flex items-center">
                       <Award className="h-3.5 w-3.5 mr-1 text-amber-500" />
@@ -145,8 +125,27 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
               </div>
             </div>
 
-            <Separator />
-
+            {/* Right Element: New Portrait Button */}
+            <div className="flex-shrink-0">
+              <Button 
+                onClick={handleGenerateNewPortrait} 
+                disabled={isGeneratingImage}
+                variant="outline"
+                size="sm"
+              >
+                {isGeneratingImage ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                {isGeneratingImage ? 'Generating...' : 'New Portrait'}
+              </Button>
+            </div>
+          </div>
+        </DialogHeader>
+        
+        <ScrollArea className="flex-grow min-h-0"> {/* Added min-h-0 */}
+          <div className="p-4 sm:p-6 space-y-6">
             {/* Middle/Bottom Section: Stats, Goals/Backstory */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Left Column: Stat Box */}
@@ -174,7 +173,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 
                 <div className="p-4 border rounded-lg shadow-sm bg-background/30 flex-grow flex flex-col min-h-[200px]">
                   <h3 className="text-lg font-semibold flex items-center mb-2"><FileText className="h-5 w-5 mr-2 text-primary" />Backstory</h3>
-                  <ScrollArea className="flex-1 max-h-48 sm:max-h-64"> 
+                  <ScrollArea className="flex-1 max-h-48 sm:max-h-64 min-h-0"> 
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed pr-2">
                       {character.backstory || 'No backstory provided.'}
                     </p>
@@ -195,4 +194,3 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
     </Dialog>
   );
 }
-
