@@ -31,11 +31,11 @@ import {
 } from "@/components/ui/select";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogClose,
   DialogFooter as ShadDialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -55,13 +55,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'; // Added TabsContent
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 
 const PLAYER_CHARACTER_COLOR = 'bg-white dark:bg-gray-100';
-const ALLY_COLOR = 'bg-slate-200 dark:bg-slate-700/70';
-const ENEMY_COLOR = 'bg-red-100 dark:bg-red-800/70';
+const ALLY_COLOR = 'bg-white dark:bg-gray-100'; // Changed from slate
+const ENEMY_COLOR = 'bg-white dark:bg-gray-100'; // Changed from red
 
 
 export function CombatTrackerTool() {
@@ -109,8 +109,8 @@ export function CombatTrackerTool() {
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddAllyOrEnemyFromDialog = () => {
-    if (!newCombatantName || !newCombatantHp) {
-      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
+    if (!newCombatantName || !newCombatantHp || !newCombatantInitiativeModifier) {
+      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
       return;
     }
   
@@ -165,11 +165,11 @@ export function CombatTrackerTool() {
       }
   
       let displayColor: string;
-      let typeForCombatant: 'enemy' | 'player'; // 'player' type is used for both PCs and player-controlled allies
+      let typeForCombatant: 'enemy' | 'player';
   
       if (addCombatantDialogTab === 'ally') {
-        displayColor = ALLY_COLOR;
-        typeForCombatant = 'player'; // Allies are treated as player-controlled for type, distinguished by isPlayerCharacter
+        displayColor = ALLY_COLOR; 
+        typeForCombatant = 'player'; 
       } else { // 'enemy'
         displayColor = ENEMY_COLOR;
         typeForCombatant = 'enemy';
@@ -184,7 +184,7 @@ export function CombatTrackerTool() {
         armorClass: acValue,
         initiative: finalInitiative,
         conditions: [],
-        isPlayerCharacter: false, // This is explicitly false for enemies and non-PC allies
+        isPlayerCharacter: false,
         displayColor: displayColor,
         initiativeModifier: initiativeModifierValue
       };
@@ -266,13 +266,12 @@ export function CombatTrackerTool() {
     let updatedCombatantsList = [...combatants];
     const newCombatantsToAdd: Combatant[] = [];
   
-    partyCharacters.forEach((char) => {
+    partyCharacters.forEach((char, index) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
   
         if (existingCombatantIndex !== -1) {
-          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -283,7 +282,6 @@ export function CombatTrackerTool() {
             displayColor: PLAYER_CHARACTER_COLOR, 
           };
         } else {
-          // Add new player character
           newCombatantsToAdd.push({
             id: String(Date.now() + Math.random() + updatedCombatantsList.length + newCombatantsToAdd.length),
             name: char.name,
@@ -331,7 +329,7 @@ export function CombatTrackerTool() {
         if (type === 'hit') {
           newHp = Math.max(0, c.hp - amount);
         } else {
-          newHp = Math.min(c.maxHp, c.hp + amount);
+          newHp = Math.min(c.maxHp ?? Infinity, c.hp + amount);
         }
         return { ...c, hp: newHp };
       }
@@ -416,12 +414,12 @@ export function CombatTrackerTool() {
         </div>
       )}
       <div className="flex-shrink-0 mb-2 grid grid-cols-2 gap-2">
-         <Button 
+          <Button 
             variant="outline" 
             size="sm" 
             className="w-full hover:bg-background hover:border-primary hover:text-primary"
             onClick={() => {
-              setAddCombatantDialogTab('enemy'); // Default to enemy tab
+              setAddCombatantDialogTab('enemy');
               setIsAddCombatantDialogOpen(true);
             }}
           >
@@ -640,7 +638,7 @@ export function CombatTrackerTool() {
                 else if (hpPercentage <= 50) hpBarColorClass = 'bg-yellow-500';
 
                 const isCurrentTurn = c.id === currentTurnCombatantId;
-                let turnBorderClass = 'ring-primary'; // Default for allies
+                let turnBorderClass = 'ring-primary'; 
                 if (isCurrentTurn) {
                     if (c.type === 'enemy') {
                         turnBorderClass = 'ring-destructive';
@@ -668,7 +666,7 @@ export function CombatTrackerTool() {
                           "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
                           c.type === 'enemy' ? 'bg-destructive text-destructive-foreground' :
                           (c.isPlayerCharacter && c.type === 'player') ? 'bg-success text-success-foreground' :
-                          'bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-800' // Ally or non-PC Player
+                          'bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-800' 
                         )}
                         >
                           {c.initiative ?? '-'}
@@ -678,28 +676,23 @@ export function CombatTrackerTool() {
                           <h4 className={cn(
                             "font-semibold text-md truncate",
                              (c.type === 'player' && c.isPlayerCharacter) ? 'text-gray-800 dark:text-gray-100' : 
-                             (c.type === 'player' && !c.isPlayerCharacter) ? 'text-gray-700 dark:text-gray-300' : // Ally text color
-                             'text-gray-800 dark:text-red-100' // Enemy text color
+                             (c.type === 'player' && !c.isPlayerCharacter) ? 'text-gray-700 dark:text-gray-300' : 
+                             'text-gray-800 dark:text-red-100' 
                           )}
                           >
                             {c.name}
                           </h4>
-                          {c.conditions.length > 0 && (
-                            <span className="text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-200 dark:bg-yellow-700/40 px-1.5 py-0.5 rounded-full block mt-0.5 text-left truncate">
-                              {c.conditions.join(', ')}
-                            </span>
-                          )}
-                          <div className="flex justify-between items-center text-xs mt-1">
-                             <div className="flex items-center text-muted-foreground dark:text-gray-400">
-                                  <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                                  AC: {c.armorClass ?? 'N/A'}
-                              </div>
-                              <div className="flex items-center text-muted-foreground dark:text-gray-400">
-                                  <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
-                                  {c.hp} / {c.maxHp}
-                              </div>
-                          </div>
-                          <div className="w-full mt-1">
+                           <div className="flex justify-between items-center text-xs mt-1">
+                                <div className="flex items-center text-muted-foreground dark:text-gray-400">
+                                    <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                                    AC: {c.armorClass ?? 'N/A'}
+                                </div>
+                                <div className="flex items-center text-muted-foreground dark:text-gray-400">
+                                    <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
+                                    {c.hp} / {c.maxHp}
+                                </div>
+                            </div>
+                          <div className="w-full mt-1.5">
                             <Progress
                               value={hpPercentage}
                               className={cn("h-1.5 w-full", `[&>div]:${hpBarColorClass}`)}
@@ -729,7 +722,6 @@ export function CombatTrackerTool() {
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end" onClick={(e) => e.stopPropagation()}>
                         <div className="space-y-3">
-                        
                         <div className="space-y-1">
                           <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                           <Input
