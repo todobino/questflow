@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { format, formatDistanceToNowStrict, parseISO, differenceInSeconds } from 'date-fns';
+import { format, parseISO, differenceInSeconds } from 'date-fns';
 import { PlayCircle, StopCircle, TimerIcon, PauseCircle, Play } from 'lucide-react';
 
 export function SessionTools() {
@@ -119,7 +119,7 @@ export function SessionTools() {
               End Session
             </Button>
           </>
-        ) : null // Should not happen if currentSession is set and campaign matches
+        ) : null 
       ) : (
         <>
           {lastCompletedSessionForActiveCampaign && (
@@ -132,8 +132,8 @@ export function SessionTools() {
             onClick={handleStartSession} 
             variant="outline" 
             size="xs" 
-            className="px-2 py-1 h-auto hover:bg-success hover:text-success-foreground hover:border-success"
-            disabled={!!sessionLogs.find(log => log.campaignId === activeCampaign.id && (log.status === 'active' || log.status === 'paused'))} // Disable if any active/paused for this campaign
+            className="px-2 py-1 h-auto border-success text-success bg-success/20 hover:bg-success hover:text-success-foreground hover:border-success"
+            disabled={!!sessionLogs.find(log => log.campaignId === activeCampaign.id && (log.status === 'active' || log.status === 'paused'))} 
           >
             <PlayCircle className="mr-1.5 h-3.5 w-3.5" />
             Start Session
