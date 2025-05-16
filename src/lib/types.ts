@@ -16,16 +16,16 @@ export interface Character {
   class?: string;
   subclass?: string;
   background?: string;
-  level?: number; // Added level
+  level?: number;
   backstory?: string;
   imageUrl?: string; // URL or data URI
   currentHp?: number;
   maxHp?: number;
   armorClass?: number;
   initiativeModifier?: number;
-  currentExp?: number; // Added for EXP tracking
-  nextLevelExp?: number; // Added for EXP tracking
-  abilities?: {
+  currentExp?: number;
+  nextLevelExp?: number;
+  abilities?: { // Made optional here, but will be initialized
     strength: number;
     dexterity: number;
     constitution: number;
@@ -87,7 +87,7 @@ export interface EncounterLogEntry {
     currentHp: number;
     maxHp: number;
   }>;
-  defeatedCombatants: Array<{ // Renamed to vanquishedCombatants in display, type remains same for data
+  defeatedCombatants: Array<{
     name:string;
     type: 'enemy' | 'player' | 'ally';
   }>;
@@ -112,7 +112,7 @@ export interface SessionLog {
   sessionNumber: number;
   startTime: string; // ISO string
   endTime?: string; // ISO string, optional if session is active or paused
-  status: 'active' | 'completed' | 'paused'; // Added 'paused'
+  status: 'active' | 'completed' | 'paused';
   pausedTime?: string; // ISO string, set when session is paused
 }
 

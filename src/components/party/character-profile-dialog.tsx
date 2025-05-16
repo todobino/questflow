@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Edit3, Swords, Activity, ListChecks, Target } from 'lucide-react';
+import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Edit3, Swords, Activity, ListChecks, Target, VenetianMask } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CharacterProfileDialogProps {
@@ -18,6 +18,17 @@ interface CharacterProfileDialogProps {
   onEditCharacter: (character: Character) => void;
 }
 
+const ABILITIES_ORDER: (keyof NonNullable<Character['abilities']>)[] = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
+const ABILITY_NAMES: { [key: string]: string } = {
+  strength: "STR",
+  dexterity: "DEX",
+  constitution: "CON",
+  intelligence: "INT",
+  wisdom: "WIS",
+  charisma: "CHA",
+};
+
+
 export function CharacterProfileDialog({ character, isOpen, onClose, onEditCharacter }: CharacterProfileDialogProps) {
 
   if (!character) {
@@ -26,7 +37,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
 
   const StatDisplay = ({ icon: Icon, label, value, iconClassName, valueClassName }: { icon?: React.ElementType; label: string; value: string | number | undefined | null; iconClassName?: string; valueClassName?: string }) => (
     <div className="flex items-center text-sm">
-      {Icon && <Icon className={cn("h-4 w-4 mr-1.5 text-muted-foreground", iconClassName)} />}
+      {Icon && <Icon className={cn("h-4 w-4 mr-2 text-muted-foreground", iconClassName)} />}
       <span className="font-medium text-muted-foreground mr-1">{label}:</span>
       <span className={cn("text-foreground", valueClassName)}>{value ?? 'N/A'}</span>
     </div>
@@ -38,23 +49,12 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
 
   const imageSizeClasses = "w-24 h-24"; 
 
-  const ABILITIES_ORDER: (keyof NonNullable<Character['abilities']>)[] = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
-  const ABILITY_NAMES: { [key: string]: string } = {
-    strength: "STR",
-    dexterity: "DEX",
-    constitution: "CON",
-    intelligence: "INT",
-    wisdom: "WIS",
-    charisma: "CHA",
-  };
-
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-4 sm:p-6 border-b">
           <div className="flex items-start justify-between gap-3 sm:gap-4">
-            {/* Left Group: Image + Primary Info */}
+            {/* Left Group: Image + Primary Info Column */}
             <div className="flex items-start gap-3 sm:gap-4">
               <div className={cn("flex-shrink-0 rounded-lg overflow-hidden shadow-md bg-muted", imageSizeClasses)}>
                   <Image

@@ -3,7 +3,6 @@
 
 import type { Campaign, Character, Faction, FactionReputation, SessionLog } from '@/lib/types';
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-// import { useToast } from '@/hooks/use-toast'; // Toasts for non-errors removed
 
 interface CampaignContextType {
   campaigns: Campaign[];
@@ -105,6 +104,25 @@ const initialMockCharacters: Character[] = [
       nextLevelExp: 6500,
       abilities: { strength: 10, dexterity: 10, constitution: 14, intelligence: 12, wisdom: 16, charisma: 13 },
     },
+    {
+      id: 'char4',
+      campaignId: '3',
+      name: 'Roric Ironhew',
+      race: 'Dwarf',
+      class: 'Fighter',
+      subclass: 'Battle Master',
+      background: 'Soldier',
+      level: 3,
+      backstory: 'A stern dwarf warrior, veteran of many battles, seeking a worthy cause.',
+      imageUrl: `https://placehold.co/400x400.png`,
+      currentHp: 25,
+      maxHp: 25,
+      armorClass: 18,
+      initiativeModifier: 1,
+      currentExp: 1000,
+      nextLevelExp: 2700,
+      abilities: { strength: 16, dexterity: 10, constitution: 15, intelligence: 9, wisdom: 12, charisma: 8 },
+    }
 ];
 
 const initialMockFactions: Faction[] = [
@@ -158,21 +176,22 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
         const parsed = JSON.parse(storedCampaigns);
         if (Array.isArray(parsed) && parsed.length > 0) {
           effectiveCampaigns = parsed;
+        } else if (Array.isArray(parsed) && parsed.length === 0) { // Handle empty array from localStorage
+          effectiveCampaigns = initialMockCampaigns.map((c, idx) => ({ ...c, isActive: idx === 0 }));
         }
+      } else { // No campaigns in localStorage, use mock
+          effectiveCampaigns = initialMockCampaigns.map((c, idx) => ({ ...c, isActive: idx === 0 }));
       }
     } catch (e) {
-      console.error("Failed to parse campaigns from localStorage", e);
-    }
-
-    if (effectiveCampaigns.length === 0 && initialMockCampaigns.length > 0) {
+      console.error("Failed to parse campaigns from localStorage, using mock data.", e);
       effectiveCampaigns = initialMockCampaigns.map((c, idx) => ({ ...c, isActive: idx === 0 }));
     }
     setCampaignsState(effectiveCampaigns);
-
+    
     let active = effectiveCampaigns.find(c => c.isActive);
     if (!active && effectiveCampaigns.length > 0) {
-      active = { ...effectiveCampaigns[0], isActive: true };
-      setCampaignsState(prev => prev.map(c => (c.id === active!.id ? active! : { ...c, isActive: false })));
+        active = { ...effectiveCampaigns[0], isActive: true };
+        setCampaignsState(prev => prev.map(c => (c.id === active!.id ? active! : { ...c, isActive: false })));
     }
     setActiveCampaignState(active || null);
 
@@ -180,7 +199,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       const storedCharacters = localStorage.getItem('characters');
       setCharactersState(storedCharacters ? JSON.parse(storedCharacters) : initialMockCharacters);
     } catch (e) {
-      console.error("Failed to parse characters from localStorage", e);
+      console.error("Failed to parse characters from localStorage, using mock data.", e);
       setCharactersState(initialMockCharacters);
     }
     
@@ -188,7 +207,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       const storedFactions = localStorage.getItem('factions');
       setFactionsState(storedFactions ? JSON.parse(storedFactions) : initialMockFactions);
     } catch (e) {
-      console.error("Failed to parse factions from localStorage", e);
+      console.error("Failed to parse factions from localStorage, using mock data.", e);
       setFactionsState(initialMockFactions);
     }
 
@@ -196,7 +215,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       const storedFactionReputations = localStorage.getItem('factionReputations');
       setFactionReputationsState(storedFactionReputations ? JSON.parse(storedFactionReputations) : initialMockFactionReputations);
     } catch(e) {
-      console.error("Failed to parse faction reputations from localStorage", e);
+      console.error("Failed to parse faction reputations from localStorage, using mock data.", e);
       setFactionReputationsState(initialMockFactionReputations);
     }
     
@@ -204,7 +223,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       const storedSessionLogs = localStorage.getItem('sessionLogs');
       setSessionLogsState(storedSessionLogs ? JSON.parse(storedSessionLogs) : initialMockSessionLogs);
     } catch (e) {
-      console.error("Failed to parse session logs from localStorage", e);
+      console.error("Failed to parse session logs from localStorage, using mock data.", e);
       setSessionLogsState(initialMockSessionLogs);
     }
 
@@ -299,7 +318,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       if (newCampaign.isActive) {
         newCampaigns = newCampaigns.map(c => c.id === newCampaign.id ? c : {...c, isActive: false});
         setActiveCampaignState(newCampaign); 
-      } else if (newCampaigns.length === 1) { // If it's the only campaign, make it active
+      } else if (newCampaigns.length === 1) { 
         const firstActiveCampaign = { ...newCampaign, isActive: true };
         newCampaigns = [firstActiveCampaign];
         setActiveCampaignState(firstActiveCampaign);
@@ -320,7 +339,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
              setActiveCampaignState({...nextActive, isActive: true});
              newCampaigns = newCampaigns.map(c => ({...c, isActive: c.id === nextActive.id}));
           } else {
-            setActiveCampaignState(null); // No other campaign to set active
+            setActiveCampaignState(null); 
           }
       }
       return newCampaigns;
