@@ -4,7 +4,6 @@ import {
   BookOpen,
   Search as SearchIcon,
   Users,
-  ListOrdered,
   ShieldAlert,
   Map as MapIcon,
   BookMarked,
@@ -14,6 +13,7 @@ import {
   UsersRound,
   Scroll as ScrollIconEntry,
   Flag,
+  Table, // Changed from ListOrdered
 } from 'lucide-react';
 
 export interface NavItem {
@@ -38,12 +38,12 @@ export const SITE_NAV_ITEMS: NavItem[] = [
 
 export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
-    title: 'Session Log', // Renamed and moved to top
+    title: 'Session Log',
     href: '/journal',
     icon: BookMarked,
   },
   {
-    title: 'Party Roster', // Renamed
+    title: 'Party Roster', 
     href: '/party',
     icon: UsersRound,
   },
@@ -67,15 +67,8 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
     title: 'Random Tables',
     href: '/tables',
-    icon: ListOrdered,
+    icon: Table, // Changed icon
   },
-  // Questing was merged into Factions & Quests, no longer needed here
-  // {
-  //   title: 'Questing',
-  //   href: '/quests',
-  //   icon: ScrollIconEntry, // Assuming ScrollIconEntry is Scroll, or use a different icon if needed
-  //   disabled: true,
-  // },
   {
     title: 'Lore & World',
     href: '/lore',
@@ -86,4 +79,5 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
 
 // Filter out the disabled "Characters" link for actual rendering if it's truly removed
 export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
+
 
