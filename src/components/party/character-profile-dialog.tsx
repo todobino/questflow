@@ -3,16 +3,16 @@
 
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'; // Removed DialogFooter
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, Swords, TrendingUp, VenetianMask } from 'lucide-react';
+import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, Swords, VenetianMask, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { generateCharacterImage } from '@/ai/flows/generate-character-image';
+// import { generateCharacterImage } from '@/ai/flows/generate-character-image'; // Removed as button is removed
 import { cn } from '@/lib/utils';
 
 interface CharacterProfileDialogProps {
@@ -23,40 +23,13 @@ interface CharacterProfileDialogProps {
 }
 
 export function CharacterProfileDialog({ character, isOpen, onClose, onEditCharacter }: CharacterProfileDialogProps) {
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const { toast } = useToast();
-  const { updateCharacter } = useCampaignContext();
+  // const [isGeneratingImage, setIsGeneratingImage] = useState(false); // Removed as button is removed
+  // const { toast } = useToast(); // Removed as button is removed
+  // const { updateCharacter } = useCampaignContext(); // Removed as button is removed
 
   if (!character) {
     return null;
   }
-
-  // const handleGenerateNewPortrait = async () => { // Removed as button is removed
-  //   if (!character) return;
-  //   setIsGeneratingImage(true);
-  //   try {
-  //     const result = await generateCharacterImage({
-  //       name: character.name,
-  //       race: character.race,
-  //       characterClass: character.class,
-  //       subclass: character.subclass,
-  //       background: character.background,
-  //       backstory: character.backstory,
-  //     });
-      
-  //     const updatedChar = { ...character, imageUrl: result.imageUrl };
-  //     updateCharacter(updatedChar);
-
-  //   } catch (error) {
-  //     console.error('Error generating portrait:', error);
-  //     toast({
-  //       title: 'Portrait Generation Failed',
-  //       description: (error as Error).message || 'Could not generate a new portrait. Please try again.',
-  //       variant: 'destructive',
-  //     });
-  //   }
-  //   setIsGeneratingImage(false);
-  // };
 
   const StatDisplay = ({ icon: Icon, label, value, iconClassName, valueClassName }: { icon?: React.ElementType; label: string; value: string | number | undefined | null; iconClassName?: string; valueClassName?: string }) => (
     <div className="flex items-center text-sm">
@@ -81,11 +54,11 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
             {/* Left Group: Image + Info */}
             <div className="flex items-start gap-4 sm:gap-6 flex-1">
               <div className={cn("flex-shrink-0 rounded-lg overflow-hidden shadow-md bg-muted", imageSizeClasses)}>
-                {isGeneratingImage ? (
+                {/* {isGeneratingImage ? ( // Removed as button is removed
                   <div className="w-full h-full flex items-center justify-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   </div>
-                ) : (
+                ) : ( */}
                   <Image
                     src={character.imageUrl || 'https://placehold.co/128x128.png'}
                     alt={character.name}
@@ -95,10 +68,10 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                     data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
                     key={character.imageUrl} 
                   />
-                )}
+                {/* )} */}
               </div>
 
-              <div className="flex-1 flex flex-col space-y-1 pt-1"> {/* Added pt-1 for alignment */}
+              <div className="flex-1 flex flex-col space-y-1 pt-1">
                 <DialogTitle className="text-2xl sm:text-3xl text-left">{character.name}</DialogTitle>
                 <div className="text-sm text-muted-foreground text-left flex flex-wrap items-center gap-x-3 gap-y-0.5">
                     <span className="inline-flex items-center">
@@ -132,7 +105,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
 
             {/* Right Element: Edit Button */}
             <div className="flex-shrink-0">
-              <Button 
+               <Button 
                 onClick={() => onEditCharacter(character)}
                 variant="outline"
                 size="sm"
@@ -143,7 +116,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
           </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-grow min-h-0">
+        <ScrollArea className="flex-grow min-h-0"> {/* Added min-h-0 here */}
           <div className="p-4 sm:p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4 p-4 border rounded-lg shadow-sm bg-background/30">
@@ -169,7 +142,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 
                 <div className="p-4 border rounded-lg shadow-sm bg-background/30 flex-grow flex flex-col min-h-[200px]">
                   <h3 className="text-lg font-semibold flex items-center mb-2"><FileText className="h-5 w-5 mr-2 text-primary" />Backstory</h3>
-                  <ScrollArea className="flex-1 max-h-48 sm:max-h-64 min-h-0"> 
+                  <ScrollArea className="flex-1 max-h-48 sm:max-h-64 min-h-0"> {/* Added min-h-0 here */}
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed pr-2">
                       {character.backstory || 'No backstory provided.'}
                     </p>
@@ -180,9 +153,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
           </div>
         </ScrollArea>
         
-        <DialogFooter className="mt-auto px-4 py-2 sm:px-6 sm:py-3 border-t">
-          {/* Close button removed, Edit button moved to header */}
-        </DialogFooter>
+        {/* DialogFooter removed */}
       </DialogContent>
     </Dialog>
   );
