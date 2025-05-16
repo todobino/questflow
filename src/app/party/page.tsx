@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+// import { useToast } from '@/hooks/use-toast'; // Not used
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,7 +42,7 @@ interface CharacterCardProps {
 function CharacterCard({ character, onEdit, onDelete, onViewProfile }: CharacterCardProps) {
   return (
     <Card
-      className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-colors hover:border-primary cursor-pointer h-auto min-h-[144px]"
+      className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-colors hover:border-primary cursor-pointer h-32"
       onClick={() => onViewProfile(character)}
     >
       <div className="w-32 h-32 flex-shrink-0 bg-muted relative"> {/* Square image container */}
@@ -228,7 +228,7 @@ export default function PartyManagerPage() {
           ))}
           <Card
             onClick={handleAddCharacterClick}
-            className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted min-h-[144px] cursor-pointer group"
+            className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted h-32 cursor-pointer group"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleAddCharacterClick()}
@@ -241,5 +241,3 @@ export default function PartyManagerPage() {
     </>
   );
 }
-
-    
