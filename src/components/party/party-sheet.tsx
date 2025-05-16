@@ -40,6 +40,19 @@ export function PartySheet() {
 
   return (
     <div className="h-full flex flex-col">
+      {activeCampaign && partyMembers.length > 0 && (
+        <div className="flex-shrink-0 mb-3 p-3 border rounded-lg bg-card shadow-md">
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-sm font-semibold flex items-center">
+              <Users className="h-4 w-4 mr-2 text-primary" />
+              Party Strength
+            </p>
+            <p className="text-xs text-muted-foreground">{Math.round(partyStrengthPercentage)}%</p>
+          </div>
+          <Progress value={partyStrengthPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
+        </div>
+      )}
+
       <ScrollArea className="flex-grow">
         <div className="space-y-3 pr-1">
           {partyMembers.map((member) => {
@@ -85,7 +98,6 @@ export function PartySheet() {
                     )}
                   </div>
 
-
                   <div>
                     <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                       <span className="flex items-center">
@@ -113,20 +125,7 @@ export function PartySheet() {
         </div>
       </ScrollArea>
       
-      {activeCampaign && partyMembers.length > 0 && (
-        <div className="flex-shrink-0 mt-auto pt-3 mb-3 p-3 border rounded-lg bg-card shadow-sm">
-          <div className="flex justify-between items-center mb-1">
-            <p className="text-sm font-semibold flex items-center">
-              <Users className="h-4 w-4 mr-2 text-primary" />
-              Party Strength
-            </p>
-            <p className="text-xs text-muted-foreground">{Math.round(partyStrengthPercentage)}%</p>
-          </div>
-          <Progress value={partyStrengthPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
-        </div>
-      )}
-
-      <div className="flex-shrink-0 pt-0"> {/* Removed mt-auto, added pt-0 to ensure button is at the very bottom of its allocated space */}
+      <div className="flex-shrink-0 pt-3"> 
         <Button asChild className="w-full">
           <Link href="/party">Manage Party</Link>
         </Button>
