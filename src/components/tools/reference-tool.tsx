@@ -44,7 +44,7 @@ export function ReferenceTool() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col border border-border shadow-md rounded-lg">
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b flex-shrink-0">
         <h3 className="flex items-center text-lg font-semibold">
