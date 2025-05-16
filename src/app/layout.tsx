@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
-// Removed Outfit import
+import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { ThemeProvider } from 'next-themes';
-
-// Removed Outfit instantiation
 
 export const metadata: Metadata = {
   title: 'QuestFlow',
@@ -17,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="antialiased"> {/* Removed Outfit className */}
+    <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
+      <body className={`${GeistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
