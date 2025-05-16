@@ -50,32 +50,47 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
   return (
     <SidebarProvider defaultOpen>
-      <div className="group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar">
+      {/* Outermost container for the entire layout */}
+      <div 
+        className="group/sidebar-wrapper flex h-screen w-full overflow-hidden has-[[data-variant=inset]]:bg-sidebar"
+        style={
+          {
+            "--sidebar-width": "15vw",
+            "--sidebar-width-icon": "4rem",
+            "--sidebar-width-mobile": "80vw",
+          } as React.CSSProperties
+        }
+      >
 
         {mounted && (
           <SidebarNav />
         )}
 
+        {/* Central Column: Session Header + Main Scrollable Content */}
         <div className="w-[calc(100vw-var(--sidebar-width)-25vw)] md:w-[calc(100vw-var(--sidebar-width)-25vw)] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
+          {/* Mobile Header (already sticky) */}
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
             <SidebarTrigger />
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign.name}</h1>}
           </header>
           
           
+          {/* Desktop Session Header (sticky relative to this central column's scroll container) */}
           <header className="sticky top-0 z-10 hidden h-14 shrink-0 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
             {mounted && <CampaignSwitcher />}
             {mounted && <SessionTools />}
           </header>
 
+          {/* Main Scrollable Content Area */}
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
             {children}
           </main>
         </div>
 
-        <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground px-4 pt-2 pb-4 hidden md:flex flex-col overflow-hidden"> {/* Changed p-4 to px-4 pt-2 pb-4 */}
+        {/* Right Sidebar (fixed relative to main layout, internal content scrolls) */}
+        <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground px-4 pt-2 pb-4 hidden md:flex flex-col overflow-hidden">
           <Tabs defaultValue="party" className="w-full flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-3 shrink-0 border border-border">
+            <TabsList className="grid w-full grid-cols-3 shrink-0 border border-neutral-500 dark:border-background">
               <TabsTrigger value="party" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Users className="h-4 w-4 mr-1 md:mr-2" />Party
               </TabsTrigger>
@@ -132,8 +147,9 @@ export function MainLayout({ children }: MainLayoutProps) {
     setMounted(true);
   }, []);
 
+  // Prevent rendering on the server or during initial client hydration mismatch
   if (!mounted) {
-    return null;
+    return null; 
   }
 
   return (
@@ -142,3 +158,4 @@ export function MainLayout({ children }: MainLayoutProps) {
     </CampaignProvider>
   )
 }
+
