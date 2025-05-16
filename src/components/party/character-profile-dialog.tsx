@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
 import { generateCharacterImage } from '@/ai/flows/generate-character-image';
+import { cn } from '@/lib/utils'; // Added missing import
 
 interface CharacterProfileDialogProps {
   character: Character | null;
@@ -70,11 +71,9 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col"> {/* Increased max-width for two columns */}
-        {/* DialogHeader can remain for the main title if desired, or title can be part of the content */}
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl text-center md:text-left">{character.name}</DialogTitle>
-          {/* DialogDescription can be removed if its content is moved */}
         </DialogHeader>
         
         <ScrollArea className="flex-grow pr-2 -mr-2 md:pr-6 md:-mr-6">
@@ -130,8 +129,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 <StatDisplay icon={ShieldIcon} label="AC" value={character.armorClass} iconClassName="text-sky-600"/>
                 <StatDisplay icon={Zap} label="Initiative" value={character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'} iconClassName="text-yellow-500" />
                 <StatDisplay icon={Award} label="Level" value={character.level} iconClassName="text-amber-500"/>
-                 <StatDisplay icon={Award} label="Experience" value={`${character.currentExp ?? '0'} / ${character.nextLevelExp ?? '?'}`} iconClassName="text-amber-600"/>
-
+                <StatDisplay icon={Award} label="Experience" value={`${character.currentExp ?? '0'} / ${character.nextLevelExp ?? '?'}`} iconClassName="text-amber-600"/>
               </div>
               
               <div className="space-y-1">
