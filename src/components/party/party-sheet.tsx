@@ -5,13 +5,13 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-// Removed: import { Button } from '@/components/ui/button';
-// Removed: import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { Shield as ShieldIcon, Award, Users, Heart } from 'lucide-react';
+import { Shield as ShieldIcon, Award, Users, Heart, Zap } from 'lucide-react'; // Added Zap
 
 export function PartySheet() {
   const {
@@ -32,7 +32,7 @@ export function PartySheet() {
 
   const totalCurrentHp = partyMembers.reduce((sum, member) => sum + (member.currentHp ?? 0), 0);
   const totalMaxHp = partyMembers.reduce((sum, member) => sum + (member.maxHp ?? 1), 0); 
-  const partyStrengthPercentage = totalMaxHp > 0 ? (totalCurrentHp / totalMaxHp) * 100 : 0;
+  const partyStaminaPercentage = totalMaxHp > 0 ? (totalCurrentHp / totalMaxHp) * 100 : 0;
 
   if (isCampaignLoading) {
     return <p className="text-sm text-muted-foreground text-center py-4">Loading party...</p>;
@@ -44,12 +44,12 @@ export function PartySheet() {
         <div className="flex-shrink-0 mb-3 p-3 border rounded-lg bg-card shadow-md">
           <div className="flex justify-between items-center mb-1">
             <p className="text-sm font-semibold flex items-center">
-              <Users className="h-4 w-4 mr-2 text-primary" />
-              Party Strength
+              <Zap className="h-4 w-4 mr-2 text-primary" /> {/* Changed icon to Zap */}
+              Party Stamina {/* Changed text */}
             </p>
-            <p className="text-xs text-muted-foreground">{Math.round(partyStrengthPercentage)}%</p>
+            <p className="text-xs text-muted-foreground">{Math.round(partyStaminaPercentage)}%</p>
           </div>
-          <Progress value={partyStrengthPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
+          <Progress value={partyStaminaPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
         </div>
       )}
 
@@ -125,13 +125,20 @@ export function PartySheet() {
         </div>
       </ScrollArea>
       
-      {/* Removed Manage Party Button
       <div className="flex-shrink-0 pt-3 mt-auto"> 
-        <Button asChild className="w-full">
-          <Link href="/party">Manage Party</Link>
-        </Button>
+         {activeCampaign && (
+          <div className="flex-shrink-0 mb-1 p-3 border rounded-lg bg-card shadow-md">
+              <div className="flex justify-between items-center mb-1">
+                <p className="text-sm font-semibold flex items-center">
+                  <Zap className="h-4 w-4 mr-2 text-primary" /> {/* Changed icon */}
+                  Party Stamina {/* Changed text */}
+                </p>
+                <p className="text-xs text-muted-foreground">{Math.round(partyStaminaPercentage)}%</p>
+              </div>
+              <Progress value={partyStaminaPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
+          </div>
+        )}
       </div>
-      */}
     </div>
   );
 }
