@@ -57,6 +57,13 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 
 // Define color classes to ensure consistency
 const PLAYER_CHARACTER_COLOR = 'bg-white dark:bg-gray-100';
@@ -69,7 +76,8 @@ export function CombatTrackerTool() {
   const [combatants, setCombatants] = useState<Combatant[]>([]);
 
   const [isAddCombatantDialogOpen, setIsAddCombatantDialogOpen] = useState(false);
-  const [addCombatantDialogTab, setAddCombatantDialogTab] = useState<'player' | 'enemy' | 'ally'>('player');
+  const [addCombatantDialogTab, setAddCombatantDialogTab] = useState<'enemy' | 'ally' | 'player'>('enemy');
+
 
   // For Player tab
   const [selectedPlayerCharacterId, setSelectedPlayerCharacterId] = useState<string | undefined>(undefined);
@@ -108,20 +116,6 @@ export function CombatTrackerTool() {
   const currentTurnCombatantId = combatStarted && sortedCombatants.length > 0 ? sortedCombatants[turnIndex]?.id : null;
 
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
-
-  const handleOpenAddCombatantDialog = (tab: 'player' | 'enemy' | 'ally') => {
-    setNewCombatantName('');
-    setNewCombatantHp('');
-    setNewCombatantMaxHp('');
-    setNewCombatantAC('');
-    setNewCombatantInitiativeModifier('');
-    setNewCombatantQuantity('1');
-    setNewCombatantInitiativeRollType('individual');
-    setSelectedPlayerCharacterId(undefined);
-    setPlayerInitiativeInput('');
-    setAddCombatantDialogTab(tab);
-    setIsAddCombatantDialogOpen(true);
-  };
 
   const handleAddAllyOrEnemyFromDialog = () => {
     if (!newCombatantName || !newCombatantHp || !newCombatantInitiativeModifier) {
@@ -228,12 +222,10 @@ export function CombatTrackerTool() {
 
   const handleRollPlayerDialogInitiative = () => {
     if (!selectedPlayerCharacterId) {
-      toast({ title: 'No Player Selected', description: 'Please select a player to roll initiative for.', variant: 'destructive' });
       return;
     }
     const character = partyCharacters.find(p => p.id === selectedPlayerCharacterId);
     if (!character) {
-      toast({ title: 'Character Not Found', variant: 'destructive' });
       return;
     }
     const roll = roll1d20();
@@ -243,12 +235,10 @@ export function CombatTrackerTool() {
 
   const handleAddPlayerFromDialog = () => {
     if (!selectedPlayerCharacterId) {
-      toast({ title: 'No Player Selected', description: 'Please select a player character.', variant: 'destructive' });
       return;
     }
     const characterToAdd = partyCharacters.find(p => p.id === selectedPlayerCharacterId);
     if (!characterToAdd) {
-      toast({ title: 'Character Not Found', variant: 'destructive' });
       return;
     }
 
@@ -300,7 +290,7 @@ export function CombatTrackerTool() {
             maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
             initiativeModifier: char.initiativeModifier ?? 0,
-            displayColor: PLAYER_CHARACTER_COLOR, // Ensure color is set
+            displayColor: PLAYER_CHARACTER_COLOR, 
           };
         } else {
           // Add new player character
@@ -316,7 +306,7 @@ export function CombatTrackerTool() {
             isPlayerCharacter: true,
             originalCharacterId: char.id,
             armorClass: char.armorClass,
-            displayColor: PLAYER_CHARACTER_COLOR, // Ensure color is set
+            displayColor: PLAYER_CHARACTER_COLOR, 
           });
         }
       }
@@ -441,7 +431,7 @@ export function CombatTrackerTool() {
           size="sm"
           className="w-full hover:bg-background hover:border-primary hover:text-primary"
           onClick={() => {
-            setAddCombatantDialogTab('player'); // Default to player tab
+            setAddCombatantDialogTab('enemy'); // Default to enemy tab
             setIsAddCombatantDialogOpen(true);
           }}
         >
@@ -452,7 +442,21 @@ export function CombatTrackerTool() {
         </Button>
       </div>
 
-      <Dialog open={isAddCombatantDialogOpen} onOpenChange={setIsAddCombatantDialogOpen}>
+      <Dialog open={isAddCombatantDialogOpen} onOpenChange={(isOpen) => {
+        setIsAddCombatantDialogOpen(isOpen);
+        if (!isOpen) {
+          // Reset common fields when dialog closes
+          setNewCombatantName('');
+          setNewCombatantHp('');
+          setNewCombatantMaxHp('');
+          setNewCombatantAC('');
+          setNewCombatantInitiativeModifier('');
+          setNewCombatantQuantity('1');
+          setNewCombatantInitiativeRollType('individual');
+          setSelectedPlayerCharacterId(undefined);
+          setPlayerInitiativeInput('');
+        }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Combatant</DialogTitle>
@@ -463,51 +467,11 @@ export function CombatTrackerTool() {
           </DialogHeader>
           <Tabs value={addCombatantDialogTab} onValueChange={(value) => setAddCombatantDialogTab(value as 'player' | 'enemy' | 'ally')} className="w-full pt-2">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="player"><UserPlus className="mr-2 h-4 w-4" />Player</TabsTrigger>
               <TabsTrigger value="enemy"><Cat className="mr-2 h-4 w-4" />Enemy</TabsTrigger>
               <TabsTrigger value="ally"><ShieldPlus className="mr-2 h-4 w-4" />Ally</TabsTrigger>
+              <TabsTrigger value="player"><UserPlus className="mr-2 h-4 w-4" />Player</TabsTrigger>
             </TabsList>
-            <TabsContent value="player" className="py-4 space-y-4">
-              <Select
-                onValueChange={(value) => {
-                  setSelectedPlayerCharacterId(value);
-                  setPlayerInitiativeInput('');
-                }}
-                value={selectedPlayerCharacterId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select player character" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availablePlayerCharacters.length > 0 ? (
-                    availablePlayerCharacters.map(char => (
-                      <SelectItem key={char.id} value={char.id}>{char.name} (Lvl {char.level})</SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-2 text-sm text-muted-foreground">No available players or all party members added.</div>
-                  )}
-                </SelectContent>
-              </Select>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="player-initiative"
-                  type="number"
-                  value={playerInitiativeInput}
-                  onChange={e => setPlayerInitiativeInput(e.target.value)}
-                  placeholder="Initiative"
-                  bsSize="sm"
-                  className="flex-grow"
-                />
-                <Button onClick={handleRollPlayerDialogInitiative} variant="outline" size="sm" disabled={!selectedPlayerCharacterId}>
-                  <Dices className="mr-2 h-4 w-4" /> Roll d20
-                </Button>
-              </div>
-              <ShadDialogFooter className="pt-4">
-                <Button variant="outline" onClick={() => setIsAddCombatantDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddPlayerFromDialog} disabled={!selectedPlayerCharacterId}>Add Player</Button>
-              </ShadDialogFooter>
-            </TabsContent>
-            <TabsContent value="enemy" className="py-4 space-y-3">
+             <TabsContent value="enemy" className="py-4 space-y-3">
               <div>
                 <Label htmlFor="new-combatant-name-enemy" className="text-xs">Name</Label>
                 <Input id="new-combatant-name-enemy" value={newCombatantName} onChange={e => setNewCombatantName(e.target.value)} placeholder="e.g., Goblin Boss" bsSize="sm" />
@@ -613,12 +577,52 @@ export function CombatTrackerTool() {
                 <Button onClick={handleAddAllyOrEnemyFromDialog}>Add {parseInt(newCombatantQuantity) > 1 ? 'Allies' : 'Ally'}</Button>
               </ShadDialogFooter>
             </TabsContent>
+            <TabsContent value="player" className="py-4 space-y-4">
+              <Select
+                onValueChange={(value) => {
+                  setSelectedPlayerCharacterId(value);
+                  setPlayerInitiativeInput('');
+                }}
+                value={selectedPlayerCharacterId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select player character" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availablePlayerCharacters.length > 0 ? (
+                    availablePlayerCharacters.map(char => (
+                      <SelectItem key={char.id} value={char.id}>{char.name} (Lvl {char.level})</SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-muted-foreground">No available players or all party members added.</div>
+                  )}
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="player-initiative"
+                  type="number"
+                  value={playerInitiativeInput}
+                  onChange={e => setPlayerInitiativeInput(e.target.value)}
+                  placeholder="Initiative"
+                  bsSize="sm"
+                  className="flex-grow"
+                />
+                <Button onClick={handleRollPlayerDialogInitiative} variant="outline" size="sm" disabled={!selectedPlayerCharacterId}>
+                  <Dices className="mr-2 h-4 w-4" /> Roll d20
+                </Button>
+              </div>
+              <ShadDialogFooter className="pt-4">
+                <Button variant="outline" onClick={() => setIsAddCombatantDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleAddPlayerFromDialog} disabled={!selectedPlayerCharacterId}>Add Player</Button>
+              </ShadDialogFooter>
+            </TabsContent>
           </Tabs>
         </DialogContent>
       </Dialog>
 
       <Card className="shadow-md flex-grow flex flex-col min-h-0">
-        <CardHeader className="p-2.5 flex flex-row items-center justify-between">
+        <CardHeader className="px-2.5 py-2 flex flex-row items-center justify-between">
           <CardTitle className="flex items-center text-lg">
             <UsersIcon className="mr-2 h-5 w-5 text-primary" />
             Initiative Order
@@ -634,7 +638,7 @@ export function CombatTrackerTool() {
           </Button>
         </CardHeader>
         <Separator />
-        <CardContent className="px-2.5 py-2 flex-grow overflow-y-auto">
+        <CardContent className="p-2.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -682,16 +686,16 @@ export function CombatTrackerTool() {
                               {c.conditions.join(', ')}
                             </span>
                           )}
-                          <div className="flex justify-between items-center text-xs mt-1">
-                            <div className="flex items-center">
-                              <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                              {c.armorClass ?? 'N/A'}
+                           <div className="flex justify-between items-center text-xs mt-1">
+                              <div className="flex items-center">
+                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                                AC: {c.armorClass ?? 'N/A'}
+                              </div>
+                              <div className="flex items-center">
+                                <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
+                                HP: {c.hp} / {c.maxHp}
+                              </div>
                             </div>
-                            <div className="flex items-center">
-                              <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
-                              {c.hp} / {c.maxHp}
-                            </div>
-                          </div>
                           <div className="w-full mt-1">
                             <Progress
                               value={hpPercentage}
@@ -853,3 +857,4 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
