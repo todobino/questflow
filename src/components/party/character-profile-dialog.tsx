@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'; // Removed DialogFooter
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -43,37 +43,31 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
   ? (character.currentExp / character.nextLevelExp) * 100
   : 0;
 
-  const imageSizeClasses = "w-28 h-28"; 
+  const imageSizeClasses = "w-24 h-24"; // Reduced from w-28 h-28
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-4 sm:p-6 border-b">
           {/* Main Header Flex Container */}
-          <div className="flex items-start justify-between gap-4 sm:gap-6">
+          <div className="flex items-start justify-between gap-3 sm:gap-4"> {/* Reduced gap */}
             {/* Left Group: Image + Info */}
-            <div className="flex items-start gap-4 sm:gap-6 flex-1">
+            <div className="flex items-start gap-3 sm:gap-4 flex-1"> {/* Reduced gap */}
               <div className={cn("flex-shrink-0 rounded-lg overflow-hidden shadow-md bg-muted", imageSizeClasses)}>
-                {/* {isGeneratingImage ? ( // Removed as button is removed
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                  </div>
-                ) : ( */}
                   <Image
-                    src={character.imageUrl || 'https://placehold.co/128x128.png'}
+                    src={character.imageUrl || 'https://placehold.co/96x96.png'} // Updated placeholder
                     alt={character.name}
-                    width={112} 
-                    height={112} 
+                    width={96} // Reduced from 112
+                    height={96} // Reduced from 112
                     className="object-cover w-full h-full"
                     data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
                     key={character.imageUrl} 
                   />
-                {/* )} */}
               </div>
 
-              <div className="flex-1 flex flex-col space-y-1 pt-1">
-                <DialogTitle className="text-2xl sm:text-3xl text-left">{character.name}</DialogTitle>
-                <div className="text-sm text-muted-foreground text-left flex flex-wrap items-center gap-x-3 gap-y-0.5">
+              <div className="flex-1 flex flex-col space-y-0.5 pt-1"> {/* Reduced space-y */}
+                <DialogTitle className="text-xl sm:text-2xl text-left">{character.name}</DialogTitle> {/* Reduced font size */}
+                <div className="text-xs text-muted-foreground text-left flex flex-wrap items-center gap-x-3 gap-y-0.5"> {/* Reduced font size */}
                     <span className="inline-flex items-center">
                         <Swords className="mr-1.5 h-4 w-4 text-muted-foreground" />
                         Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
@@ -86,7 +80,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                         </span>
                     )}
                 </div>
-                <div className="pt-1">
+                <div className="pt-0.5"> {/* Reduced pt */}
                   <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                     <span className="flex items-center">
                       <strong className="mr-1">XP:</strong> 
@@ -97,7 +91,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                     )}
                   </div>
                   {character.nextLevelExp && character.nextLevelExp > 0 && character.currentExp !== undefined && (
-                      <Progress value={expPercentage} className="h-2" />
+                      <Progress value={expPercentage} className="h-1.5" /> /* Reduced height */
                   )}
                 </div>
               </div>
@@ -116,7 +110,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
           </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-grow min-h-0"> {/* Added min-h-0 here */}
+        <ScrollArea className="flex-grow min-h-0">
           <div className="p-4 sm:p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4 p-4 border rounded-lg shadow-sm bg-background/30">
@@ -142,7 +136,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 
                 <div className="p-4 border rounded-lg shadow-sm bg-background/30 flex-grow flex flex-col min-h-[200px]">
                   <h3 className="text-lg font-semibold flex items-center mb-2"><FileText className="h-5 w-5 mr-2 text-primary" />Backstory</h3>
-                  <ScrollArea className="flex-1 max-h-48 sm:max-h-64 min-h-0"> {/* Added min-h-0 here */}
+                  <ScrollArea className="flex-1 max-h-48 sm:max-h-64 min-h-0">
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed pr-2">
                       {character.backstory || 'No backstory provided.'}
                     </p>
@@ -153,8 +147,8 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
           </div>
         </ScrollArea>
         
-        {/* DialogFooter removed */}
       </DialogContent>
     </Dialog>
   );
 }
+
