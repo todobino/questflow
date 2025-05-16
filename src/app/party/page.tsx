@@ -10,7 +10,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { CharacterForm } from '@/components/character-creator/character-form';
 import type { Character } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon, Award } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,17 +67,25 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
         </CardDescription>
         
         <div className="mt-1.5 space-y-1 text-xs flex-grow"> 
-          <div className="flex items-center">
-            <Heart className="h-3.5 w-3.5 mr-1.5 text-red-500 flex-shrink-0" />
-            <span>HP: {character.currentHp ?? 'N/A'} / {character.maxHp ?? 'N/A'}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <ShieldIcon className="h-3.5 w-3.5 mr-1.5 text-sky-600 flex-shrink-0" />
+              <span>AC: {character.armorClass ?? 'N/A'}</span>
+            </div>
+            <div className="flex items-center">
+              <Heart className="h-3.5 w-3.5 mr-1.5 text-red-500 flex-shrink-0" />
+              <span>HP: {character.currentHp ?? 'N/A'} / {character.maxHp ?? 'N/A'}</span>
+            </div>
           </div>
-          <div className="flex items-center">
-            <ShieldIcon className="h-3.5 w-3.5 mr-1.5 text-sky-600 flex-shrink-0" />
-            <span>AC: {character.armorClass ?? 'N/A'}</span>
-          </div>
-          <div className="flex items-center">
-            <Zap className="h-3.5 w-3.5 mr-1.5 text-yellow-500 flex-shrink-0" />
-            <span>Init: {character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Award className="h-3.5 w-3.5 mr-1.5 text-amber-500 flex-shrink-0" />
+              <span>EXP: {character.currentExp ?? 'N/A'} / {character.nextLevelExp ?? 'N/A'}</span>
+            </div>
+            <div className="flex items-center">
+              <Zap className="h-3.5 w-3.5 mr-1.5 text-yellow-500 flex-shrink-0" />
+              <span>Init: {character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'}</span>
+            </div>
           </div>
         </div>
 
@@ -190,6 +198,8 @@ export default function PartyManagerPage() {
       maxHp: 10,
       armorClass: 10,
       initiativeModifier: 0,
+      currentExp: 0,
+      nextLevelExp: 1000,
     };
 
     setRandomizedData(newCharacterData);
@@ -318,3 +328,5 @@ export default function PartyManagerPage() {
     </>
   );
 }
+
+    
