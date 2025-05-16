@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, Swords, TrendingUp } from 'lucide-react';
+import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, Swords, TrendingUp, VenetianMask } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -31,36 +31,36 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
     return null;
   }
 
-  const handleGenerateNewPortrait = async () => {
-    if (!character) return;
-    setIsGeneratingImage(true);
-    try {
-      const result = await generateCharacterImage({
-        name: character.name,
-        race: character.race,
-        characterClass: character.class,
-        subclass: character.subclass,
-        background: character.background,
-        backstory: character.backstory,
-      });
+  // const handleGenerateNewPortrait = async () => { // Removed as button is removed
+  //   if (!character) return;
+  //   setIsGeneratingImage(true);
+  //   try {
+  //     const result = await generateCharacterImage({
+  //       name: character.name,
+  //       race: character.race,
+  //       characterClass: character.class,
+  //       subclass: character.subclass,
+  //       background: character.background,
+  //       backstory: character.backstory,
+  //     });
       
-      const updatedChar = { ...character, imageUrl: result.imageUrl };
-      updateCharacter(updatedChar);
+  //     const updatedChar = { ...character, imageUrl: result.imageUrl };
+  //     updateCharacter(updatedChar);
 
-    } catch (error) {
-      console.error('Error generating portrait:', error);
-      toast({
-        title: 'Portrait Generation Failed',
-        description: (error as Error).message || 'Could not generate a new portrait. Please try again.',
-        variant: 'destructive',
-      });
-    }
-    setIsGeneratingImage(false);
-  };
+  //   } catch (error) {
+  //     console.error('Error generating portrait:', error);
+  //     toast({
+  //       title: 'Portrait Generation Failed',
+  //       description: (error as Error).message || 'Could not generate a new portrait. Please try again.',
+  //       variant: 'destructive',
+  //     });
+  //   }
+  //   setIsGeneratingImage(false);
+  // };
 
   const StatDisplay = ({ icon: Icon, label, value, iconClassName, valueClassName }: { icon?: React.ElementType; label: string; value: string | number | undefined | null; iconClassName?: string; valueClassName?: string }) => (
     <div className="flex items-center text-sm">
-      {Icon && <Icon className={cn("h-4 w-4 mr-1.5 text-muted-foreground", iconClassName)} />}
+      {Icon && <Icon className={cn("h-4 w-4 mr-2 text-muted-foreground", iconClassName)} />}
       <span className="font-medium text-muted-foreground mr-1">{label}:</span>
       <span className={cn("text-foreground", valueClassName)}>{value ?? 'N/A'}</span>
     </div>
@@ -76,11 +76,12 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-4 sm:p-6 border-b">
+          {/* Main Header Flex Container */}
           <div className="flex items-start justify-between gap-4 sm:gap-6">
             {/* Left Group: Image + Info */}
             <div className="flex items-start gap-4 sm:gap-6 flex-1">
               <div className={cn("flex-shrink-0 rounded-lg overflow-hidden shadow-md bg-muted", imageSizeClasses)}>
-                {isGeneratingImage && !character.imageUrl ? (
+                {isGeneratingImage ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   </div>
@@ -97,9 +98,9 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 )}
               </div>
 
-              <div className="flex-1 flex flex-col space-y-1">
+              <div className="flex-1 flex flex-col space-y-1 pt-1"> {/* Added pt-1 for alignment */}
                 <DialogTitle className="text-2xl sm:text-3xl text-left">{character.name}</DialogTitle>
-                <div className="text-md text-muted-foreground text-left flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                <div className="text-sm text-muted-foreground text-left flex flex-wrap items-center gap-x-3 gap-y-0.5">
                     <span className="inline-flex items-center">
                         <Swords className="mr-1.5 h-4 w-4 text-muted-foreground" />
                         Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
@@ -129,20 +130,14 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
               </div>
             </div>
 
-            {/* Right Element: New Portrait Button */}
+            {/* Right Element: Edit Button */}
             <div className="flex-shrink-0">
               <Button 
-                onClick={handleGenerateNewPortrait} 
-                disabled={isGeneratingImage}
+                onClick={() => onEditCharacter(character)}
                 variant="outline"
                 size="sm"
               >
-                {isGeneratingImage ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                New Portrait
+                <Edit3 className="mr-2 h-4 w-4" /> Edit
               </Button>
             </div>
           </div>
@@ -186,13 +181,9 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
         </ScrollArea>
         
         <DialogFooter className="mt-auto px-4 py-2 sm:px-6 sm:py-3 border-t">
-          <Button variant="outline" onClick={() => onEditCharacter(character)}>
-            <Edit3 className="mr-2 h-4 w-4" /> Edit
-          </Button>
-          <Button variant="outline" onClick={onClose}>Close</Button>
+          {/* Close button removed, Edit button moved to header */}
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
