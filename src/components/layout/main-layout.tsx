@@ -9,7 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
-import { PartySheet } from '@/components/party/party-sheet';
+// Removed PartySheet import as it's no longer directly used here
 import { Dices, Swords, Users, FileText } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
@@ -21,6 +21,7 @@ import { Dialog } from '@/components/ui/dialog';
 import type { Character } from '@/lib/types';
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
+import Link from 'next/link'; // Added Link for Party tab placeholder
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -71,7 +72,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     const randomSubclass = subclassesForClass.length > 0 ? subclassesForClass[Math.floor(Math.random() * subclassesForClass.length)] : '';
     const randomBackground = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
     
-    const namesForRace = DND_NAMES[randomRace] || DND_NAMES.Human;
+    const namesForRace = DND_NAMES[randomRace] || DND_NAMES.Human; // Fallback to Human names if race not found
     const randomFirstName = namesForRace.firstNames[Math.floor(Math.random() * namesForRace.firstNames.length)];
     const randomLastName = namesForRace.lastNames[Math.floor(Math.random() * namesForRace.lastNames.length)];
     const characterName = `${randomFirstName} ${randomLastName}`;
@@ -93,25 +94,19 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       nextLevelExp: 1000,
     };
     
-    openCharacterForm(randomizedData as Character); // Re-open/update form with new data
+    openCharacterForm(randomizedData as Character); 
     setIsRandomizingCharacterInDialog(false);
   };
 
+
   if (!mounted) {
-    return null;
+    return null; 
   }
 
   return (
     <SidebarProvider defaultOpen>
       <div
         className="group/sidebar-wrapper flex h-screen w-full overflow-hidden has-[[data-variant=inset]]:bg-sidebar"
-        style={
-          {
-            "--sidebar-width": "15vw",
-            "--sidebar-width-icon": "4rem",
-            "--sidebar-width-mobile": "80vw",
-          } as React.CSSProperties
-        }
       >
         {mounted && <SidebarNav />}
 
@@ -145,7 +140,10 @@ function MainLayoutContent({ children }: MainLayoutProps) {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="party" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0" forceMount>
-              {mounted && <PartySheet />}
+              {/* Placeholder for Party tab in sidebar */}
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                <p>View and manage your party on the main <Link href="/party" className="text-primary hover:underline">Party Manager</Link> page.</p>
+              </div>
             </TabsContent>
             <TabsContent value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0" forceMount>
               <DiceRollerTool />
@@ -204,5 +202,3 @@ export function MainLayout({ children }: MainLayoutProps) {
     </CampaignProvider>
   )
 }
-
-    

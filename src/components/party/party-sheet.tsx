@@ -5,8 +5,8 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+// Removed: import { Button } from '@/components/ui/button';
+// Removed: import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -125,11 +125,13 @@ export function PartySheet() {
         </div>
       </ScrollArea>
       
-      <div className="flex-shrink-0 pt-3"> 
+      {/* Removed Manage Party Button
+      <div className="flex-shrink-0 pt-3 mt-auto"> 
         <Button asChild className="w-full">
           <Link href="/party">Manage Party</Link>
         </Button>
       </div>
+      */}
     </div>
   );
 }
