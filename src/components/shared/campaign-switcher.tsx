@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, Check } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
@@ -13,9 +13,6 @@ import { useCampaignContext } from '@/contexts/campaign-context';
 
 interface CampaignSwitcherProps {
   // Props now come from context, so direct props might not be needed
-  // activeCampaign: Campaign | null;
-  // campaigns: Campaign[];
-  // setCampaignActive: (campaignId: string) => void;
 }
 
 export function CampaignSwitcher({ }: CampaignSwitcherProps) {
@@ -23,21 +20,39 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
   const {
     campaigns,
     activeCampaign,
-    requestSwitchCampaign
+    requestSwitchCampaign, // Use this from context
   } = useCampaignContext();
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleCampaignSelect = (campaignId: string) => {
-    requestSwitchCampaign(campaignId);
+    requestSwitchCampaign(campaignId); // Use the context function
     setPopoverOpen(false);
   };
+
+  if (!mounted) { // Prevent SSR/hydration issues with popover and activeCampaign
+    return (
+       <Button
+        variant="outline"
+        size="sm"
+        className="h-auto px-2 py-1 shadow-md border-neutral-400 dark:border-border"
+        disabled
+      >
+        Loading...
+      </Button>
+    );
+  }
 
   if (!activeCampaign) {
     return (
       <Button
         variant="success"
         size="sm"
-        className="h-auto px-2 py-1 shadow-md" // Added shadow-md
+        className="h-auto px-2 py-1 shadow-md"
         onClick={() => router.push('/campaigns')}
       >
         Select Campaign
@@ -51,15 +66,15 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
         <Button
           size="sm"
           className={cn(
-            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border shadow-md", // Added shadow-md
-            "bg-muted text-neutral-600 dark:text-neutral-400 border-border",
+            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border shadow-md",
+            "bg-muted text-neutral-600 dark:text-neutral-400 border-neutral-400 dark:border-border", // Changed border-border to border-neutral-400 for light mode
             "hover:bg-muted hover:text-foreground hover:border-primary"
           )}
         >
           <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 group-hover:text-foreground opacity-100",
+              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 group-hover:text-foreground"
             )}
           />
         </Button>
@@ -103,4 +118,3 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
     </Popover>
   );
 }
-    
