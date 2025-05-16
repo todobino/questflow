@@ -33,14 +33,12 @@ export function ReferenceTool() {
     // In a real app, perform search logic here (e.g., API call, filter local data)
     console.log('Searching for:', searchTerm);
     
-    // Add to search history (simplified)
     const newEntry: SearchHistoryEntry = {
       id: String(Date.now()),
       term: searchTerm,
       timestamp: new Date().toISOString(),
     };
-    setSearchHistory(prev => [newEntry, ...prev.slice(0, 19)]); // Keep last 20
-    // setSearchTerm(''); // Optionally clear search term after search
+    setSearchHistory(prev => [newEntry, ...prev.slice(0, 19)]);
   };
 
   return (
@@ -57,19 +55,15 @@ export function ReferenceTool() {
         </Button>
       </div>
 
-      {/* Main Content Area (Placeholder) */}
-      <div className="flex-grow p-3 overflow-y-auto">
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Information Display</CardTitle>
-            <CardDescription>Details from your search or selected reference material will appear here.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Use the search bar below to find information about rules, lore, items, or any other reference material.
+      {/* Main Content Area */}
+      <div className="flex-grow p-2 overflow-y-auto"> {/* Changed p-3 to p-2 for minimal padding */}
+        <div className="h-full flex flex-col items-center justify-center text-center"> {/* Removed Card and its children */}
+            <FileText className="h-16 w-16 text-muted-foreground/30 mb-4" />
+            <h4 className="text-md font-semibold text-muted-foreground">Reference Material</h4>
+            <p className="text-xs text-muted-foreground/80 max-w-xs">
+              Search for rules, lore, items, or any other reference material using the search bar below. Results will appear here.
             </p>
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* Footer with Search Bar */}
