@@ -5,8 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -34,9 +33,9 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter as ShadDialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter as ShadDialogFooter,
 } from "@/components/ui/dialog";
 import {
   Popover,
@@ -183,7 +182,7 @@ export function CombatTrackerTool() {
         armorClass: acValue,
         initiative: finalInitiative,
         conditions: [],
-        isPlayerCharacter: addCombatantDialogTab === 'ally' ? false : false, // Explicitly false for non-player characters from this form
+        isPlayerCharacter: addCombatantDialogTab === 'ally' ? false : (addCombatantDialogTab === 'enemy' ? false : true),
         displayColor: displayColor,
         initiativeModifier: initiativeModifierValue
       };
@@ -419,12 +418,12 @@ export function CombatTrackerTool() {
             className="w-full hover:bg-background hover:border-primary hover:text-primary"
             onClick={() => {
               setIsAddCombatantDialogOpen(true);
-              setAddCombatantDialogTab('enemy'); // Default to enemy tab
+              setAddCombatantDialogTab('enemy'); 
             }}
           >
             Add Combatant
           </Button>
-        <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default" disabled={combatStarted}>
+        <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default" disabled={false}>
           <UsersIcon className="mr-2 h-4 w-4" /> Add Party
         </Button>
       </div>
@@ -508,7 +507,7 @@ export function CombatTrackerTool() {
               <ShadDialogFooter className="pt-4">
                 <Button variant="outline" onClick={() => setIsAddCombatantDialogOpen(false)}>Cancel</Button>
                 <Button onClick={handleAddAllyOrEnemyFromDialog}>
-                  Add {parseInt(enemyQuantity, 10) > 1 && addCombatantDialogTab === 'enemy' 
+                  Add {parseInt(newCombatantQuantity, 10) > 1 && addCombatantDialogTab === 'enemy' 
                     ? 'Enemies' 
                     : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}
                 </Button>
@@ -565,7 +564,7 @@ export function CombatTrackerTool() {
               <ShadDialogFooter className="pt-4">
                 <Button variant="outline" onClick={() => setIsAddCombatantDialogOpen(false)}>Cancel</Button>
                 <Button onClick={handleAddAllyOrEnemyFromDialog}>
-                  Add {parseInt(enemyQuantity, 10) > 1 && addCombatantDialogTab === 'ally'
+                  Add {parseInt(newCombatantQuantity, 10) > 1 && addCombatantDialogTab === 'ally'
                     ? 'Allies'
                     : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}
                 </Button>
@@ -632,7 +631,7 @@ export function CombatTrackerTool() {
             </Button>
         </CardHeader>
         
-        <CardContent className="px-2.5 py-2 flex-grow overflow-y-auto">
+        <CardContent className="p-2.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -649,13 +648,12 @@ export function CombatTrackerTool() {
                   hpBarColorClass = 'bg-primary dark:bg-foreground';
                 }
 
-
                 const isCurrentTurn = c.id === currentTurnCombatantId;
-                let turnBorderClass = 'ring-primary dark:ring-foreground'; // Default border
+                let turnBorderClass = 'ring-primary dark:ring-foreground'; 
                 let initiativeBgColor = 'bg-slate-700 dark:bg-slate-200';
                 let initiativeTextColor = 'text-white dark:text-slate-800';
 
-                if (c.isPlayerCharacter && c.type === 'player') {
+                if (c.type === 'player' && c.isPlayerCharacter) {
                     initiativeBgColor = 'bg-success';
                     initiativeTextColor = 'text-success-foreground';
                     if (isCurrentTurn) turnBorderClass = 'ring-success';
@@ -680,7 +678,7 @@ export function CombatTrackerTool() {
                           'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-lg transition-all duration-300 cursor-pointer',
                           isCurrentTurn ? `ring-2 ${turnBorderClass} scale-[1.02]` : 'opacity-90 hover:opacity-100',
                           c.hp <= 0 ? 'opacity-50 grayscale' : '',
-                          c.displayColor // This will apply white/light-gray for player/ally/enemy
+                          c.displayColor 
                         )}
                         onClick={() => { setOpenPopoverId(c.id); setHitHealAmount(''); }}
                       >
@@ -702,7 +700,7 @@ export function CombatTrackerTool() {
                           >
                             {c.name}
                           </h4>
-                           <div className="flex justify-between items-center text-xs mt-1">
+                          <div className="flex justify-between items-center text-xs mt-1">
                               <div className="flex items-center text-muted-foreground dark:text-gray-400">
                                   <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
                                   AC: {c.armorClass ?? 'N/A'}
@@ -878,3 +876,6 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
+
+    
