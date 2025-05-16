@@ -107,14 +107,15 @@ export function CombatTrackerTool() {
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddAllyOrEnemyFromDialog = () => {
-    if (!newCombatantName || !newCombatantHp || !newCombatantInitiativeModifier) {
-      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
+    if (!newCombatantName || !newCombatantHp) {
+      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
       return;
     }
   
-    let initiativeModifierValue = parseInt(newCombatantInitiativeModifier.trim(), 10);
-    if (newCombatantInitiativeModifier.trim() === '' || isNaN(initiativeModifierValue)) {
-      initiativeModifierValue = 0; 
+    const initiativeModifierValue = newCombatantInitiativeModifier.trim() !== '' ? parseInt(newCombatantInitiativeModifier.trim(), 10) : 0;
+    if (newCombatantInitiativeModifier.trim() !== '' && isNaN(initiativeModifierValue)) {
+      toast({ title: 'Invalid Initiative Modifier', description: 'Initiative Modifier must be a number or empty (defaults to 0).', variant: 'destructive' });
+      return;
     }
   
     const quantity = parseInt(newCombatantQuantity, 10);
@@ -182,7 +183,7 @@ export function CombatTrackerTool() {
         armorClass: acValue,
         initiative: finalInitiative,
         conditions: [],
-        isPlayerCharacter: addCombatantDialogTab === 'ally' ? false : (addCombatantDialogTab === 'enemy' ? false : true),
+        isPlayerCharacter: false, // Allies and Enemies are not player characters by default from this form
         displayColor: displayColor,
         initiativeModifier: initiativeModifierValue
       };
@@ -223,16 +224,18 @@ export function CombatTrackerTool() {
 
   const handleAddPlayerFromDialog = () => {
     if (!selectedPlayerCharacterId) {
+      toast({title: "No Player Selected", description: "Please select a player character.", variant: "destructive"});
       return;
     }
     const characterToAdd = partyCharacters.find(p => p.id === selectedPlayerCharacterId);
     if (!characterToAdd) {
+      toast({title: "Player Not Found", description: "Selected player character could not be found.", variant: "destructive"});
       return;
     }
 
     const initiativeValue = playerInitiativeInput.trim() !== '' ? parseInt(playerInitiativeInput, 10) : undefined;
     if (playerInitiativeInput.trim() !== '' && (initiativeValue === undefined || isNaN(initiativeValue))) {
-      toast({ title: "Invalid Initiative", description: "Initiative must be a number.", variant: "destructive" });
+      toast({ title: "Invalid Initiative", description: "Initiative must be a number or empty.", variant: "destructive" });
       return;
     }
 
@@ -242,7 +245,7 @@ export function CombatTrackerTool() {
       type: 'player',
       hp: characterToAdd.currentHp ?? characterToAdd.maxHp ?? 10,
       maxHp: characterToAdd.maxHp ?? 10,
-      initiative: initiativeValue,
+      initiative: initiativeValue, // Initiative can be set here or rolled separately
       conditions: [],
       initiativeModifier: characterToAdd.initiativeModifier ?? 0,
       isPlayerCharacter: true,
@@ -258,6 +261,7 @@ export function CombatTrackerTool() {
 
  const handleAddPartyToCombat = () => {
     if (!activeCampaign || !partyCharacters) {
+      toast({ title: "No Active Campaign/Party", description: "Cannot add party without an active campaign and party members.", variant: "destructive" });
       return;
     }
 
@@ -270,6 +274,7 @@ export function CombatTrackerTool() {
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
 
         if (existingCombatantIndex !== -1) {
+          // Update existing player character
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
             initiative: newInitiative,
@@ -277,9 +282,10 @@ export function CombatTrackerTool() {
             maxHp: char.maxHp ?? updatedCombatantsList[existingCombatantIndex].maxHp,
             armorClass: char.armorClass,
             initiativeModifier: char.initiativeModifier ?? 0,
-            displayColor: PLAYER_CHARACTER_COLOR,
+            displayColor: PLAYER_CHARACTER_COLOR, // Ensure correct color
           };
         } else {
+          // Add new player character
           newCombatantsToAdd.push({
             id: String(Date.now() + Math.random() + updatedCombatantsList.length + newCombatantsToAdd.length),
             name: char.name,
@@ -299,6 +305,7 @@ export function CombatTrackerTool() {
     });
 
     updatedCombatantsList = [...updatedCombatantsList, ...newCombatantsToAdd];
+    // Sort immediately after adding/updating party
     updatedCombatantsList.sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
     setCombatants(updatedCombatantsList);
   };
@@ -346,6 +353,7 @@ export function CombatTrackerTool() {
       toast({ title: "Not Enough Combatants", description: "Need at least one combatant.", variant: "destructive" });
       return;
     }
+    setCombatants(prev => [...prev].sort((a,b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity)));
     setRound(1);
     setTurnIndex(0);
     setCombatStarted(true);
@@ -423,8 +431,8 @@ export function CombatTrackerTool() {
           >
             Add Combatant
           </Button>
-        <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default" disabled={false}>
-          <UsersIcon className="mr-2 h-4 w-4" /> Add Party
+        <Button onClick={handleAddPartyToCombat} className="w-full" size="sm" variant="default" disabled={combatStarted}>
+          <Dices className="mr-2 h-4 w-4" /> Roll Party
         </Button>
       </div>
 
@@ -631,7 +639,7 @@ export function CombatTrackerTool() {
             </Button>
         </CardHeader>
         
-        <CardContent className="p-2.5 flex-grow overflow-y-auto">
+        <CardContent className="px-2.5 py-2 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -691,7 +699,7 @@ export function CombatTrackerTool() {
                         </div>
 
                         <div className="flex-grow flex flex-col min-w-0">
-                          <h4 className={cn(
+                           <h4 className={cn(
                             "font-semibold text-md truncate",
                              (c.type === 'player' && c.isPlayerCharacter) ? 'text-gray-800 dark:text-gray-100' : 
                              (c.type === 'player' && !c.isPlayerCharacter) ? 'text-gray-700 dark:text-gray-300' : 
@@ -700,16 +708,20 @@ export function CombatTrackerTool() {
                           >
                             {c.name}
                           </h4>
+                         
+                          {/* AC and HP on the same line */}
                           <div className="flex justify-between items-center text-xs mt-1">
-                              <div className="flex items-center text-muted-foreground dark:text-gray-400">
-                                  <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                                  AC: {c.armorClass ?? 'N/A'}
-                              </div>
-                              <div className="flex items-center text-muted-foreground dark:text-gray-400">
-                                  <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
-                                  {c.hp} / {c.maxHp}
-                              </div>
+                            <div className="flex items-center text-muted-foreground dark:text-gray-400">
+                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                                AC: {c.armorClass ?? 'N/A'}
+                            </div>
+                            <div className="flex items-center text-muted-foreground dark:text-gray-400">
+                                <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
+                                {c.hp} / {c.maxHp}
+                            </div>
                           </div>
+
+                          {/* Health Bar */}
                           <div className="w-full mt-1.5">
                             <Progress
                               value={hpPercentage}
@@ -718,29 +730,29 @@ export function CombatTrackerTool() {
                           </div>
                         </div>
                          <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon-sm" 
-                                        className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
-                                        onClick={(e) => { e.stopPropagation(); }}
-                                    >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <ShadAlertDialogContent onClick={(e) => e.stopPropagation()}>
-                                    <ShadAlertDialogHeader>
-                                        <ShadAlertDialogTitle>Delete {c.name}?</ShadAlertDialogTitle>
-                                        <ShadAlertDialogDescription>This action cannot be undone.</ShadAlertDialogDescription>
-                                    </ShadAlertDialogHeader>
-                                    <ShadAlertDialogFooter>
-                                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={(e) => { e.stopPropagation(); setCombatantToDeleteId(c.id); setIsDeleteConfirmOpen(true); setOpenPopoverId(null); }}>Delete</AlertDialogAction>
-                                    </ShadAlertDialogFooter>
-                                </ShadAlertDialogContent>
-                            </AlertDialog>
-                        </div>
+                             <AlertDialog>
+                                 <AlertDialogTrigger asChild>
+                                     <Button 
+                                         variant="ghost" 
+                                         size="icon-sm" 
+                                         className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0"
+                                         onClick={(e) => { e.stopPropagation(); }}
+                                     >
+                                         <Trash2 className="h-3.5 w-3.5" />
+                                     </Button>
+                                 </AlertDialogTrigger>
+                                 <ShadAlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                     <ShadAlertDialogHeader>
+                                         <ShadAlertDialogTitle>Delete {c.name}?</ShadAlertDialogTitle>
+                                         <ShadAlertDialogDescription>This action cannot be undone.</ShadAlertDialogDescription>
+                                     </ShadAlertDialogHeader>
+                                     <ShadAlertDialogFooter>
+                                         <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                                         <AlertDialogAction onClick={(e) => { e.stopPropagation(); setCombatantToDeleteId(c.id); setIsDeleteConfirmOpen(true); setOpenPopoverId(null); }}>Delete</AlertDialogAction>
+                                     </ShadAlertDialogFooter>
+                                 </ShadAlertDialogContent>
+                             </AlertDialog>
+                         </div>
                       </li>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end" onClick={(e) => e.stopPropagation()}>
@@ -877,5 +889,7 @@ export function CombatTrackerTool() {
   );
 }
 
+
+    
 
     
