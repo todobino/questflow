@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Character } from '@/lib/types';
+import type { Character, InventoryItem } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
 import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon, Award, Backpack, ScrollText } from 'lucide-react';
 import {
@@ -31,6 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CharacterCardProps {
   character: Character;
@@ -125,6 +126,18 @@ export default function PartyManagerPage() {
   } = useCampaignContext();
 
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
+  const [partyInventoryItems, setPartyInventoryItems] = useState<InventoryItem[]>([
+    { id: 'item1', name: 'Longsword +1', type: 'weapon', quantity: 1, description: 'A finely crafted longsword imbued with minor magic.' },
+    { id: 'item2', name: 'Potion of Healing (Greater)', type: 'potion', quantity: 3, description: 'Restores 4d4 + 4 hit points.' },
+    { id: 'item3', name: 'Chain Mail', type: 'armor', quantity: 1, description: 'Standard chain mail armor.' },
+    { id: 'item4', name: 'Thieves\' Tools', type: 'gear', quantity: 1, description: 'Essential for any rogue.' },
+    { id: 'item5', name: 'Ancient Gold Coin', type: 'treasure', quantity: 5, description: 'An old coin from a forgotten kingdom.' },
+    { id: 'item6', name: 'Scroll of Fireball', type: 'scroll', quantity: 1, description: 'A scroll containing the Fireball spell.' },
+    { id: 'item7', name: 'Dagger of Venom', type: 'weapon', quantity: 1, description: 'A wicked-looking dagger that can be coated with poison.' },
+    { id: 'item8', name: 'Potion of Invisibility', type: 'potion', quantity: 1, description: 'Makes the drinker invisible for a short time.' },
+    { id: 'item9', name: 'Rope (50 feet, silk)', type: 'gear', quantity: 1, description: 'Strong and light silk rope.' },
+  ]);
+
 
   const partyMembers = characters.filter(char => char.campaignId === activeCampaign?.id);
 
@@ -157,10 +170,15 @@ export default function PartyManagerPage() {
     );
   }
 
+  const getItemsByType = (type: InventoryItem['type'] | 'all') => {
+    if (type === 'all') return partyInventoryItems;
+    return partyInventoryItems.filter(item => item.type === type);
+  };
+
   return (
     <>
       <PageHeader
-        title="Party Roster"
+        title="Party Manager"
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -193,7 +211,7 @@ export default function PartyManagerPage() {
           </DropdownMenu>
         }
       />
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Left Column: Character Roster */}
       <div className="lg:col-span-2">
         {!activeCampaign ? (
@@ -216,7 +234,7 @@ export default function PartyManagerPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6">
             {partyMembers.map((character) => (
               <CharacterCard
                 key={character.id}
@@ -241,7 +259,7 @@ export default function PartyManagerPage() {
       </div>
 
       {/* Right Column: Party Inventory */}
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-3">
         <Card className="shadow-lg min-h-[calc(100vh-12rem)]"> {/* Adjust min-height as needed */}
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -259,17 +277,49 @@ export default function PartyManagerPage() {
                 {/* Add more tabs like Armor, Gear, Misc etc. */}
               </TabsList>
               <TabsContent value="all">
-                <div className="text-center text-muted-foreground py-8">
-                  <ScrollText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-2" />
-                  <p>No items in the party inventory yet.</p>
-                  <Button variant="outline" size="sm" className="mt-4">Add Item (Soon)</Button>
-                </div>
+                <ScrollArea className="h-[calc(100vh-20rem)]">
+                  <ul className="space-y-2 pr-2">
+                    {getItemsByType('all').length > 0 ? getItemsByType('all').map(item => (
+                      <li key={item.id} className="p-2 border rounded-md text-sm hover:bg-muted/50">
+                        <span className="font-semibold">{item.name}</span> (x{item.quantity})
+                        {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
+                      </li>
+                    )) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        <ScrollText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-2" />
+                        <p>No items in the party inventory yet.</p>
+                      </div>
+                    )}
+                  </ul>
+                </ScrollArea>
               </TabsContent>
               <TabsContent value="weapons">
-                <p className="text-center text-muted-foreground py-8">No weapons in inventory.</p>
+                 <ScrollArea className="h-[calc(100vh-20rem)]">
+                  <ul className="space-y-2 pr-2">
+                    {getItemsByType('weapon').length > 0 ? getItemsByType('weapon').map(item => (
+                      <li key={item.id} className="p-2 border rounded-md text-sm hover:bg-muted/50">
+                        <span className="font-semibold">{item.name}</span> (x{item.quantity})
+                        {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
+                      </li>
+                    )) : (
+                      <p className="text-center text-muted-foreground py-8">No weapons in inventory.</p>
+                    )}
+                  </ul>
+                 </ScrollArea>
               </TabsContent>
               <TabsContent value="potions">
-                <p className="text-center text-muted-foreground py-8">No potions in inventory.</p>
+                 <ScrollArea className="h-[calc(100vh-20rem)]">
+                  <ul className="space-y-2 pr-2">
+                    {getItemsByType('potion').length > 0 ? getItemsByType('potion').map(item => (
+                      <li key={item.id} className="p-2 border rounded-md text-sm hover:bg-muted/50">
+                        <span className="font-semibold">{item.name}</span> (x{item.quantity})
+                        {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
+                      </li>
+                    )) : (
+                      <p className="text-center text-muted-foreground py-8">No potions in inventory.</p>
+                    )}
+                  </ul>
+                 </ScrollArea>
               </TabsContent>
             </Tabs>
           </CardContent>

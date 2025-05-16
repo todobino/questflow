@@ -14,7 +14,7 @@ import {
   Scroll as ScrollIconEntry,
   Flag,
   Table,
-  Crosshair, // Keep Crosshair as it was just changed
+  Crosshair,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -39,15 +39,15 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     icon: BookMarked,
   },
   {
-    title: 'Party Roster',
+    title: 'Party Manager', // Changed from Party Roster
     href: '/party',
     icon: UsersRound,
   },
   {
     title: 'Encounters',
     href: '/encounters',
-    icon: Crosshair, // Using Crosshair as per recent change
-    disabled: false, // Enable the encounters link
+    icon: Crosshair, 
+    disabled: false, 
   },
   {
     title: 'Factions & Quests',
@@ -76,4 +76,3 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
 
 // Filter out the disabled "Characters" link for actual rendering if it's truly removed
 export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
-
