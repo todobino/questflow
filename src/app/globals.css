@@ -27,8 +27,8 @@
     --destructive-foreground: 0 0% 98%; /* White */
     --success: 145 63% 35%; /* Darker Green */
     --success-foreground: 0 0% 98%; /* White */
-    --alert: 48 96% 53%; /* Yellow */
-    --alert-foreground: 0 0% 10%; /* Dark Gray/Black for text on yellow */
+    --alert: 40 90% 48%; /* Darker Orange-Yellow */
+    --alert-foreground: 0 0% 10%; /* Dark Gray/Black for text on alert */
     --border: 0 0% 89.8%; /* Light Gray Border */
     --input: 0 0% 89.8%; /* Light Gray Input Background */
     --ring: 0 0% 9%; /* Dark Gray / Black for focus rings */
@@ -69,7 +69,7 @@
     --destructive-foreground: 0 0% 98%;
     --success: 145 63% 35%; /* Darker Adjusted Green */
     --success-foreground: 0 0% 98%;
-    --alert: 48 96% 60%; /* Adjusted Yellow */
+    --alert: 40 90% 55%; /* Darker Orange-Yellow for dark mode */
     --alert-foreground: 0 0% 10%;
     --border: 240 4% 14.9%;
     --input: 240 4% 14.9%;
