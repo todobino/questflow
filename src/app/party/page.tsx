@@ -49,9 +49,9 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
       className="group relative flex flex-row overflow-hidden rounded-lg shadow-lg transition-colors hover:border-primary cursor-pointer h-auto min-h-[144px]"
       onClick={() => onViewProfile(character)}
     >
-      <div className="w-32 flex-shrink-0 h-full bg-muted relative">
+      <div className="w-32 h-32 flex-shrink-0 bg-muted relative"> {/* Changed h-full to h-32 for square image */}
         <Image
-          src={character.imageUrl || `https://placehold.co/128x160.png`} 
+          src={character.imageUrl || `https://placehold.co/128x128.png`} {/* Updated placeholder to be square */}
           alt={character.name}
           layout="fill"
           objectFit="cover"
@@ -72,7 +72,7 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
               <ShieldIcon className="h-3.5 w-3.5 mr-1.5 text-sky-600 flex-shrink-0" />
               <span>AC: {character.armorClass ?? 'N/A'}</span>
             </div>
-            <div className="flex items-center"> {/* Init */}
+             <div className="flex items-center"> {/* Init */}
               <Zap className="h-3.5 w-3.5 mr-1.5 text-yellow-500 flex-shrink-0" />
               <span>Init: {character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'}</span>
             </div>
@@ -257,3 +257,4 @@ export default function PartyManagerPage() {
     </>
   );
 }
+
