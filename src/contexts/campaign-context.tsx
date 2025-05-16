@@ -33,6 +33,10 @@ interface CampaignContextType {
   confirmSwitchCampaign: () => void;
   cancelSwitchCampaign: () => void;
   isSwitchCampaignDialogVisible: boolean;
+  editingCharacterForForm: Character | null;
+  isCharacterFormOpen: boolean;
+  openCharacterForm: (characterToEdit?: Character) => void;
+  closeCharacterForm: () => void;
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -110,12 +114,12 @@ const initialMockFactions: Faction[] = [
 ];
 
 const initialMockFactionReputations: FactionReputation[] = [
-  { factionId: 'fac1', campaignId: '1', score: 5 }, // Silver Hand - Friendly
-  { factionId: 'fac2', campaignId: '1', score: -10 }, // Shadow Syndicate - Hostile
-  { factionId: 'fac3', campaignId: '2', score: 0 },  // Deepguard Order - Neutral
-  { factionId: 'fac4', campaignId: '2', score: -15 }, // Coral Reavers - Hated
-  { factionId: 'fac5', campaignId: '3', score: 2 },   // Riverwood Guard - Neutral (leaning Friendly)
-  { factionId: 'fac6', campaignId: '3', score: -5 },  // Nightwood Cult - Unfriendly
+  { factionId: 'fac1', campaignId: '1', score: 5 }, 
+  { factionId: 'fac2', campaignId: '1', score: -10 }, 
+  { factionId: 'fac3', campaignId: '2', score: 0 },  
+  { factionId: 'fac4', campaignId: '2', score: -15 }, 
+  { factionId: 'fac5', campaignId: '3', score: 2 },  
+  { factionId: 'fac6', campaignId: '3', score: -5 },  
 ];
 
 const initialMockSessionLogs: SessionLog[] = [
@@ -133,10 +137,13 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const [sessionLogs, setSessionLogsState] = useState<SessionLog[]>([]);
   const [currentSession, setCurrentSessionState] = useState<SessionLog | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  // const { toast } = useToast(); // toast is not used directly in this file anymore for non-error messages
 
   const [selectedCharacterForProfile, setSelectedCharacterForProfile] = useState<Character | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const [editingCharacterForForm, setEditingCharacterForForm] = useState<Character | null>(null);
+  const [isCharacterFormOpen, setIsCharacterFormOpen] = useState(false);
 
   const [isSwitchCampaignDialogVisible, setIsSwitchCampaignDialogVisible] = useState(false);
   const [targetCampaignIdToSwitch, setTargetCampaignIdToSwitch] = useState<string | null>(null);
@@ -150,24 +157,25 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
         if (Array.isArray(parsed) && parsed.length > 0) {
             effectiveCampaigns = parsed;
         } else if (Array.isArray(parsed) && parsed.length === 0 && initialMockCampaigns.length > 0) {
+            // If localStorage is empty but mock has data, use mock and set first active
             effectiveCampaigns = initialMockCampaigns.map((c, idx) => ({...c, isActive: idx === 0}));
         }
       } catch (e) {
         console.error("Failed to parse campaigns from localStorage", e);
-        if (initialMockCampaigns.length > 0) {
+         if (initialMockCampaigns.length > 0) { // Fallback to mocks if parsing fails
             effectiveCampaigns = initialMockCampaigns.map((c, idx) => ({...c, isActive: idx === 0}));
         }
       }
     } else if (initialMockCampaigns.length > 0) {
+        // First load, no localStorage, use mocks and set first active
         effectiveCampaigns = initialMockCampaigns.map((c, idx) => ({...c, isActive: idx === 0}));
     }
     setCampaignsState(effectiveCampaigns);
 
     let active = effectiveCampaigns.find(c => c.isActive);
-    if (!active && effectiveCampaigns.length > 0) {
+    if (!active && effectiveCampaigns.length > 0) { // If no campaign is marked active, make the first one active
       const firstCampaign = { ...effectiveCampaigns[0], isActive: true };
       active = firstCampaign;
-      // Update campaignsState to mark the first one active, this will trigger save via another useEffect
       setCampaignsState(prev => prev.map(c => (c.id === firstCampaign.id ? firstCampaign : { ...c, isActive: false })));
     }
     setActiveCampaignState(active || null);
@@ -185,7 +193,6 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     setSessionLogsState(storedSessionLogs ? JSON.parse(storedSessionLogs) : initialMockSessionLogs);
 
     setIsLoading(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
 
 
@@ -312,7 +319,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
         newActive = { ...remainingCampaigns[0], isActive: true };
         setCampaignsState(prev => prev.map(c => c.id === newActive!.id ? newActive! : { ...c, isActive: false }));
       } else {
-        setCampaignsState([]); // No campaigns left
+        setCampaignsState([]); 
       }
       setActiveCampaignState(newActive);
     }
@@ -320,7 +327,6 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
 
   const addCharacter = useCallback((characterData: Omit<Character, 'id' | 'campaignId'>) => {
     if (!activeCampaign) {
-      // toast({ title: "Error", description: "No active campaign to save character to.", variant: "destructive" });
       return;
     }
     const newCharacter: Character = {
@@ -360,18 +366,29 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     setIsProfileOpen(false);
   }, []);
 
+  const openCharacterForm = useCallback((characterToEdit?: Character) => {
+    setEditingCharacterForForm(characterToEdit || null);
+    setIsCharacterFormOpen(true);
+    closeProfileDialog();
+  }, [closeProfileDialog]);
+
+  const closeCharacterForm = useCallback(() => {
+    setEditingCharacterForForm(null);
+    setIsCharacterFormOpen(false);
+  }, []);
+
   const startNewSession = useCallback(() => {
     if (!activeCampaign) {
-      toast({ title: "No Campaign Active", description: "Please select an active campaign.", variant: "destructive" });
+      // toast({ title: "No Campaign Active", description: "Please select an active campaign.", variant: "destructive" });
       return;
     }
     const existingSessionForCampaign = sessionLogs.find(log => log.campaignId === activeCampaign.id && (log.status === 'active' || log.status === 'paused'));
     if (existingSessionForCampaign) {
-        if (existingSessionForCampaign.status === 'active') {
-            toast({ title: "Session Already Active", description: "A session is already running for this campaign.", variant: "destructive" });
-            return;
-        }
-        toast({ title: "Paused Session Exists", description: "Please resume or end the paused session for this campaign.", variant: "destructive" });
+        // if (existingSessionForCampaign.status === 'active') {
+        //     toast({ title: "Session Already Active", description: "A session is already running for this campaign.", variant: "destructive" });
+        //     return;
+        // }
+        // toast({ title: "Paused Session Exists", description: "Please resume or end the paused session for this campaign.", variant: "destructive" });
         return;
     }
 
@@ -387,11 +404,11 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     };
     setSessionLogsState(prevLogs => [newSession, ...prevLogs]);
     setCurrentSessionState(newSession);
-  }, [activeCampaign, sessionLogs, toast]);
+  }, [activeCampaign, sessionLogs]);
 
   const endCurrentSession = useCallback(() => {
     if (!currentSession || (currentSession.status !== 'active' && currentSession.status !== 'paused')) {
-      toast({ title: "No Active or Paused Session", description: "There is no session to end.", variant: "destructive" });
+      // toast({ title: "No Active or Paused Session", description: "There is no session to end.", variant: "destructive" });
       return;
     }
     const endedSession = {
@@ -404,11 +421,11 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       prevLogs.map(log => (log.id === currentSession.id ? endedSession : log))
     );
     setCurrentSessionState(null);
-  }, [currentSession, toast]);
+  }, [currentSession]);
 
   const pauseCurrentSession = useCallback(() => {
     if (!currentSession || currentSession.status !== 'active') {
-        toast({ title: "No Active Session", description: "No active session to pause.", variant: "destructive" });
+        // toast({ title: "No Active Session", description: "No active session to pause.", variant: "destructive" });
         return;
     }
     const pausedSession: SessionLog = {
@@ -420,11 +437,11 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
         prevLogs.map(log => log.id === currentSession.id ? pausedSession : log)
     );
     setCurrentSessionState(pausedSession); 
-  }, [currentSession, toast]);
+  }, [currentSession]);
 
   const resumeSession = useCallback(() => {
     if (!currentSession || currentSession.status !== 'paused') {
-        toast({ title: "No Paused Session", description: "No session is currently paused for this campaign.", variant: "destructive" });
+        // toast({ title: "No Paused Session", description: "No session is currently paused for this campaign.", variant: "destructive" });
         return;
     }
     const resumedSession: SessionLog = {
@@ -436,7 +453,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
         prevLogs.map(log => log.id === currentSession.id ? resumedSession : log)
     );
     setCurrentSessionState(resumedSession);
-  }, [currentSession, toast]);
+  }, [currentSession]);
 
 
   if (isLoading && typeof window === 'undefined') {
@@ -450,7 +467,8 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
       selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog,
       factions, factionReputations,
       sessionLogs, currentSession, startNewSession, endCurrentSession, pauseCurrentSession, resumeSession,
-      requestSwitchCampaign, confirmSwitchCampaign, cancelSwitchCampaign, isSwitchCampaignDialogVisible
+      requestSwitchCampaign, confirmSwitchCampaign, cancelSwitchCampaign, isSwitchCampaignDialogVisible,
+      editingCharacterForForm, isCharacterFormOpen, openCharacterForm, closeCharacterForm
     }}>
       {children}
     </CampaignContext.Provider>
@@ -464,6 +482,3 @@ export const useCampaignContext = () => {
   }
   return context;
 };
-
-
-    
