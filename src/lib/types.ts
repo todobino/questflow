@@ -79,7 +79,7 @@ export interface EncounterLogEntry {
     currentHp: number;
     maxHp: number;
   }>;
-  defeatedCombatants: Array<{
+  defeatedCombatants: Array<{ // Renamed to vanquishedCombatants in display, type remains same for data
     name:string;
     type: 'enemy' | 'player' | 'ally';
   }>;
@@ -106,5 +106,44 @@ export interface SessionLog {
   endTime?: string; // ISO string, optional if session is active or paused
   status: 'active' | 'completed' | 'paused'; // Added 'paused'
   pausedTime?: string; // ISO string, set when session is paused
+}
+
+// Types for D&D 5e API
+export interface MonsterListItem {
+  index: string;
+  name: string;
+  url: string;
+}
+
+export interface MonsterListResponse {
+  count: number;
+  results: MonsterListItem[];
+}
+
+export interface ArmorClass {
+  type: string;
+  value: number;
+  desc?: string;
+}
+
+export interface MonsterDetails {
+  index: string;
+  name: string;
+  size: string;
+  type: string;
+  alignment: string;
+  armor_class: ArmorClass[];
+  hit_points: number;
+  hit_dice: string;
+  challenge_rating: number;
+  // Add other fields as needed, e.g., speed, stats, actions, legendary_actions
+  desc?: string; // Some monsters have descriptions
+  image?: string; // e.g. /api/images/monsters/aboleth.png (relative to base API URL)
+}
+
+// Simplified Monster for display in Encounter Builder
+export interface EncounterMonster extends MonsterListItem {
+  cr: number;
+  // other quick access fields if needed
 }
 
