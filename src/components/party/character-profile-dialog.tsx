@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, Swords, VenetianMask, TrendingUp } from 'lucide-react';
+import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Sparkles, Edit3, Target, ListChecks, Activity, Swords, VenetianMask, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -43,7 +43,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
   ? (character.currentExp / character.nextLevelExp) * 100
   : 0;
 
-  const imageSizeClasses = "w-24 h-24";
+  const imageSizeClasses = "w-24 h-24"; // Smaller image
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,8 +56,8 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                   <Image
                     src={character.imageUrl || 'https://placehold.co/96x96.png'}
                     alt={character.name}
-                    width={96}
-                    height={96}
+                    width={96} // Match new size
+                    height={96} // Match new size
                     className="object-cover w-full h-full"
                     data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
                     key={character.imageUrl} 
@@ -79,7 +79,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                         </span>
                     )}
                 </div>
-                <div className="pt-0.5">
+                <div className="pt-0.5"> {/* Reduced top padding */}
                   <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                     <span className="flex items-center">
                       <strong className="mr-1 text-sm">XP:</strong> 
@@ -90,14 +90,14 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                     )}
                   </div>
                   {character.nextLevelExp && character.nextLevelExp > 0 && character.currentExp !== undefined && (
-                      <Progress value={expPercentage} className="h-1.5" />
+                      <Progress value={expPercentage} className="h-1.5" /> 
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Middle Column: HP, AC, Initiative */}
-            <div className="flex-shrink-0 flex flex-col space-y-1.5 items-start sm:items-end pt-1 pr-2">
+            {/* Middle Column: HP, AC, Initiative - Now consistently left-aligned and more compact */}
+            <div className="flex-shrink-0 flex flex-col space-y-1 items-start">
                  <StatDisplay icon={Heart} label="HP" value={`${character.currentHp ?? '?'}/${character.maxHp ?? '?'}`} iconClassName="text-red-500" />
                  <StatDisplay icon={ShieldIcon} label="AC" value={character.armorClass} iconClassName="text-sky-600"/>
                  <StatDisplay icon={Zap} label="Init" value={character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'} iconClassName="text-yellow-500" />
@@ -153,3 +153,4 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
     </Dialog>
   );
 }
+
