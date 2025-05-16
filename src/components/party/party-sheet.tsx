@@ -36,8 +36,8 @@ export function PartySheet() {
     }
     const individualHealthPercentages = partyMembers.map(member => {
       const currentHp = member.currentHp ?? 0;
-      const maxHp = member.maxHp ?? 1; // Avoid division by zero if maxHp is 0 or undefined
-      if (maxHp === 0) return 0; // If maxHp is truly 0, health percentage is 0
+      const maxHp = member.maxHp ?? 1; 
+      if (maxHp === 0) return 0;
       return (currentHp / maxHp) * 100;
     });
     const totalPercentageSum = individualHealthPercentages.reduce((sum, percentage) => sum + percentage, 0);
@@ -57,7 +57,7 @@ export function PartySheet() {
         <div className="flex-shrink-0 mb-3 p-3 border rounded-lg bg-card shadow-md">
           <div className="flex justify-between items-center mb-1">
             <p className="text-sm font-semibold flex items-center">
-              <Zap className="h-4 w-4 mr-2 text-primary" />
+              <Zap className="h-4 w-4 mr-2 text-alert" /> {/* Changed text-primary to text-alert */}
               Party Stamina
             </p>
             <p className="text-xs text-muted-foreground">{Math.round(partyStaminaPercentage)}%</p>
@@ -137,7 +137,6 @@ export function PartySheet() {
           )}
         </div>
       </ScrollArea>
-      
     </div>
   );
 }
