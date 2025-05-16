@@ -81,7 +81,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
           <DialogTitle className="text-2xl sm:text-3xl">{character.name}</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-grow">
+        <ScrollArea className="flex-grow min-h-0"> {/* Added min-h-0 */}
           <div className="p-4 sm:p-6 space-y-6">
             {/* Top Row: Image, Name/Level/Class/BG, EXP Bar */}
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
@@ -174,7 +174,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 
                 <div className="p-4 border rounded-lg shadow-sm bg-background/30 flex-grow flex flex-col min-h-[200px]">
                   <h3 className="text-lg font-semibold flex items-center mb-2"><FileText className="h-5 w-5 mr-2 text-primary" />Backstory</h3>
-                  <ScrollArea className="flex-1 max-h-48 sm:max-h-64"> {/* Adjusted max-h */}
+                  <ScrollArea className="flex-1 max-h-48 sm:max-h-64"> 
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed pr-2">
                       {character.backstory || 'No backstory provided.'}
                     </p>
