@@ -6,8 +6,8 @@ import Image from 'next/image';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog } from '@/components/ui/dialog'; 
-import { CharacterForm } from '@/components/character-creator/character-form';
+// Dialog import is handled by MainLayout now
+// import { CharacterForm } from '@/components/character-creator/character-form'; // Handled by MainLayout
 import type { Character } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
 import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon, Award } from 'lucide-react';
@@ -33,9 +33,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS, type DndClass } from '@/lib/dnd-data';
-import { DND_NAMES } from '@/lib/dnd-names';
-
+// RACES, CLASSES, SUBCLASSES, BACKGROUNDS, DND_NAMES are not directly used here anymore for randomization
+// Randomization logic is now in CampaignContext or passed to CharacterForm if needed for AI
 
 interface CharacterCardProps {
   character: Character;
@@ -66,25 +65,27 @@ function CharacterCard({ character, onEdit, onDelete, onViewProfile }: Character
           {character.subclass ? ` (${character.subclass})` : ''}
         </CardDescription>
         
-        <div className="mt-1.5 space-y-1 text-xs flex-grow"> 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
+        <div className="mt-1.5 grid grid-cols-2 gap-x-2 text-xs flex-grow">
+          {/* Left Column */}
+          <div className="space-y-1">
+            <div className="flex items-center"> {/* AC */}
               <ShieldIcon className="h-3.5 w-3.5 mr-1.5 text-sky-600 flex-shrink-0" />
               <span>AC: {character.armorClass ?? 'N/A'}</span>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center"> {/* Init */}
+              <Zap className="h-3.5 w-3.5 mr-1.5 text-yellow-500 flex-shrink-0" />
+              <span>Init: {character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'}</span>
+            </div>
+          </div>
+          {/* Right Column */}
+          <div className="space-y-1">
+            <div className="flex items-center"> {/* HP */}
               <Heart className="h-3.5 w-3.5 mr-1.5 text-red-500 flex-shrink-0" />
               <span>HP: {character.currentHp ?? 'N/A'} / {character.maxHp ?? 'N/A'}</span>
             </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <div className="flex items-center"> {/* EXP */}
               <Award className="h-3.5 w-3.5 mr-1.5 text-amber-500 flex-shrink-0" />
               <span>EXP: {character.currentExp ?? 'N/A'} / {character.nextLevelExp ?? 'N/A'}</span>
-            </div>
-            <div className="flex items-center">
-              <Zap className="h-3.5 w-3.5 mr-1.5 text-yellow-500 flex-shrink-0" />
-              <span>Init: {character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -121,94 +122,38 @@ export default function PartyManagerPage() {
   const { 
     activeCampaign, 
     characters, 
-    addCharacter, 
-    updateCharacter, 
+    // addCharacter, // now handled by openCharacterForm(null)
+    // updateCharacter, // now handled by openCharacterForm(character)
     deleteCharacter: deleteCharacterFromContext, 
     isLoading: isCampaignLoading,
-    openProfileDialog 
+    openProfileDialog,
+    openCharacterForm // Use this from context
   } = useCampaignContext();
   
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCharacter, setEditingCharacter] = useState<Partial<Character> | null>(null);
+  // Local state for form dialog itself is removed, now managed in CampaignContext/MainLayout
+  // const [isFormOpen, setIsFormOpen] = useState(false);
+  // const [editingCharacter, setEditingCharacter] = useState<Partial<Character> | null>(null);
   const [linkPartyLevel, setLinkPartyLevel] = useState(true);
-  const [isRandomizing, setIsRandomizing] = useState(false); 
-  const [randomizedData, setRandomizedData] = useState<Partial<Character>>({});
+  // const [isRandomizing, setIsRandomizing] = useState(false); 
+  // const [randomizedData, setRandomizedData] = useState<Partial<Character>>({});
   
   const { toast } = useToast();
 
   const partyMembers = characters.filter(char => char.campaignId === activeCampaign?.id);
 
   const handleAddCharacterClick = () => {
-    setEditingCharacter(null);
-    setRandomizedData({}); 
-    setIsFormOpen(true);
+    openCharacterForm(); // Open form for a new character
   };
 
   const handleEditCharacter = (character: Character) => {
-    setEditingCharacter(character);
-    setRandomizedData({}); 
-    setIsFormOpen(true);
+    openCharacterForm(character); // Open form to edit existing character
   };
 
   const handleDeleteCharacter = (characterId: string) => {
     deleteCharacterFromContext(characterId);
   };
   
-  const handleSaveCharacter = (characterData: Omit<Character, 'id' | 'campaignId'>) => {
-    if (!activeCampaign) {
-      // toast({ title: "Error", description: "No active campaign to save character to.", variant: "destructive" });
-      setIsFormOpen(false);
-      return;
-    }
-    if (editingCharacter && editingCharacter.id) {
-      updateCharacter({ ...characterData, id: editingCharacter.id, campaignId: activeCampaign.id });
-    } else {
-      addCharacter(characterData);
-    }
-    setIsFormOpen(false);
-    setEditingCharacter(null);
-    setRandomizedData({});
-  };
-
-  const handleLocalRandomizeCharacter = () => {
-    setIsRandomizing(true);
-    setRandomizedData({});
-
-    const randomRace = RACES[Math.floor(Math.random() * RACES.length)];
-    const randomClass = CLASSES[Math.floor(Math.random() * CLASSES.length)];
-    const availableSubclasses = SUBCLASSES[randomClass as DndClass] || [];
-    const randomSubclass = availableSubclasses.length > 0 ? availableSubclasses[Math.floor(Math.random() * availableSubclasses.length)] : '';
-    const randomBackground = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
-
-    const raceNames = DND_NAMES[randomRace as keyof typeof DND_NAMES];
-    const randomFirstName = raceNames.firstNames[Math.floor(Math.random() * raceNames.firstNames.length)];
-    const randomLastName = raceNames.lastNames[Math.floor(Math.random() * raceNames.lastNames.length)];
-    const randomName = `${randomFirstName} ${randomLastName}`;
-
-    const newCharacterData: Partial<Character> = {
-      name: randomName,
-      race: randomRace,
-      class: randomClass,
-      subclass: randomSubclass,
-      background: randomBackground,
-      backstory: '', 
-      imageUrl: 'https://placehold.co/400x400.png', 
-      level: 1,
-      currentHp: 10,
-      maxHp: 10,
-      armorClass: 10,
-      initiativeModifier: 0,
-      currentExp: 0,
-      nextLevelExp: 1000,
-    };
-
-    setRandomizedData(newCharacterData);
-    
-    if (isFormOpen && !editingCharacter?.id) {
-       setEditingCharacter(prev => ({ ...prev, ...newCharacterData }));
-    }
-    setIsRandomizing(false);
-  };
+  // handleSaveCharacter is now implicitly handled by CharacterForm dialog itself via context
   
   const handleLevelUpParty = () => {
     // Placeholder for future functionality
@@ -221,7 +166,10 @@ export default function PartyManagerPage() {
 
   if (isCampaignLoading) {
     return (
-      <div className="text-center py-12">Loading party data...</div>
+      <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Loading party data...</p>
+      </div>
     );
   }
   
@@ -294,7 +242,7 @@ export default function PartyManagerPage() {
           ))}
           <Card 
             onClick={handleAddCharacterClick}
-            className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted min-h-[144px] cursor-pointer"
+            className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 p-6 text-center shadow-none transition-all hover:border-primary hover:bg-muted min-h-[144px] cursor-pointer group"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleAddCharacterClick()}
@@ -305,28 +253,7 @@ export default function PartyManagerPage() {
         </div>
       )}
 
-      <Dialog open={isFormOpen} onOpenChange={(open) => {
-        setIsFormOpen(open);
-        if (!open) {
-          setEditingCharacter(null); 
-          setRandomizedData({});
-        }
-      }}>
-        <CharacterForm
-          isDialog={true}
-          currentCharacter={editingCharacter || randomizedData} 
-          onSave={handleSaveCharacter}
-          onClose={() => {
-            setIsFormOpen(false);
-            setEditingCharacter(null);
-            setRandomizedData({});
-          }}
-          onRandomize={handleLocalRandomizeCharacter} 
-          isRandomizing={isRandomizing}
-        />
-      </Dialog>
+      {/* CharacterForm Dialog is now managed by MainLayoutContent */}
     </>
   );
 }
-
-    
