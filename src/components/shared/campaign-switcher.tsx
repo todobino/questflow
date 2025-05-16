@@ -20,7 +20,7 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
   const {
     campaigns,
     activeCampaign,
-    requestSwitchCampaign, // Use this from context
+    requestSwitchCampaign,
   } = useCampaignContext();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -30,11 +30,11 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
   }, []);
 
   const handleCampaignSelect = (campaignId: string) => {
-    requestSwitchCampaign(campaignId); // Use the context function
+    requestSwitchCampaign(campaignId);
     setPopoverOpen(false);
   };
 
-  if (!mounted) { // Prevent SSR/hydration issues with popover and activeCampaign
+  if (!mounted) {
     return (
        <Button
         variant="outline"
@@ -66,15 +66,23 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
         <Button
           size="sm"
           className={cn(
-            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border shadow-md",
-            "bg-muted text-neutral-600 dark:text-neutral-400 border-neutral-400 dark:border-border", // Changed border-border to border-neutral-400 for light mode
-            "hover:bg-muted hover:text-foreground hover:border-primary"
+            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border shadow-md", // Base
+            // Light mode defaults
+            "bg-muted text-neutral-600 border-neutral-400",
+            // Dark mode overrides
+            "dark:bg-muted dark:text-primary-foreground dark:border-primary-foreground",
+            // Light mode hover
+            "hover:bg-muted hover:text-foreground hover:border-primary",
+            // Dark mode hover overrides (maintaining dark gray bg, white text/border)
+            "dark:hover:bg-secondary dark:hover:text-primary-foreground dark:hover:border-primary-foreground"
           )}
         >
           <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 group-hover:text-foreground"
+              "h-4 w-4 shrink-0", // Chevron always visible
+              "text-neutral-600 group-hover:text-foreground", // Light mode text & hover
+              "dark:text-primary-foreground dark:group-hover:text-primary-foreground" // Dark mode text & hover (white)
             )}
           />
         </Button>
