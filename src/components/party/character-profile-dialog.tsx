@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Shield as ShieldIcon, Zap, BookOpen, UserCircle, Palette, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, Swords, TrendingUp } from 'lucide-react'; // Added Swords, TrendingUp, removed Award, VenetianMask
+import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Sparkles, Loader2, Edit3, Target, ListChecks, Activity, Swords, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -47,7 +47,6 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
       const updatedChar = { ...character, imageUrl: result.imageUrl };
       updateCharacter(updatedChar);
 
-      // Toast removed as per user request for non-error toasts
     } catch (error) {
       console.error('Error generating portrait:', error);
       toast({
@@ -87,7 +86,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                   </div>
                 ) : (
                   <Image
-                    src={character.imageUrl || 'https://placehold.co/400x400.png'}
+                    src={character.imageUrl || 'https://placehold.co/128x128.png'}
                     alt={character.name}
                     width={112} 
                     height={112} 
@@ -102,7 +101,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 <DialogTitle className="text-2xl sm:text-3xl text-left">{character.name}</DialogTitle>
                 <div className="text-md text-muted-foreground text-left flex flex-wrap items-center gap-x-3 gap-y-0.5">
                     <span className="inline-flex items-center">
-                        <Swords className="mr-1.5 h-4 w-4 text-muted-foreground" /> {/* Changed from VenetianMask */}
+                        <Swords className="mr-1.5 h-4 w-4 text-muted-foreground" />
                         Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
                         {character.subclass ? ` (${character.subclass})` : ''}
                     </span>
@@ -116,8 +115,8 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                 <div className="pt-1">
                   <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                     <span className="flex items-center">
-                      <TrendingUp className="h-3.5 w-3.5 mr-1 text-amber-500" /> {/* Changed from Award */}
-                      EXP: {character.currentExp ?? '0'} / {character.nextLevelExp ?? '?'}
+                      <strong className="mr-1">XP:</strong> 
+                      <span className="text-foreground">{character.currentExp ?? '0'} / {character.nextLevelExp ?? '?'}</span>
                     </span>
                     {character.nextLevelExp && character.nextLevelExp > 0 && character.currentExp !== undefined && (
                         <span>{Math.round(expPercentage)}%</span>
