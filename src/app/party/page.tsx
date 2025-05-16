@@ -10,7 +10,15 @@ import { Dialog } from '@/components/ui/dialog';
 import { CharacterForm } from '@/components/character-creator/character-form';
 import type { Character } from '@/lib/types';
 import { useCampaignContext } from '@/contexts/campaign-context';
-import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon } from 'lucide-react';
+import { PlusCircle, Users, Zap, Settings2, Edit3, Trash2, Loader2, Heart, Shield as ShieldIcon, MoreHorizontal } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -140,7 +148,7 @@ export default function PartyManagerPage() {
   
   const handleSaveCharacter = (characterData: Omit<Character, 'id' | 'campaignId'>) => {
     if (!activeCampaign) {
-      toast({ title: "Error", description: "No active campaign to save character to.", variant: "destructive" });
+      // toast({ title: "Error", description: "No active campaign to save character to.", variant: "destructive" });
       setIsFormOpen(false);
       return;
     }
@@ -194,6 +202,7 @@ export default function PartyManagerPage() {
   
   const handleLevelUpParty = () => {
     // Placeholder for future functionality
+    // toast({ title: "Level Up!", description: "Party level up functionality coming soon." });
   };
 
   const handleViewProfile = (character: Character) => {
@@ -211,19 +220,35 @@ export default function PartyManagerPage() {
       <PageHeader
         title="Party Roster"
         actions={
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="link-level-switch"
-                checked={linkPartyLevel}
-                onCheckedChange={setLinkPartyLevel}
-              />
-              <Label htmlFor="link-level-switch" className="text-sm">Link Party Level</Label>
-            </div>
-            <Button onClick={handleLevelUpParty} variant="default" size="sm">
-              <Zap className="mr-2 h-4 w-4" /> Level Up Party
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings2 className="mr-2 h-4 w-4" /> Party Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Party Settings</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="focus:bg-transparent focus:text-accent-foreground">
+                <div className="flex items-center justify-between w-full">
+                  <Label htmlFor="link-level-switch-dropdown" className="text-sm font-normal cursor-pointer">
+                    Link Party Level
+                  </Label>
+                  <Switch
+                    id="link-level-switch-dropdown"
+                    checked={linkPartyLevel}
+                    onCheckedChange={setLinkPartyLevel}
+                    className="ml-auto"
+                  />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Button onClick={handleLevelUpParty} variant="ghost" className="w-full justify-start px-2 py-1.5 h-auto font-normal">
+                  <Zap className="mr-2 h-4 w-4" /> Level Up Party
+                </Button>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       />
 
