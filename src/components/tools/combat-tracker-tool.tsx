@@ -18,7 +18,7 @@ import {
   SheetClose,
   SheetFooter as SheetModalFooter,
 } from '@/components/ui/sheet';
-import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus, Swords, X, Cat } from 'lucide-react';
+import { PlusCircle, UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus, Cat, Swords } from 'lucide-react';
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -58,6 +58,12 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 
 const initialCombatants: Combatant[] = [];
@@ -282,7 +288,7 @@ export function CombatTrackerTool() {
 
     let updatedCombatantsList = [...combatants];
 
-    partyCharacters.forEach((char, index) => {
+    partyCharacters.forEach((char) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
@@ -299,7 +305,7 @@ export function CombatTrackerTool() {
           };
         } else {
           updatedCombatantsList.push({
-            id: String(Date.now() + Math.random() + updatedCombatantsList.length + index), 
+            id: String(Date.now() + Math.random() + updatedCombatantsList.length), 
             name: char.name,
             type: 'player',
             hp: char.currentHp ?? char.maxHp ?? 10,
@@ -606,9 +612,8 @@ export function CombatTrackerTool() {
         </DialogContent>
       </Dialog>
 
-
       <Card className="shadow-md flex-grow flex flex-col min-h-0">
-        <CardHeader className="px-[0.625rem] py-1.5 flex flex-row items-center justify-between">
+        <CardHeader className="px-2.5 py-1.5 flex flex-row items-center justify-between">
             <CardTitle className="flex items-center text-lg">
                 <UsersIcon className="mr-2 h-5 w-5 text-primary" />
                 Initiative Order
@@ -669,17 +674,18 @@ export function CombatTrackerTool() {
                             </span>
                             )}
                             <div className="flex justify-between items-center text-xs mt-1">
-                                <span></span> {/* Placeholder for alignment */}
+                                 {c.armorClass !== undefined && (
+                                <div className="flex items-center">
+                                    <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
+                                    <span>AC: {c.armorClass}</span>
+                                </div>
+                                )}
+                                <div className="flex items-center">
+                                    <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
+                                    {c.hp} / {c.maxHp}
+                                </div>
                             </div>
                              <div className="w-full mt-1">
-                                <div className="flex items-center justify-between text-xs mb-0.5">
-                                    <span className="flex items-center text-muted-foreground">
-                                        HP: {c.hp} / {c.maxHp}
-                                    </span>
-                                     <span className="text-muted-foreground">
-                                        {Math.round(hpPercentage)}%
-                                    </span>
-                                </div>
                                 <Progress 
                                     value={hpPercentage} 
                                     className={cn(
@@ -690,13 +696,7 @@ export function CombatTrackerTool() {
                             </div>
                         </div>
                         
-                         <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                            {c.armorClass !== undefined && (
-                                <div className="flex items-center text-xs bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
-                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                                <span className="font-semibold">{c.armorClass}</span>
-                                </div>
-                            )}
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0">
@@ -721,7 +721,6 @@ export function CombatTrackerTool() {
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end" onClick={(e) => e.stopPropagation()}>
                         <div className="space-y-3">
-                            {/* Removed delete button from popover to match direct delete on tile */}
                             <div className="space-y-1">
                                 <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                                 <Input 
@@ -758,29 +757,27 @@ export function CombatTrackerTool() {
             </ul>
             )}
         </CardContent>
-         {combatants.length > 0 && (
-          <CardFooter className="p-2 border-t">
-            <div className="flex items-center gap-2 w-full">
-                {!combatStarted ? (
-                    <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
-                        <Swords className="mr-2 h-4 w-4" /> Start Combat
-                    </Button>
-                ) : (
-                    <Button onClick={nextTurn} className="flex-1" size="sm">
-                        Next Turn <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                )}
-                 <Button
-                    onClick={endCombat}
-                    variant="outline"
-                    className="bg-muted border-border text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
-                    size="sm"
-                >
-                    <ShieldX className="mr-2 h-4 w-4" /> End Combat
-                </Button>
-            </div>
-          </CardFooter>
-        )}
+        <CardFooter className="p-2 border-t">
+          <div className="flex items-center gap-2 w-full">
+              {!combatStarted ? (
+                  <Button onClick={startCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
+                      <Swords className="mr-2 h-4 w-4" /> Start Combat
+                  </Button>
+              ) : (
+                  <Button onClick={nextTurn} className="flex-1" size="sm">
+                      Next Turn <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+              )}
+               <Button
+                  onClick={endCombat}
+                  variant="outline"
+                  className="bg-muted border-border text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+                  size="sm"
+              >
+                  <ShieldX className="mr-2 h-4 w-4" /> End Combat
+              </Button>
+          </div>
+        </CardFooter>
       </Card>
 
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
@@ -851,4 +848,5 @@ export function CombatTrackerTool() {
     </div>
   );
 }
+
 
