@@ -18,7 +18,7 @@ import {
   SheetClose,
   SheetFooter as SheetModalFooter,
 } from '@/components/ui/sheet';
-import { UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus, Cat, X, PlusCircle, Swords } from 'lucide-react';
+import { UserPlus, Bot, Dices, ShieldX, Trash2, MinusCircle, History, Users as UsersIcon, ArrowRight, Heart, Shield as ShieldIcon, ShieldPlus, Cat, X, Swords, PlusCircle } from 'lucide-react';
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -60,8 +60,8 @@ import { cn } from '@/lib/utils';
 
 
 const PLAYER_CHARACTER_COLOR = 'bg-white dark:bg-gray-100';
-const ALLY_COLOR = 'bg-white dark:bg-gray-100'; // Changed from slate
-const ENEMY_COLOR = 'bg-white dark:bg-gray-100'; // Changed from red
+const ALLY_COLOR = 'bg-white dark:bg-gray-100';
+const ENEMY_COLOR = 'bg-white dark:bg-gray-100';
 
 
 export function CombatTrackerTool() {
@@ -266,7 +266,7 @@ export function CombatTrackerTool() {
     let updatedCombatantsList = [...combatants];
     const newCombatantsToAdd: Combatant[] = [];
   
-    partyCharacters.forEach((char, index) => {
+    partyCharacters.forEach((char) => {
       if (char.campaignId === activeCampaign.id) {
         const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
         const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
@@ -413,13 +413,12 @@ export function CombatTrackerTool() {
           </span>
         </div>
       )}
-      <div className="flex-shrink-0 mb-2 grid grid-cols-2 gap-2">
+      <div className="flex-shrink-0 mb-2 flex items-center gap-2">
           <Button 
             variant="outline" 
             size="sm" 
             className="w-full hover:bg-background hover:border-primary hover:text-primary"
             onClick={() => {
-              setAddCombatantDialogTab('enemy');
               setIsAddCombatantDialogOpen(true);
             }}
           >
@@ -625,7 +624,7 @@ export function CombatTrackerTool() {
             </Button>
         </CardHeader>
         <Separator />
-        <CardContent className="px-2.5 py-2 flex-grow overflow-y-auto">
+        <CardContent className="p-2.5 flex-grow overflow-y-auto">
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -633,9 +632,15 @@ export function CombatTrackerTool() {
               {sortedCombatants.map((c) => {
                 const hpPercentage = c.maxHp > 0 ? (c.hp / c.maxHp) * 100 : 0;
                 
-                let hpBarColorClass = 'bg-success';
-                if (hpPercentage <= 20) hpBarColorClass = 'bg-destructive';
-                else if (hpPercentage <= 50) hpBarColorClass = 'bg-yellow-500';
+                let hpBarColorClass: string;
+                if (hpPercentage <= 20) {
+                  hpBarColorClass = 'bg-destructive';
+                } else if (hpPercentage <= 50) {
+                  hpBarColorClass = 'bg-yellow-500';
+                } else {
+                  hpBarColorClass = 'bg-primary';
+                }
+
 
                 const isCurrentTurn = c.id === currentTurnCombatantId;
                 let turnBorderClass = 'ring-primary'; 
@@ -664,9 +669,9 @@ export function CombatTrackerTool() {
                       >
                         <div className={cn(
                           "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
-                          c.type === 'enemy' ? 'bg-destructive text-destructive-foreground' :
-                          (c.isPlayerCharacter && c.type === 'player') ? 'bg-success text-success-foreground' :
-                          'bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-800' 
+                           c.type === 'enemy' ? 'bg-destructive text-destructive-foreground' :
+                           (c.isPlayerCharacter && c.type === 'player') ? 'bg-success text-success-foreground' :
+                           'bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-800' 
                         )}
                         >
                           {c.initiative ?? '-'}
@@ -682,10 +687,11 @@ export function CombatTrackerTool() {
                           >
                             {c.name}
                           </h4>
-                           <div className="flex justify-between items-center text-xs mt-1">
+                            {/* Conditions can be listed here if needed */}
+                            <div className="flex justify-between items-center text-xs mt-1">
                                 <div className="flex items-center text-muted-foreground dark:text-gray-400">
                                     <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" />
-                                    AC: {c.armorClass ?? 'N/A'}
+                                     AC: {c.armorClass ?? 'N/A'}
                                 </div>
                                 <div className="flex items-center text-muted-foreground dark:text-gray-400">
                                     <Heart className="mr-1 h-3.5 w-3.5 text-red-500" />
@@ -857,3 +863,4 @@ export function CombatTrackerTool() {
     
 
     
+
