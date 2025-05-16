@@ -20,7 +20,7 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
   const {
     campaigns,
     activeCampaign,
-    requestSwitchCampaign, // Use requestSwitchCampaign
+    requestSwitchCampaign, 
   } = useCampaignContext();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -30,7 +30,7 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
   }, []);
 
   const handleCampaignSelect = (campaignId: string) => {
-    requestSwitchCampaign(campaignId); // Use requestSwitchCampaign
+    requestSwitchCampaign(campaignId); 
     setPopoverOpen(false);
   };
 
@@ -66,21 +66,18 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
         <Button
           size="sm"
           className={cn(
-            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold shadow-md",
-            // Light mode
-            "bg-muted text-neutral-600 border-border", 
-            "hover:bg-muted hover:text-foreground hover:border-primary",
-            // Dark mode
-            "dark:bg-muted dark:text-sidebar-foreground dark:border-sidebar-foreground",
-            "dark:hover:bg-neutral-700 dark:hover:text-sidebar-foreground dark:hover:border-sidebar-foreground"
+            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold shadow-md", // Base layout
+            "bg-muted text-neutral-600 dark:text-sidebar-foreground", // Default bg and text (dark mode uses light gray text)
+            "border border-neutral-400 dark:border-sidebar-foreground", // Default border (light mode dark gray, dark mode light gray)
+            "hover:bg-muted hover:text-foreground hover:border-neutral-400", // Light mode hover (border remains dark gray)
+            "dark:hover:bg-neutral-700 dark:hover:text-sidebar-foreground dark:hover:border-sidebar-foreground" // Dark mode hover overrides
           )}
         >
           <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
-              "text-neutral-600 group-hover:text-foreground", // Light mode chevron
-              "dark:text-sidebar-foreground group-hover:dark:text-sidebar-foreground" // Dark mode chevron
+              "h-4 w-4 shrink-0 text-neutral-600 dark:text-sidebar-foreground",
+              "group-hover:text-foreground group-hover:dark:text-sidebar-foreground" // Chevron color on hover
             )}
           />
         </Button>
@@ -124,3 +121,4 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
     </Popover>
   );
 }
+
