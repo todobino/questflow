@@ -33,8 +33,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  DialogHeader as DialogPrimitiveHeader, // Renamed to avoid conflict
+  DialogTitle as DialogPrimitiveTitle,   // Renamed to avoid conflict
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -45,16 +45,13 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { useCampaignContext } from '@/contexts/campaign-context';
 
 
-interface SidebarNavProps {
-  campaigns: Campaign[];
-  activeCampaign: Campaign | null;
-}
-
-export function SidebarNav({ campaigns, activeCampaign }: SidebarNavProps) {
+export function SidebarNav() {
   const pathname = usePathname();
   const { state: sidebarState, isMobile } = useSidebar();
+  const { activeCampaign, campaigns, setCampaignActive } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
   const [campaignSwitcherOpen, setCampaignSwitcherOpen] = useState(false);
 
@@ -65,10 +62,12 @@ export function SidebarNav({ campaigns, activeCampaign }: SidebarNavProps) {
   const campaignNavItems = getFilteredCampaignNavItems();
   const AppLogoComponent = APP_LOGO_ICON;
   const searchNavItem = SITE_NAV_ITEMS.find(item => item.title === 'Search');
+  const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false);
+
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-2">
+      <SidebarHeader className="px-2 pt-4 pb-2"> {/* Increased pt from p-2 */}
         <Link href="/campaigns" className="flex items-center gap-2 px-2 text-foreground hover:text-foreground">
           <AppLogoComponent className="h-6 w-6 text-primary" />
           {(sidebarState === 'expanded' || isMobile) && (
@@ -76,11 +75,10 @@ export function SidebarNav({ campaigns, activeCampaign }: SidebarNavProps) {
           )}
         </Link>
       </SidebarHeader>
-      {/* Removed SidebarSeparator and campaign switcher from here */}
-
+      
       <SidebarContent>
         {/* Campaign Menu Nav */}
-        <SidebarMenu className="px-2 pt-2"> {/* Added pt-2 here */}
+        <SidebarMenu className="px-2 pt-2">
           {campaignNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
                <TooltipProvider>
@@ -88,8 +86,10 @@ export function SidebarNav({ campaigns, activeCampaign }: SidebarNavProps) {
                     asChild
                     isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
                     tooltip={item.title}
-                    disabled={item.disabled || (!activeCampaign && item.href !== '/campaigns' && item.href !== '/')} 
-                    className={cn((item.disabled || (!activeCampaign && item.href !== '/campaigns' && item.href !== '/')) && "cursor-not-allowed opacity-50")}
+                    disabled={item.disabled || (!activeCampaign && item.href !== '/campaigns' && item.href !== '/')}
+                    className={cn(
+                      (item.disabled || (!activeCampaign && item.href !== '/campaigns' && item.href !== '/')) && "cursor-not-allowed opacity-50"
+                    )}
                 >
                     <Link href={(item.disabled || (!activeCampaign && item.href !== '/campaigns' && item.href !== '/')) ? '#' : item.href}>
                     <item.icon />
@@ -108,16 +108,12 @@ export function SidebarNav({ campaigns, activeCampaign }: SidebarNavProps) {
             <SidebarMenuItem>
               <TooltipProvider>
                 <SidebarMenuButton
-                  asChild
-                  isActive={pathname === searchNavItem.href}
+                  onClick={() => setIsSearchSheetOpen(true)}
                   tooltip={searchNavItem.title}
                   disabled={searchNavItem.disabled}
-                  
                 >
-                  <Link href={searchNavItem.disabled ? '#' : searchNavItem.href}>
-                    <searchNavItem.icon />
-                    <span>{searchNavItem.title}</span>
-                  </Link>
+                  <searchNavItem.icon />
+                  <span>{searchNavItem.title}</span>
                 </SidebarMenuButton>
               </TooltipProvider>
             </SidebarMenuItem>
@@ -129,7 +125,6 @@ export function SidebarNav({ campaigns, activeCampaign }: SidebarNavProps) {
                         asChild
                         isActive={pathname === '/settings'}
                         tooltip="Settings"
-                        
                     >
                         <Link href="/settings">
                             <Settings />
@@ -140,6 +135,8 @@ export function SidebarNav({ campaigns, activeCampaign }: SidebarNavProps) {
             </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+      {/* SearchSheet is rendered here but controlled by SidebarNav's state */}
+      {/* <SearchSheet isOpen={isSearchSheetOpen} onOpenChange={setIsSearchSheetOpen} /> */}
     </Sidebar>
   );
 }
