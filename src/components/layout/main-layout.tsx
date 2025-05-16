@@ -9,7 +9,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
-// Removed PartySheet import as it's no longer directly used here
 import { Dices, Swords, Users, FileText } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
@@ -17,11 +16,10 @@ import { CampaignSwitcher } from '@/components/shared/campaign-switcher';
 import { SessionTools } from '@/components/shared/session-tools';
 import { SwitchCampaignDialog } from '@/components/shared/switch-campaign-dialog';
 import { CharacterForm } from '@/components/character-creator/character-form';
-import { Dialog } from '@/components/ui/dialog';
 import type { Character } from '@/lib/types';
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
-import Link from 'next/link'; // Added Link for Party tab placeholder
+import Link from 'next/link';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -64,15 +62,16 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     closeCharacterForm();
   };
 
-  const handleLocalRandomizeCharacterForDialog = () => {
+  const handleRandomizeInDialog = () => {
     setIsRandomizingCharacterInDialog(true);
+    // This logic assumes local randomization, adjust if using AI flow for dialog
     const randomRace = RACES[Math.floor(Math.random() * RACES.length)];
     const randomClass = CLASSES[Math.floor(Math.random() * CLASSES.length)];
     const subclassesForClass = SUBCLASSES[randomClass] || [];
     const randomSubclass = subclassesForClass.length > 0 ? subclassesForClass[Math.floor(Math.random() * subclassesForClass.length)] : '';
     const randomBackground = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
     
-    const namesForRace = DND_NAMES[randomRace] || DND_NAMES.Human; // Fallback to Human names if race not found
+    const namesForRace = DND_NAMES[randomRace] || DND_NAMES.Human;
     const randomFirstName = namesForRace.firstNames[Math.floor(Math.random() * namesForRace.firstNames.length)];
     const randomLastName = namesForRace.lastNames[Math.floor(Math.random() * namesForRace.lastNames.length)];
     const characterName = `${randomFirstName} ${randomLastName}`;
@@ -83,8 +82,8 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       class: randomClass,
       subclass: randomSubclass,
       background: randomBackground,
-      backstory: '', // No AI backstory here
-      imageUrl: `https://placehold.co/400x400.png`,
+      backstory: '', // AI backstory not generated here
+      imageUrl: `https://placehold.co/400x400.png`, // Default placeholder
       level: 1,
       currentHp: 10,
       maxHp: 10,
@@ -93,8 +92,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       currentExp: 0,
       nextLevelExp: 1000,
     };
-    
-    openCharacterForm(randomizedData as Character); 
+    openCharacterForm(randomizedData as Character); // Open form with randomized data
     setIsRandomizingCharacterInDialog(false);
   };
 
@@ -127,11 +125,8 @@ function MainLayoutContent({ children }: MainLayoutProps) {
         </div>
 
         <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground px-4 pt-2 pb-4 hidden md:flex flex-col overflow-hidden">
-          <Tabs defaultValue="party" className="w-full flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-3 shrink-0 border border-neutral-500 dark:border-background">
-              <TabsTrigger value="party" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
-                <Users className="h-4 w-4 mr-1 md:mr-2" />Party
-              </TabsTrigger>
+          <Tabs defaultValue="dice" className="w-full flex-1 flex flex-col min-h-0"> {/* Default to dice */}
+            <TabsList className="grid w-full grid-cols-2 shrink-0 border border-neutral-500 dark:border-background"> {/* Changed to grid-cols-2 */}
               <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Dices className="h-4 w-4 mr-1 md:mr-2" />Dice
               </TabsTrigger>
@@ -139,16 +134,11 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="party" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0" forceMount>
-              {/* Placeholder for Party tab in sidebar */}
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                <p>View and manage your party on the main <Link href="/party" className="text-primary hover:underline">Party Manager</Link> page.</p>
-              </div>
-            </TabsContent>
-            <TabsContent value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0" forceMount>
+            {/* Removed Party Tab Content */}
+            <TabsContent forceMount value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               <DiceRollerTool />
             </TabsContent>
-            <TabsContent value="combat" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0" forceMount>
+            <TabsContent forceMount value="combat" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               <CombatTrackerTool />
             </TabsContent>
           </Tabs>
@@ -172,7 +162,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
               currentCharacter={editingCharacterForForm}
               onSave={handleSaveCharacterInDialog}
               onClose={closeCharacterForm}
-              onRandomize={handleLocalRandomizeCharacterForDialog}
+              onRandomize={handleRandomizeInDialog}
               isRandomizing={isRandomizingCharacterInDialog}
             />
           </Dialog>
