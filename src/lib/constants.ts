@@ -13,7 +13,8 @@ import {
   UsersRound,
   Scroll as ScrollIconEntry,
   Flag,
-  Table, // Changed from ListOrdered
+  Table, 
+  Crosshair, // Added Crosshair
 } from 'lucide-react';
 
 export interface NavItem {
@@ -28,12 +29,7 @@ export const APP_LOGO_ICON = Swords;
 export const APP_NAME = "QuestFlow";
 
 export const SITE_NAV_ITEMS: NavItem[] = [
-  {
-    title: 'Search',
-    href: '/search',
-    icon: SearchIcon,
-    disabled: true,
-  },
+  // Campaigns item removed
 ];
 
 export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
@@ -50,7 +46,7 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
     title: 'Encounters',
     href: '/encounters',
-    icon: ShieldAlert,
+    icon: Crosshair, // Changed from ShieldAlert
     disabled: true,
   },
   {
@@ -67,7 +63,8 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
     title: 'Random Tables',
     href: '/tables',
-    icon: Table, // Changed icon
+    icon: Table,
+    disabled: false, 
   },
   {
     title: 'Lore & World',
