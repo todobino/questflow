@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { useCampaignContext } from '@/contexts/campaign-context'; 
+import { useCampaignContext } from '@/contexts/campaign-context';
 
 interface CampaignSwitcherProps {
   // Props now come from context, so direct props might not be needed
@@ -20,24 +20,24 @@ interface CampaignSwitcherProps {
 
 export function CampaignSwitcher({ }: CampaignSwitcherProps) {
   const router = useRouter();
-  const { 
-    campaigns, 
-    activeCampaign, 
-    requestSwitchCampaign 
+  const {
+    campaigns,
+    activeCampaign,
+    requestSwitchCampaign
   } = useCampaignContext();
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const handleCampaignSelect = (campaignId: string) => {
-    requestSwitchCampaign(campaignId); 
+    requestSwitchCampaign(campaignId);
     setPopoverOpen(false);
   };
 
   if (!activeCampaign) {
     return (
       <Button
-        variant="success" // Changed from ghost to success
+        variant="success"
         size="sm"
-        className="h-auto px-2 py-1" // Removed text-muted-foreground and hover classes, success variant handles this
+        className="h-auto px-2 py-1 shadow-md" // Added shadow-md
         onClick={() => router.push('/campaigns')}
       >
         Select Campaign
@@ -51,7 +51,7 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
         <Button
           size="sm"
           className={cn(
-            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border",
+            "group flex items-center gap-1 px-2 py-1 h-auto font-semibold border shadow-md", // Added shadow-md
             "bg-muted text-neutral-600 dark:text-neutral-400 border-border",
             "hover:bg-muted hover:text-foreground hover:border-primary"
           )}
@@ -59,7 +59,7 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
           <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{activeCampaign.name}</span>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 group-hover:text-foreground opacity-100", 
+              "h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 group-hover:text-foreground opacity-100",
             )}
           />
         </Button>
@@ -103,4 +103,4 @@ export function CampaignSwitcher({ }: CampaignSwitcherProps) {
     </Popover>
   );
 }
-
+    
