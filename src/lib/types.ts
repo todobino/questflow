@@ -25,6 +25,14 @@ export interface Character {
   initiativeModifier?: number;
   currentExp?: number; // Added for EXP tracking
   nextLevelExp?: number; // Added for EXP tracking
+  abilities?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
   // Optional: stats, inventory, notes, factionId
 }
 

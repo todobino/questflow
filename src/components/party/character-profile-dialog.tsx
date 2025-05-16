@@ -8,11 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Sparkles, Edit3, Target, ListChecks, Activity, Swords, VenetianMask, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useCampaignContext } from '@/contexts/campaign-context';
-// import { generateCharacterImage } from '@/ai/flows/generate-character-image'; // Commented out as New Portrait button was removed
+import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Edit3, Swords, Activity, ListChecks, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CharacterProfileDialogProps {
@@ -23,9 +19,6 @@ interface CharacterProfileDialogProps {
 }
 
 export function CharacterProfileDialog({ character, isOpen, onClose, onEditCharacter }: CharacterProfileDialogProps) {
-  // const [isGeneratingImage, setIsGeneratingImage] = useState(false); // State for New Portrait button
-  // const { toast } = useToast(); // For New Portrait button
-  // const { updateCharacter } = useCampaignContext(); // For New Portrait button
 
   if (!character) {
     return null;
@@ -43,7 +36,18 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
   ? (character.currentExp / character.nextLevelExp) * 100
   : 0;
 
-  const imageSizeClasses = "w-24 h-24"; // Smaller image
+  const imageSizeClasses = "w-24 h-24"; 
+
+  const ABILITIES_ORDER: (keyof NonNullable<Character['abilities']>)[] = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
+  const ABILITY_NAMES: { [key: string]: string } = {
+    strength: "STR",
+    dexterity: "DEX",
+    constitution: "CON",
+    intelligence: "INT",
+    wisdom: "WIS",
+    charisma: "CHA",
+  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,8 +60,8 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                   <Image
                     src={character.imageUrl || 'https://placehold.co/96x96.png'}
                     alt={character.name}
-                    width={96} // Match new size
-                    height={96} // Match new size
+                    width={96} 
+                    height={96} 
                     className="object-cover w-full h-full"
                     data-ai-hint={`${character.race || ''} ${character.class || ''} portrait`}
                     key={character.imageUrl} 
@@ -79,7 +83,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
                         </span>
                     )}
                 </div>
-                <div className="pt-0.5"> {/* Reduced top padding */}
+                <div className="pt-0.5"> 
                   <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                     <span className="flex items-center">
                       <strong className="mr-1 text-sm">XP:</strong> 
@@ -96,13 +100,12 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
               </div>
             </div>
 
-            {/* Middle Column: HP, AC, Initiative - Now consistently left-aligned and more compact */}
-            <div className="flex-shrink-0 flex flex-col space-y-1 items-start">
+            {/* Middle Column: HP, AC, Initiative */}
+            <div className="flex-shrink-0 flex flex-col space-y-1 items-start pt-1">
                  <StatDisplay icon={Heart} label="HP" value={`${character.currentHp ?? '?'}/${character.maxHp ?? '?'}`} iconClassName="text-red-500" />
                  <StatDisplay icon={ShieldIcon} label="AC" value={character.armorClass} iconClassName="text-sky-600"/>
                  <StatDisplay icon={Zap} label="Init" value={character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'} iconClassName="text-yellow-500" />
             </div>
-
 
             {/* Right Element: Edit Button */}
             <div className="flex-shrink-0">
@@ -123,7 +126,18 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
               {/* Left Column in Scroll Area: Ability Scores, Feats */}
               <div className="space-y-4 p-4 border rounded-lg shadow-sm bg-background/30">
                  <h3 className="text-md font-semibold flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Ability Scores</h3>
-                 <p className="text-sm text-muted-foreground italic">Ability scores display coming soon.</p>
+                 {character.abilities ? (
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                        {ABILITIES_ORDER.map(abilityKey => (
+                            <div key={abilityKey} className="flex justify-between">
+                                <span className="font-medium text-muted-foreground">{ABILITY_NAMES[abilityKey]}:</span>
+                                <span className="text-foreground">{character.abilities![abilityKey]}</span>
+                            </div>
+                        ))}
+                    </div>
+                 ) : (
+                    <p className="text-sm text-muted-foreground italic">No ability scores defined.</p>
+                 )}
                 <Separator />
                  <h3 className="text-md font-semibold flex items-center mt-3"><ListChecks className="mr-2 h-5 w-5 text-primary"/>Feats & Features</h3>
                  <p className="text-sm text-muted-foreground italic">Feats and features tracking coming soon.</p>
@@ -153,4 +167,3 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
     </Dialog>
   );
 }
-
