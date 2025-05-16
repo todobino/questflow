@@ -144,7 +144,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
           </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-grow min-h-0"> {/* Added min-h-0 */}
+        <ScrollArea className="flex-grow min-h-0">
           <div className="p-4 sm:p-6 space-y-6">
             {/* Middle/Bottom Section: Stats, Goals/Backstory */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -184,7 +184,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose, onEditChara
           </div>
         </ScrollArea>
         
-        <DialogFooter className="mt-auto p-4 sm:p-6 border-t">
+        <DialogFooter className="mt-auto px-4 py-2 sm:px-6 sm:py-3 border-t">
           <Button variant="outline" onClick={() => onEditCharacter(character)}>
             <Edit3 className="mr-2 h-4 w-4" /> Edit
           </Button>
