@@ -229,7 +229,7 @@ export default function PartyManagerPage() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Party Settings</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="focus:bg-transparent focus:text-accent-foreground">
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="focus:bg-transparent focus:text-foreground">
                 <div className="flex items-center justify-between w-full">
                   <Label htmlFor="link-level-switch-dropdown" className="text-sm font-normal cursor-pointer">
                     Link Party Level
