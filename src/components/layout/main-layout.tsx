@@ -9,8 +9,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
-import { ReferenceTool } from '@/components/tools/reference-tool'; // New Import
-import { Dices, Swords, Info } from 'lucide-react'; // Added Info icon
+import { ReferenceTool } from '@/components/tools/reference-tool'; 
+import { Dices, Swords, Info, UserRound, Dice2 } from 'lucide-react'; 
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
 import { CampaignSwitcher } from '@/components/shared/campaign-switcher';
@@ -20,7 +20,9 @@ import { CharacterForm } from '@/components/character-creator/character-form';
 import type { Character } from '@/lib/types';
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
-import { Dialog } from '@/components/ui/dialog'; // Ensure Dialog is imported
+import { Dialog } from '@/components/ui/dialog'; 
+import { PartySheet } from '@/components/party/party-sheet';
+
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -29,6 +31,8 @@ interface MainLayoutProps {
 function MainLayoutContent({ children }: MainLayoutProps) {
   const {
     activeCampaign,
+    campaigns,
+    setCampaignActive,
     selectedCharacterForProfile,
     isProfileOpen,
     closeProfileDialog,
@@ -68,7 +72,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     const randomSubclass = subclassesForClass.length > 0 ? subclassesForClass[Math.floor(Math.random() * subclassesForClass.length)] : '';
     const randomBackground = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
     
-    const namesForRace = DND_NAMES[randomRace] || DND_NAMES.Human; // Fallback to Human names
+    const namesForRace = DND_NAMES[randomRace] || DND_NAMES.Human; 
     const randomFirstName = namesForRace.firstNames[Math.floor(Math.random() * namesForRace.firstNames.length)];
     const randomLastName = namesForRace.lastNames[Math.floor(Math.random() * namesForRace.lastNames.length)];
     const characterName = `${randomFirstName} ${randomLastName}`;
@@ -88,8 +92,9 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       initiativeModifier: 0,
       currentExp: 0,
       nextLevelExp: 1000,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     };
-    openCharacterForm(randomizedData as Character);
+    openCharacterForm(randomizedData as Character); // Pass partial or full character for form prefill
     setIsRandomizingCharacterInDialog(false);
   };
 
@@ -111,8 +116,8 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           </header>
           
           <header className="sticky top-0 z-10 hidden h-14 shrink-0 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
-            {mounted && <CampaignSwitcher />}
-            {mounted && <SessionTools />}
+             {mounted && <CampaignSwitcher />}
+             {mounted && <SessionTools />}
           </header>
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
@@ -124,7 +129,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
           <Tabs defaultValue="dice" className="w-full flex-1 flex flex-col min-h-0">
             <TabsList className="grid w-full grid-cols-3 shrink-0 border border-neutral-500 dark:border-background">
               <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
-                <Dices className="h-4 w-4 mr-1 md:mr-2" />Dice
+                <Dice2 className="h-4 w-4 mr-1 md:mr-2" />Dice 
               </TabsTrigger>
               <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
@@ -152,6 +157,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 character={selectedCharacterForProfile}
                 isOpen={isProfileOpen}
                 onClose={closeProfileDialog}
+                // onEditCharacter is no longer passed as editing is internal
             />
         </Dialog>
       )}
@@ -192,3 +198,5 @@ export function MainLayout({ children }: MainLayoutProps) {
     </CampaignProvider>
   )
 }
+
+    
