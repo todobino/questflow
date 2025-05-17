@@ -4,13 +4,14 @@
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS, type DndClass } from '@/lib/dnd-data';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label'; // Added import
 import {
   Select,
   SelectContent,
@@ -26,7 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Edit3, Swords, Activity, ListChecks, Target, VenetianMask, Sparkles, Loader2, Save, XCircle } from 'lucide-react';
+import { Heart, Shield as ShieldIcon, Zap, Puzzle, FileText, Edit3, Swords, Activity, ListChecks, Target, VenetianMask, Sparkles, Loader2, Save, XCircle, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useCampaignContext } from '@/contexts/campaign-context';
@@ -34,7 +35,8 @@ import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { generateCharacterImage } from '@/ai/flows/generate-character-image';
+// Commented out generateCharacterImage as the button was removed
+// import { generateCharacterImage } from '@/ai/flows/generate-character-image';
 
 
 const characterProfileSchema = z.object({
@@ -75,7 +77,7 @@ interface CharacterProfileDialogProps {
   character: Character | null;
   isOpen: boolean;
   onClose: () => void;
-  // onEditCharacter prop is removed as editing is now internal
+  // onEditCharacter prop is removed as editing is handled internally
 }
 
 const ABILITIES_ORDER: (keyof NonNullable<Character['abilities']>)[] = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
@@ -93,12 +95,18 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
   const { updateCharacter } = useCampaignContext();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  // const [isGeneratingImage, setIsGeneratingImage] = useState(false); // New Portrait button removed
   const [availableSubclasses, setAvailableSubclasses] = useState<readonly string[]>([]);
   
   const form = useForm<CharacterProfileFormData>({
     resolver: zodResolver(characterProfileSchema),
-    defaultValues: character || {},
+    defaultValues: character || {
+        name: '', race: '', class: '', subclass: '', background: '',
+        level: 1, currentHp: 10, maxHp: 10, armorClass: 10, initiativeModifier: 0,
+        currentExp: 0, nextLevelExp: 1000,
+        abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+        backstory: '', imageUrl: 'https://placehold.co/400x400.png'
+    },
   });
 
   const selectedClass = form.watch('class') as DndClass | undefined;
@@ -133,8 +141,16 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
       if (character.class && SUBCLASSES[character.class as DndClass]) {
         setAvailableSubclasses(SUBCLASSES[character.class as DndClass]);
       }
+    } else {
+         form.reset({
+            name: '', race: '', class: '', subclass: '', background: '',
+            level: 1, currentHp: 10, maxHp: 10, armorClass: 10, initiativeModifier: 0,
+            currentExp: 0, nextLevelExp: 1000,
+            abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+            backstory: '', imageUrl: 'https://placehold.co/400x400.png'
+        });
     }
-  }, [character, form, isEditing]); // Reset form when character changes or edit mode toggles
+  }, [character, form, isEditing]);
 
   const handleSave = (data: CharacterProfileFormData) => {
     if (!character) return;
@@ -144,41 +160,19 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
   };
 
   const handleCancelEdit = () => {
-    if (character) form.reset(character); // Reset to original character data
+    if (character) form.reset(character); 
     setIsEditing(false);
   };
   
-  const handleGenerateNewPortrait = async () => {
-    if (!character) return;
-    setIsGeneratingImage(true);
-    try {
-      const result = await generateCharacterImage({
-        name: character.name,
-        race: character.race,
-        characterClass: character.class,
-        subclass: character.subclass,
-        background: character.background,
-        backstory: character.backstory,
-      });
-      if (character) { // Check character again in case dialog closed
-        updateCharacter({ ...character, imageUrl: result.imageUrl });
-        form.setValue('imageUrl', result.imageUrl); // Update form as well
-      }
-      // toast({ title: "Portrait Generated!", description: "The new character portrait has been applied." });
-    } catch (error) {
-      console.error("Error generating portrait:", error);
-      toast({ title: "Portrait Generation Failed", description: (error as Error).message || "Could not generate portrait.", variant: "destructive" });
-    }
-    setIsGeneratingImage(false);
-  };
-
+  // New Portrait button and its handler removed
+  // const handleGenerateNewPortrait = async () => { ... };
 
   if (!character) {
     return null;
   }
 
-  const expPercentage = (character.nextLevelExp && character.nextLevelExp > 0 && character.currentExp !== undefined)
-  ? (character.currentExp / character.nextLevelExp) * 100
+  const expPercentage = (form.watch('nextLevelExp') && form.watch('nextLevelExp')! > 0 && form.watch('currentExp') !== undefined)
+  ? (form.watch('currentExp')! / form.watch('nextLevelExp')!) * 100
   : 0;
 
   const imageSizeClasses = "w-24 h-24"; 
@@ -192,7 +186,12 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) {
+            setIsEditing(false); // Ensure edit mode is off when dialog closes
+            onClose();
+        }
+    }}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSave)}>
@@ -210,19 +209,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                         data-ai-hint={`${form.watch('race') || ''} ${form.watch('class') || ''} portrait`}
                         key={form.watch('imageUrl')} 
                       />
-                       {isEditing && (
-                        <Button 
-                            type="button"
-                            onClick={handleGenerateNewPortrait}
-                            disabled={isGeneratingImage}
-                            size="sm"
-                            className="absolute bottom-1 right-1 h-7 w-7 p-0"
-                            variant="outline"
-                            aria-label="Generate new portrait"
-                        >
-                            {isGeneratingImage ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4"/>}
-                        </Button>
-                       )}
+                       {/* New Portrait Button and logic removed */}
                   </div>
 
                   <div className="flex-1 flex flex-col space-y-0.5 pt-1">
@@ -240,36 +227,36 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                         )}
                       />
                     ) : (
-                       <DialogTitle className="text-xl sm:text-2xl text-left">{character.name}</DialogTitle>
+                       <DialogTitle className="text-xl sm:text-2xl text-left">{form.watch('name')}</DialogTitle>
                     )}
                    
                     <div className="text-xs text-muted-foreground text-left flex flex-wrap items-center gap-x-3 gap-y-0.5">
                        {isEditing ? (
                         <>
                           <FormField control={form.control} name="level" render={({ field }) => (<FormItem className="inline-flex items-center"><Swords className="mr-1.5 h-4 w-4 text-muted-foreground" /> Lvl <Input type="number" {...field} className="w-12 h-6 p-1 ml-1 text-xs"/> </FormItem> )} />
-                          <FormField control={form.control} name="race" render={({ field }) => (<FormItem className="inline-flex items-center"><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-6 p-1 text-xs"><SelectValue placeholder="Race" /></SelectTrigger></FormControl><SelectContent>{RACES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></FormItem> )} />
-                          <FormField control={form.control} name="class" render={({ field }) => (<FormItem className="inline-flex items-center"><Select onValueChange={(v)=>{field.onChange(v); form.setValue('subclass', '');}} value={field.value}><FormControl><SelectTrigger className="h-6 p-1 text-xs"><SelectValue placeholder="Class" /></SelectTrigger></FormControl><SelectContent>{CLASSES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></FormItem> )} />
-                          <FormField control={form.control} name="subclass" render={({ field }) => (<FormItem className="inline-flex items-center"><Select onValueChange={field.onChange} value={field.value} disabled={!selectedClass || availableSubclasses.length === 0}><FormControl><SelectTrigger className="h-6 p-1 text-xs"><SelectValue placeholder={selectedClass ? "Subclass" : "Select class first"} /></SelectTrigger></FormControl><SelectContent>{availableSubclasses.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}</SelectContent></Select></FormItem> )} />
-                          <FormField control={form.control} name="background" render={({ field }) => (<FormItem className="inline-flex items-center"><Puzzle className="mr-1.5 h-4 w-4 text-muted-foreground" /><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-6 p-1 text-xs"><SelectValue placeholder="Background" /></SelectTrigger></FormControl><SelectContent>{BACKGROUNDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></FormItem> )} />
+                          <FormField control={form.control} name="race" render={({ field }) => (<FormItem className="inline-flex items-center"><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger className="h-6 p-1 text-xs"><SelectValue placeholder="Race" /></SelectTrigger></FormControl><SelectContent>{RACES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></FormItem> )} />
+                          <FormField control={form.control} name="class" render={({ field }) => (<FormItem className="inline-flex items-center"><Select onValueChange={(v)=>{field.onChange(v); form.setValue('subclass', '');}} value={field.value || ''}><FormControl><SelectTrigger className="h-6 p-1 text-xs"><SelectValue placeholder="Class" /></SelectTrigger></FormControl><SelectContent>{CLASSES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></FormItem> )} />
+                          <FormField control={form.control} name="subclass" render={({ field }) => (<FormItem className="inline-flex items-center"><Select onValueChange={field.onChange} value={field.value || ''} disabled={!selectedClass || availableSubclasses.length === 0}><FormControl><SelectTrigger className="h-6 p-1 text-xs"><SelectValue placeholder={selectedClass ? "Subclass" : "Class first"} /></SelectTrigger></FormControl><SelectContent>{availableSubclasses.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}</SelectContent></Select></FormItem> )} />
+                          <FormField control={form.control} name="background" render={({ field }) => (<FormItem className="inline-flex items-center"><Puzzle className="mr-1.5 h-4 w-4 text-muted-foreground" /><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger className="h-6 p-1 text-xs"><SelectValue placeholder="Background" /></SelectTrigger></FormControl><SelectContent>{BACKGROUNDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></FormItem> )} />
                         </>
                        ) : (
                         <>
                           <span className="inline-flex items-center">
                               <Swords className="mr-1.5 h-4 w-4 text-muted-foreground" />
-                              Lvl {character.level || 1} {character.race || 'N/A'} {character.class || 'N/A'}
-                              {character.subclass ? ` (${character.subclass})` : ''}
+                              Lvl {form.watch('level') || 1} {form.watch('race') || 'N/A'} {form.watch('class') || 'N/A'}
+                              {form.watch('subclass') ? ` (${form.watch('subclass')})` : ''}
                           </span>
-                          {character.background && (
+                          {form.watch('background') && (
                               <span className="inline-flex items-center">
                                   <Puzzle className="mr-1.5 h-4 w-4 text-muted-foreground" />
-                                  {character.background}
+                                  {form.watch('background')}
                               </span>
                           )}
                         </>
                        )}
                     </div>
                     <div className="pt-0.5"> 
-                      <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
+                       <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                         <span className="flex items-center">
                           <strong className="mr-1 text-sm">XP:</strong> 
                           {isEditing ? (
@@ -277,14 +264,14 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                              <FormField control={form.control} name="currentExp" render={({ field }) => (<FormItem><Input type="number" {...field} className="w-16 h-6 p-1 mx-1 text-xs"/> </FormItem> )} /> / <FormField control={form.control} name="nextLevelExp" render={({ field }) => (<FormItem><Input type="number" {...field} className="w-16 h-6 p-1 ml-1 text-xs"/> </FormItem> )} />
                             </>
                           ) : (
-                            <span className="text-foreground text-sm">{character.currentExp ?? '0'} / {character.nextLevelExp ?? '?'}</span>
+                            <span className="text-foreground text-sm">{form.watch('currentExp') ?? '0'} / {form.watch('nextLevelExp') ?? '?'}</span>
                           )}
                         </span>
-                        {character.nextLevelExp && character.nextLevelExp > 0 && character.currentExp !== undefined && !isEditing && (
+                         {form.watch('nextLevelExp') && form.watch('nextLevelExp')! > 0 && form.watch('currentExp') !== undefined && !isEditing && (
                             <span className="text-sm">{Math.round(expPercentage)}%</span>
                         )}
                       </div>
-                      {character.nextLevelExp && character.nextLevelExp > 0 && character.currentExp !== undefined && !isEditing &&(
+                      {!isEditing && form.watch('nextLevelExp') && form.watch('nextLevelExp')! > 0 && form.watch('currentExp') !== undefined &&(
                           <Progress value={expPercentage} className="h-1.5" /> 
                       )}
                     </div>
@@ -302,9 +289,9 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                     </>
                    ) : (
                     <>
-                      <StatDisplay icon={Heart} label="HP" value={`${character.currentHp ?? '?'}/${character.maxHp ?? '?'}`} iconClassName="text-red-500" />
-                      <StatDisplay icon={ShieldIcon} label="AC" value={character.armorClass} iconClassName="text-sky-600"/>
-                      <StatDisplay icon={Zap} label="Init" value={character.initiativeModifier !== undefined ? (character.initiativeModifier >= 0 ? `+${character.initiativeModifier}`: character.initiativeModifier) : 'N/A'} iconClassName="text-yellow-500" />
+                      <StatDisplay icon={Heart} label="HP" value={`${form.watch('currentHp') ?? '?'}/${form.watch('maxHp') ?? '?'}`} iconClassName="text-red-500" />
+                      <StatDisplay icon={ShieldIcon} label="AC" value={form.watch('armorClass')} iconClassName="text-sky-600"/>
+                      <StatDisplay icon={Zap} label="Init" value={form.watch('initiativeModifier') !== undefined ? (form.watch('initiativeModifier')! >= 0 ? `+${form.watch('initiativeModifier')}`: form.watch('initiativeModifier')) : 'N/A'} iconClassName="text-yellow-500" />
                     </>
                    )}
                 </div>
@@ -341,7 +328,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                   <div className="space-y-4 p-4 border rounded-lg shadow-sm bg-background/30">
                     <h3 className="text-md font-semibold flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Ability Scores</h3>
                     {isEditing ? (
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
                             {ABILITIES_ORDER.map(abilityKey => (
                                 <FormField
                                     control={form.control}
@@ -349,23 +336,24 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                                     key={abilityKey}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs">{ABILITY_NAMES[abilityKey]}</FormLabel>
+                                            <FormLabel className="text-xs font-medium text-muted-foreground">{ABILITY_NAMES[abilityKey]}</FormLabel>
                                             <FormControl>
                                                 <Input type="number" {...field} className="h-7 p-1 text-xs" 
                                                  onChange={e => field.onChange(parseInt(e.target.value,10) || 0)}
                                                 />
                                             </FormControl>
+                                            <FormMessage className="text-xs"/>
                                         </FormItem>
                                     )}
                                 />
                             ))}
                         </div>
-                    ) : character.abilities ? (
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    ) : form.watch('abilities') ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
                             {ABILITIES_ORDER.map(abilityKey => (
                                 <div key={abilityKey} className="flex justify-between">
                                     <span className="font-medium text-muted-foreground">{ABILITY_NAMES[abilityKey]}:</span>
-                                    <span className="text-foreground">{character.abilities![abilityKey]}</span>
+                                    <span className="text-foreground">{form.watch('abilities')![abilityKey]}</span>
                                 </div>
                             ))}
                         </div>
@@ -406,7 +394,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                              />
                          ) : (
                             <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed pr-2">
-                            {character.backstory || 'No backstory provided.'}
+                            {form.watch('backstory') || 'No backstory provided.'}
                             </p>
                          )}
                       </ScrollArea>
@@ -421,5 +409,3 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
     </Dialog>
   );
 }
-
-    
