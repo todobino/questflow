@@ -27,9 +27,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Heart, Shield as ShieldIcon, Zap, Activity, ListChecks, Target, FileText, Edit3, Save, XCircle, VenetianMask, Puzzle, TrendingUp, Swords } from 'lucide-react';
+import { Heart, Shield as ShieldIcon, Zap, Activity, ListChecks, Target, FileText, Edit3, Save, XCircle, VenetianMask, Puzzle, TrendingUp, Swords, UserCircle, Dices, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Added useRef here
 import { useCampaignContext } from '@/contexts/campaign-context';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -73,7 +73,7 @@ interface CharacterProfileDialogProps {
   character: Character | null;
   isOpen: boolean;
   onClose: () => void;
-  // onEditCharacter is removed as editing is now internal
+  // onEditCharacter is removed as editing is handled internally
 }
 
 const ABILITIES_ORDER: (keyof NonNullable<Character['abilities']>)[] = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
@@ -86,13 +86,22 @@ const ABILITY_NAMES: { [key: string]: string } = {
   charisma: "CHA",
 };
 
+const StatDisplay = ({ icon: Icon, label, value, iconClassName, valueClassName }: { icon?: React.ElementType; label: string; value: string | number | undefined | null; iconClassName?: string; valueClassName?: string }) => (
+  <div className="flex items-center text-sm">
+    {Icon && <Icon className={cn("h-4 w-4 mr-2 text-muted-foreground", iconClassName)} />}
+    <span className="font-medium text-muted-foreground mr-1">{label}:</span>
+    <span className={cn("text-foreground", valueClassName)}>{value ?? 'N/A'}</span>
+  </div>
+);
+
+
 export function CharacterProfileDialog({ character, isOpen, onClose }: CharacterProfileDialogProps) {
   const { updateCharacter } = useCampaignContext();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [availableSubclasses, setAvailableSubclasses] = useState<readonly string[]>([]);
   
-  const currentCharacterRef = React.useRef(character); 
+  const currentCharacterRef = useRef(character); // To store the original character for cancel
 
   const form = useForm<CharacterProfileFormData>({
     resolver: zodResolver(characterProfileSchema),
@@ -107,11 +116,14 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
     } else {
       setAvailableSubclasses([]);
     }
-  }, [selectedClassWatch]);
+     if (isEditing && selectedClassWatch) {
+      form.setValue('subclass', ''); // Reset subclass if class changes during edit
+    }
+  }, [selectedClassWatch, isEditing, form]);
 
   useEffect(() => {
-    if (isOpen && character) { // Only reset form when dialog opens or character changes
-      currentCharacterRef.current = character;
+    if (isOpen && character) { 
+      currentCharacterRef.current = character; // Store original for cancel
       form.reset({
         name: character.name || '',
         race: character.race || '',
@@ -129,50 +141,56 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
         backstory: character.backstory || '',
         imageUrl: character.imageUrl || 'https://placehold.co/400x400.png',
       });
-      if (character.class && SUBCLASSES[character.class as DndClass]) {
+       if (character.class && SUBCLASSES[character.class as DndClass]) {
         setAvailableSubclasses(SUBCLASSES[character.class as DndClass]);
       }
     } else if (!isOpen) {
-      setIsEditing(false); // Reset editing state when dialog closes
+      setIsEditing(false); 
     }
-  }, [character, form.reset, isOpen]);
+  }, [character, form, isOpen]);
 
 
   const handleSave = (data: CharacterProfileFormData) => {
     if (!character) return;
-    updateCharacter({ ...character, ...data });
+    updateCharacter({ ...character, ...data }); // Spread existing character to keep campaignId and id
     setIsEditing(false);
     toast({ title: "Character Updated", description: `${data.name || 'Character'} has been updated.` });
   };
 
   const handleCancelEdit = () => {
-    if (currentCharacterRef.current) form.reset(currentCharacterRef.current); // Reset form to original data
+    if (currentCharacterRef.current) {
+        form.reset({ // Reset form to originally passed character
+            name: currentCharacterRef.current.name || '',
+            race: currentCharacterRef.current.race || '',
+            class: currentCharacterRef.current.class || '',
+            subclass: currentCharacterRef.current.subclass || '',
+            background: currentCharacterRef.current.background || '',
+            level: currentCharacterRef.current.level || 1,
+            currentHp: currentCharacterRef.current.currentHp !== undefined ? currentCharacterRef.current.currentHp : (currentCharacterRef.current.maxHp || 10),
+            maxHp: currentCharacterRef.current.maxHp || 10,
+            armorClass: currentCharacterRef.current.armorClass || 10,
+            initiativeModifier: currentCharacterRef.current.initiativeModifier || 0,
+            currentExp: currentCharacterRef.current.currentExp || 0,
+            nextLevelExp: currentCharacterRef.current.nextLevelExp || 1000,
+            abilities: currentCharacterRef.current.abilities || { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+            backstory: currentCharacterRef.current.backstory || '',
+            imageUrl: currentCharacterRef.current.imageUrl || 'https://placehold.co/400x400.png',
+        });
+    }
     setIsEditing(false);
   };
-
-  if (!character && !isEditing) { 
-    return null;
-  }
   
-  const displayCharacter = isEditing ? form.watch() : character; // Use form.watch() for live updates in edit mode
-  if (!displayCharacter) return null;
+  if (!character) return null; // Don't render if no character is selected
 
-  const expPercentage = (displayCharacter.nextLevelExp && displayCharacter.nextLevelExp > 0 && displayCharacter.currentExp !== undefined)
+  const displayCharacter = isEditing ? form.watch() : character; 
+  const expPercentage = (displayCharacter?.nextLevelExp && displayCharacter.nextLevelExp > 0 && displayCharacter.currentExp !== undefined)
     ? (displayCharacter.currentExp / displayCharacter.nextLevelExp) * 100
     : 0;
-
-  const StatDisplay = ({ icon: Icon, label, value, iconClassName, valueClassName }: { icon?: React.ElementType; label: string; value: string | number | undefined | null; iconClassName?: string; valueClassName?: string }) => (
-    <div className="flex items-center text-sm">
-      {Icon && <Icon className={cn("h-4 w-4 mr-2 text-muted-foreground", iconClassName)} />}
-      <span className="font-medium text-muted-foreground mr-1">{label}:</span>
-      <span className={cn("text-foreground", valueClassName)}>{value ?? 'N/A'}</span>
-    </div>
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
         if (!open) {
-            setIsEditing(false); 
+            if (isEditing) handleCancelEdit(); // Ensure changes are discarded if dialog is closed externally while editing
             onClose();
         }
     }}>
@@ -180,9 +198,10 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSave)}>
             <DialogHeader className="p-4 sm:p-6 border-b">
-              <div className="flex items-stretch justify-between gap-x-3 sm:gap-x-4">
-                {/* Left: Image */}
-                <div className="flex-shrink-0 w-24 h-24 relative rounded-lg overflow-hidden shadow-md bg-muted">
+              <div className="flex items-start justify-between gap-x-3 sm:gap-x-4">
+                {/* Left: Image + Info */}
+                <div className="flex items-start gap-x-3 sm:gap-x-4 flex-1 min-w-0">
+                  <div className="flex-shrink-0 w-24 h-24 relative rounded-lg overflow-hidden shadow-md bg-muted">
                     <Image
                       src={displayCharacter.imageUrl || 'https://placehold.co/96x96.png'}
                       alt={displayCharacter.name || 'Character'}
@@ -190,67 +209,63 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                       height={96}
                       className="object-cover w-full h-full"
                       data-ai-hint={`${displayCharacter.race || ''} ${displayCharacter.class || ''} portrait`}
-                      key={displayCharacter.imageUrl} // Important for re-rendering on image change
+                      key={displayCharacter.imageUrl} 
                     />
-                </div>
-                
-                {/* Center-Left: Main Info */}
-                <div className="flex-1 flex flex-col space-y-1 min-w-0">
-                  {isEditing ? (
-                     <FormField control={form.control} name="name" render={({ field }) => ( <FormItem className="mb-0.5"><FormControl><Input placeholder="Character Name" {...field} className="text-xl sm:text-2xl font-semibold p-1 h-auto border-0 focus-visible:ring-1 focus-visible:ring-ring" /></FormControl><FormMessage className="text-xs" /></FormItem>)} />
-                  ) : (
-                    <DialogTitle className="text-xl sm:text-2xl text-left">{displayCharacter.name || 'Character Profile'}</DialogTitle>
-                  )}
+                  </div>
                   
-                  {isEditing ? (
-                    <div className="grid grid-cols-2 gap-2 text-xs mt-1">
-                        <FormField control={form.control} name="race" render={({ field }) => (<FormItem><FormLabel className="text-xs">Race</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger className="h-7 p-1.5 text-xs"><SelectValue placeholder="Race" /></SelectTrigger></FormControl><SelectContent>{RACES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
-                        <FormField control={form.control} name="class" render={({ field }) => (<FormItem><FormLabel className="text-xs">Class</FormLabel><Select onValueChange={(v)=>{field.onChange(v); form.setValue('subclass', '');}} value={field.value || ''}><FormControl><SelectTrigger className="h-7 p-1.5 text-xs"><SelectValue placeholder="Class" /></SelectTrigger></FormControl><SelectContent>{CLASSES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
-                        <FormField control={form.control} name="subclass" render={({ field }) => (<FormItem><FormLabel className="text-xs">Subclass</FormLabel><Select onValueChange={field.onChange} value={field.value || ''} disabled={!selectedClassWatch || availableSubclasses.length === 0}><FormControl><SelectTrigger className="h-7 p-1.5 text-xs"><SelectValue placeholder="Subclass" /></SelectTrigger></FormControl><SelectContent>{availableSubclasses.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
-                        <FormField control={form.control} name="background" render={({ field }) => (<FormItem><FormLabel className="text-xs">Background</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger className="h-7 p-1.5 text-xs"><SelectValue placeholder="Background" /></SelectTrigger></FormControl><SelectContent>{BACKGROUNDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
+                  <div className="flex-1 flex flex-col space-y-1 min-w-0">
+                    {isEditing ? (
+                       <FormField control={form.control} name="name" render={({ field }) => ( <FormItem className="mb-0.5"><FormControl><Input placeholder="Character Name" {...field} className="text-xl sm:text-2xl font-semibold p-1 h-auto border-0 focus-visible:ring-1 focus-visible:ring-ring" /></FormControl><FormMessage className="text-xs" /></FormItem>)} />
+                    ) : (
+                      <DialogTitle className="text-xl sm:text-2xl text-left truncate">{displayCharacter.name || 'Character Profile'}</DialogTitle>
+                    )}
+                    
+                    <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                        {isEditing ? (
+                            <>
+                                <FormField control={form.control} name="level" render={({ field }) => (<FormItem className="w-20"><FormLabel className="text-xs sr-only">Level</FormLabel><Input type="number" {...field} placeholder="Lvl" className="h-6 p-1 text-xs"/></FormItem> )} />
+                                <FormField control={form.control} name="race" render={({ field }) => (<FormItem className="flex-1 min-w-[80px]"><FormLabel className="text-xs sr-only">Race</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger className="h-6 p-1.5 text-xs"><SelectValue placeholder="Race" /></SelectTrigger></FormControl><SelectContent>{RACES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
+                                <FormField control={form.control} name="class" render={({ field }) => (<FormItem className="flex-1 min-w-[80px]"><FormLabel className="text-xs sr-only">Class</FormLabel><Select onValueChange={(v)=>{field.onChange(v); form.setValue('subclass', '');}} value={field.value || ''}><FormControl><SelectTrigger className="h-6 p-1.5 text-xs"><SelectValue placeholder="Class" /></SelectTrigger></FormControl><SelectContent>{CLASSES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
+                                <FormField control={form.control} name="subclass" render={({ field }) => (<FormItem className="flex-1 min-w-[80px]"><FormLabel className="text-xs sr-only">Subclass</FormLabel><Select onValueChange={field.onChange} value={field.value || ''} disabled={!selectedClassWatch || availableSubclasses.length === 0}><FormControl><SelectTrigger className="h-6 p-1.5 text-xs"><SelectValue placeholder="Subclass" /></SelectTrigger></FormControl><SelectContent>{availableSubclasses.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
+                                <FormField control={form.control} name="background" render={({ field }) => (<FormItem className="flex-1 min-w-[80px]"><FormLabel className="text-xs sr-only">Background</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger className="h-6 p-1.5 text-xs"><SelectValue placeholder="Background" /></SelectTrigger></FormControl><SelectContent>{BACKGROUNDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
+                            </>
+                        ) : (
+                            <>
+                                <span className="flex items-center"><UserCircle className="mr-1 h-3.5 w-3.5 text-muted-foreground" />Lvl {displayCharacter.level || 1}</span>
+                                <span className="truncate">{displayCharacter.race || 'N/A'} {displayCharacter.class || 'N/A'}{displayCharacter.subclass ? ` (${displayCharacter.subclass})` : ''}</span>
+                                {displayCharacter.background && <span className="flex items-center"><Puzzle className="mr-1 h-3.5 w-3.5 text-muted-foreground" />{displayCharacter.background}</span>}
+                            </>
+                        )}
                     </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground text-left flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                        <span>{displayCharacter.race || 'N/A'}</span>
-                        <span>{displayCharacter.class || 'N/A'}</span>
-                        {displayCharacter.subclass && <span>({displayCharacter.subclass})</span>}
-                        {displayCharacter.background && <span className="italic">, {displayCharacter.background}</span>}
-                    </p>
-                  )}
 
-                  <div className="pt-0.5 text-xs">
-                    <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
-                        <span className="font-bold text-foreground">XP:</span> 
-                        <span>{displayCharacter.currentExp ?? '0'} / {displayCharacter.nextLevelExp ?? '?'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span>Lvl {displayCharacter.level || 1}</span>
-                        <Progress value={expPercentage} className="h-1.5 flex-1" />
-                        <span>Lvl {(displayCharacter.level || 0) + 1}</span>
+                    <div className="pt-0.5 text-xs">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
+                          <span className="font-bold text-foreground">XP:</span> 
+                          <span>{displayCharacter.currentExp ?? '0'} / {displayCharacter.nextLevelExp ?? '?'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <span>Lvl {displayCharacter.level || 1}</span>
+                          <Progress value={expPercentage} className="h-1.5 flex-1" />
+                          <span>Lvl {(displayCharacter.level || 0) + 1}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Center-Right: Combat Stats */}
-                 <div className={cn("flex-shrink-0 p-2 border rounded-md bg-muted/30 space-y-0.5 flex flex-col justify-center", isEditing ? "w-48" : "w-auto")}>
+                {/* Center: Combat Stats Box */}
+                <div className={cn("flex-shrink-0 p-3 border rounded-md bg-muted/30 space-y-1 flex flex-col justify-center items-stretch w-40", isEditing ? "min-h-[100px]" : "")}> {/* Adjusted width and min-height for edit mode */}
                     {isEditing ? (
                         <>
-                          <FormField control={form.control} name="level" render={({ field }) => (<FormItem><FormLabel className="text-xs">Level</FormLabel><Input type="number" {...field} placeholder="Lvl" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
-                          <FormField control={form.control} name="currentHp" render={({ field }) => (<FormItem><FormLabel className="text-xs">HP</FormLabel><Input type="number" {...field} placeholder="Current HP" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
-                          <FormField control={form.control} name="maxHp" render={({ field }) => (<FormItem><FormLabel className="text-xs">Max HP</FormLabel><Input type="number" {...field} placeholder="Max HP" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
-                          <FormField control={form.control} name="armorClass" render={({ field }) => (<FormItem><FormLabel className="text-xs">AC</FormLabel><Input type="number" {...field} placeholder="AC" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
-                          <FormField control={form.control} name="initiativeModifier" render={({ field }) => (<FormItem><FormLabel className="text-xs">Init. Mod</FormLabel><Input type="number" {...field} placeholder="Init Mod" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
+                          <FormField control={form.control} name="currentHp" render={({ field }) => (<FormItem><FormLabel className="text-xs">HP</FormLabel><Input type="number" {...field} placeholder="Current HP" className="h-6 p-1 text-xs"/></FormItem> )} />
+                          <FormField control={form.control} name="maxHp" render={({ field }) => (<FormItem><FormLabel className="text-xs">Max HP</FormLabel><Input type="number" {...field} placeholder="Max HP" className="h-6 p-1 text-xs"/></FormItem> )} />
+                          <FormField control={form.control} name="armorClass" render={({ field }) => (<FormItem><FormLabel className="text-xs">AC</FormLabel><Input type="number" {...field} placeholder="AC" className="h-6 p-1 text-xs"/></FormItem> )} />
+                          <FormField control={form.control} name="initiativeModifier" render={({ field }) => (<FormItem><FormLabel className="text-xs">Init. Mod</FormLabel><Input type="number" {...field} placeholder="Init Mod" className="h-6 p-1 text-xs"/></FormItem> )} />
                         </>
                     ) : (
                         <>
-                           <div className="flex justify-between w-full">
-                                <StatDisplay icon={Heart} label="HP" value={`${displayCharacter.currentHp ?? '?'}/${displayCharacter.maxHp ?? '?'}`} iconClassName="text-red-500" />
-                                <StatDisplay icon={ShieldIcon} label="AC" value={displayCharacter.armorClass} iconClassName="text-sky-600"/>
-                            </div>
-                            <div className="flex justify-between w-full">
-                               <StatDisplay icon={Zap} label="Lvl" value={displayCharacter.level} />
-                               <StatDisplay icon={Activity} label="Init" value={displayCharacter.initiativeModifier !== undefined ? (displayCharacter.initiativeModifier >= 0 ? `+${displayCharacter.initiativeModifier}`: displayCharacter.initiativeModifier) : 'N/A'} iconClassName="text-yellow-500" />
-                            </div>
+                            <StatDisplay icon={Heart} label="HP" value={`${displayCharacter.currentHp ?? '?'}/${displayCharacter.maxHp ?? '?'}`} iconClassName="text-red-500" />
+                            <StatDisplay icon={ShieldIcon} label="AC" value={displayCharacter.armorClass} iconClassName="text-sky-600"/>
+                            <StatDisplay icon={Dices} label="Init" value={displayCharacter.initiativeModifier !== undefined ? (displayCharacter.initiativeModifier >= 0 ? `+${displayCharacter.initiativeModifier}`: displayCharacter.initiativeModifier) : 'N/A'} iconClassName="text-yellow-500" />
                         </>
                     )}
                 </div>
@@ -306,7 +321,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                         <p className="text-sm text-muted-foreground italic">Goals and milestones tracking coming soon.</p>
                     </div>
 
-                    <div className="p-4 border rounded-lg shadow-sm bg-background/30 flex-grow flex flex-col min-h-[200px]">
+                    <div className="p-4 border rounded-lg shadow-sm bg-background/30 flex-grow flex flex-col min-h-[150px] sm:min-h-[200px]">
                       <h3 className="text-lg font-semibold flex items-center mb-2"><FileText className="h-5 w-5 mr-2 text-primary" />Backstory</h3>
                       <ScrollArea className="flex-1 max-h-48 sm:max-h-64 min-h-0">
                          {isEditing ? (
@@ -337,7 +352,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                 </div>
               </div>
             </ScrollArea>
-            <DialogFooter className="px-4 py-2 sm:px-6 sm:py-3 border-t bg-muted/50 justify-end">
+             <DialogFooter className="p-2 sm:p-3 border-t bg-muted/50 justify-end">
                  {isEditing ? (
                     <>
                       <Button type="button" variant="ghost" onClick={handleCancelEdit} size="sm">
@@ -365,4 +380,3 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
   );
 }
 
-    
