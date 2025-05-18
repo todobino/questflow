@@ -56,7 +56,6 @@ export default function FactionsQuestsPage() {
           <AccordionTrigger className="px-6 py-4 hover:no-underline">
             <div className="flex flex-col items-start text-left">
                 <CardTitle className="flex items-center text-lg"> 
-                    {/* text-lg instead of text-2xl from CardTitle default */}
                     <Info className="mr-2 h-5 w-5 text-primary" />
                     Understanding Faction Reputation
                 </CardTitle>
@@ -116,15 +115,15 @@ export default function FactionsQuestsPage() {
                 return (
                   <Card key={faction.id} className="shadow-lg flex flex-col">
                     <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-xl">{faction.name}</CardTitle>
+                      <CardTitle className="text-xl">{faction.name}</CardTitle>
+                      <div className="flex items-center mt-1 mb-2">
+                        <span className="text-sm text-muted-foreground mr-2">
+                            Reputation: <span className="font-semibold">{repScore >= 0 ? `+${repScore}` : repScore}</span>
+                        </span>
                         <Badge variant="secondary" className={`text-xs ${color} text-white`}>{milestone}</Badge>
                       </div>
-                      <CardDescription className="text-sm text-muted-foreground pt-1">
-                        Reputation: <span className="font-semibold">{repScore >= 0 ? `+${repScore}` : repScore}</span>
-                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-grow">
+                    <CardContent className="flex-grow pt-0"> {/* Adjusted padding to pt-0 since reputation is now in header */}
                       <p className="text-sm">{faction.description || 'No description available.'}</p>
                     </CardContent>
                   </Card>
@@ -137,3 +136,4 @@ export default function FactionsQuestsPage() {
     </>
   );
 }
+
