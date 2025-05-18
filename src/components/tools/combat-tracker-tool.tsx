@@ -32,7 +32,9 @@ import {
   Skull,
   ShieldPlus,
   Settings2,
-  Info
+  Info,
+  Bot,
+  ShieldX // Added ShieldX
 } from 'lucide-react';
 import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -89,10 +91,8 @@ const ENEMY_INITIATIVE_BG = 'bg-destructive text-destructive-foreground';
 export function CombatTrackerTool() {
   const { activeCampaign, characters: partyCharacters, setIsCombatActive } = useCampaignContext();
   const [combatants, setCombatants] = useState<Combatant[]>([]);
-
   const [isAddCombatantDialogOpen, setIsAddCombatantDialogOpen] = useState(false);
   const [addCombatantDialogTab, setAddCombatantDialogTab] = useState<'enemy' | 'ally'>('enemy');
-
 
   const [selectedPlayerCharacterId, setSelectedPlayerCharacterId] = useState<string | undefined>(undefined);
   const [playerInitiativeInput, setPlayerInitiativeInput] = useState('');
@@ -104,6 +104,7 @@ export function CombatTrackerTool() {
   const [newCombatantAC, setNewCombatantAC] = useState('');
   const [newCombatantQuantity, setNewCombatantQuantity] = useState('1');
   const [newCombatantInitiativeRollType, setNewCombatantInitiativeRollType] = useState<'group' | 'individual'>('individual');
+
 
   const [round, setRound] = useState(0);
   const [turnIndex, setTurnIndex] = useState(0);
@@ -121,9 +122,7 @@ export function CombatTrackerTool() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (setIsCombatActive) {
-      setIsCombatActive(combatStarted);
-    }
+    setIsCombatActive(combatStarted);
   }, [combatStarted, setIsCombatActive]);
 
   const sortedCombatants = useMemo(() => {
@@ -139,8 +138,8 @@ export function CombatTrackerTool() {
   const roll1d20 = () => Math.floor(Math.random() * 20) + 1;
 
   const handleAddAllyOrEnemyFromDialog = () => {
-    if (!newCombatantName || !newCombatantHp ) { 
-      toast({ title: 'Missing Info', description: 'Name and Current HP are required.', variant: 'destructive' });
+    if (!newCombatantName || !newCombatantHp || !newCombatantInitiativeModifier) { 
+      toast({ title: 'Missing Info', description: 'Name, Current HP, and Initiative Modifier are required.', variant: 'destructive' });
       return;
     }
     
@@ -150,7 +149,8 @@ export function CombatTrackerTool() {
         if (!isNaN(parsedMod)) {
             initiativeModifierValue = parsedMod;
         } else {
-             toast({ title: 'Invalid Modifier', description: 'Initiative Modifier must be a number. Defaulting to 0.', variant: 'destructive' });
+             toast({ title: 'Invalid Modifier', description: 'Initiative Modifier must be a number.', variant: 'destructive' });
+             return; // Added return to stop execution if modifier is invalid
         }
     }
 
@@ -202,7 +202,7 @@ export function CombatTrackerTool() {
       }
 
       let displayColor: string;
-      let typeForCombatant: 'enemy' | 'player';
+      let typeForCombatant: 'enemy' | 'player'; // 'player' type is used for allies to distinguish from enemies but not be full player characters
 
       if (addCombatantDialogTab === 'ally') {
         displayColor = ALLY_COLOR;
@@ -242,10 +242,12 @@ export function CombatTrackerTool() {
 
   const handleAddPlayerFromDialog = () => {
     if (!selectedPlayerCharacterId) {
+        toast({ title: "No Player Selected", description: "Please select a player character.", variant: "destructive" });
         return;
     }
     const characterToAdd = partyCharacters.find(p => p.id === selectedPlayerCharacterId);
     if (!characterToAdd) {
+        toast({ title: "Character Not Found", description: "Selected player character could not be found.", variant: "destructive" });
         return;
     }
 
@@ -282,14 +284,14 @@ export function CombatTrackerTool() {
 
   const handleAddPartyToCombat = () => {
     if (!activeCampaign || !partyCharacters || partyCharacters.length === 0) {
-        toast({ title: "No Party", description: "No characters in the active campaign's party to add.", variant: "destructive"});
+        // toast({ title: "No Party", description: "No characters in the active campaign's party to add.", variant: "destructive"});
         return;
     }
 
     let updatedCombatantsList = [...combatants];
     const newPartyCombatants: Combatant[] = [];
 
-    partyCharacters.forEach((char, index) => {
+    partyCharacters.forEach((char) => {
         if (char.campaignId === activeCampaign.id) {
             const newInitiative = roll1d20() + (char.initiativeModifier ?? 0);
             const existingCombatantIndex = updatedCombatantsList.findIndex(c => c.originalCharacterId === char.id);
@@ -341,6 +343,9 @@ export function CombatTrackerTool() {
         setTurnIndex(0);
         setCombatStarted(true);
         setRoundChangeMessage("Round 1");
+    } else if (sortedList.length > 0 && combatStarted) {
+        // If combat is already started, re-sort but don't reset round/turn
+        // This handles cases where party is "re-rolled" into an ongoing combat
     }
   };
 
@@ -447,14 +452,29 @@ export function CombatTrackerTool() {
 
   const handleRollPlayerDialogInitiative = () => {
       if (!selectedPlayerCharacterId) {
+          toast({ title: "No Player Selected", description: "Select a player to roll initiative.", variant: "destructive" });
           return;
       }
       const character = partyCharacters.find(p => p.id === selectedPlayerCharacterId);
       if (!character) {
+          toast({ title: "Character Not Found", description: "Could not find selected character.", variant: "destructive" });
           return;
       }
       const initiativeRoll = roll1d20() + (character.initiativeModifier ?? 0);
       setPlayerInitiativeInput(String(initiativeRoll));
+  };
+  
+  const startCombat = () => {
+    if (combatants.length === 0) {
+      toast({ title: "Empty Combat", description: "Add some combatants before starting.", variant: "destructive"});
+      return;
+    }
+    const sortedList = combatants.sort((a,b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
+    setCombatants(sortedList);
+    setRound(1);
+    setTurnIndex(0);
+    setCombatStarted(true);
+    setRoundChangeMessage("Round 1");
   };
 
   return (
@@ -467,7 +487,12 @@ export function CombatTrackerTool() {
         </div>
       )}
       
-      <div className="flex flex-col h-full">
+      <div className={cn(
+        "flex flex-col h-full rounded-lg shadow-lg",
+        combatStarted ? "border-2 border-alert bg-card" : "border border-border bg-card"
+        )}
+      >
+        {/* Header for Title and History Button */}
         <div className="px-2.5 py-2 flex flex-row items-center justify-between border-b border-border">
             <h3 className="flex items-center text-lg font-semibold">
                 <Swords className="mr-2 h-5 w-5 text-primary" />
@@ -484,8 +509,9 @@ export function CombatTrackerTool() {
             </Button>
         </div>
           
+        {/* Scrollable Combatant List */}
         <div className="px-2.5 py-2 flex-grow overflow-y-auto"> 
-          {combatants.length === 0 ? (
+          {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
             <ul className="space-y-2.5">
@@ -541,7 +567,7 @@ export function CombatTrackerTool() {
                           <div className="flex-grow flex flex-col min-w-0">
                               <h4 className={cn(
                                   "font-semibold text-md truncate",
-                                  'text-gray-800 dark:text-gray-100'
+                                  'text-gray-800 dark:text-gray-100' // Ensure name is readable on light backgrounds
                               )}
                               >
                                   {c.name}
@@ -633,26 +659,26 @@ export function CombatTrackerTool() {
             </ul>
           )}
         </div>
-        <div className="p-2 border-t border-border"> {/* Add Combatant button section */}
+         {/* Add Combatant Button Section */}
+        <div className="p-2 border-t border-border">
             <Button 
                 variant="outline" 
                 size="sm" 
                 className="w-full hover:bg-background hover:border-primary hover:text-primary"
                 onClick={() => {
-                    setAddCombatantDialogTab('enemy'); 
+                    setAddCombatantDialogTab('enemy'); // Default to enemy when opening dialog this way
                     setIsAddCombatantDialogOpen(true);
                 }}
             >
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Combatant
             </Button>
         </div>
+        {/* Footer for Combat Controls */}
         <div className="p-2 border-t border-border flex items-center gap-2 w-full">
             {!combatStarted ? (
-                <>
-                  <Button onClick={handleAddPartyToCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
-                      <PlayCircle className="mr-2 h-4 w-4" /> Roll & Start
-                  </Button>
-                </>
+                 <Button onClick={handleAddPartyToCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm" disabled={!activeCampaign || partyCharacters.length === 0}>
+                    <PlayCircle className="mr-2 h-4 w-4" /> Roll & Start
+                 </Button>
             ) : (
                 <Button onClick={nextTurn} className="flex-1" size="sm">
                 <ArrowRight className="mr-2 h-4 w-4" /> Next Turn
@@ -672,7 +698,6 @@ export function CombatTrackerTool() {
       <Dialog open={isAddCombatantDialogOpen} onOpenChange={(isOpen) => {
           setIsAddCombatantDialogOpen(isOpen);
           if (!isOpen) {
-              setAddCombatantDialogTab('enemy');
               setNewCombatantName('');
               setNewCombatantHp('');
               setNewCombatantMaxHp('');
@@ -748,7 +773,7 @@ export function CombatTrackerTool() {
               <ShadDialogFooter className="pt-4">
                 <Button variant="outline" onClick={() => setIsAddCombatantDialogOpen(false)}>Cancel</Button>
                 <Button onClick={handleAddAllyOrEnemyFromDialog}>
-                   Add {parseInt(newCombatantQuantity, 10) > 1 && addCombatantDialogTab === 'enemy' 
+                  Add {parseInt(newCombatantQuantity, 10) > 1 && addCombatantDialogTab === 'enemy' 
                     ? 'Enemies' 
                     : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}
                 </Button>
@@ -889,4 +914,5 @@ export function CombatTrackerTool() {
     </>
   );
 }
+
 
