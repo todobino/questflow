@@ -7,7 +7,6 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SidebarNav } from './sidebar-nav';
 import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PartySheet } from '@/components/party/party-sheet';
 import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
 import { ReferenceTool } from '@/components/tools/reference-tool'; 
@@ -23,6 +22,7 @@ import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
 import { Dialog } from '@/components/ui/dialog'; 
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 
 interface MainLayoutProps {
@@ -46,8 +46,6 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     isCharacterFormOpen,
     openCharacterForm,
     closeCharacterForm,
-    addCharacter,
-    updateCharacter,
     isCombatActive,
   } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
@@ -86,8 +84,8 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       class: randomClass,
       subclass: randomSubclass,
       background: randomBackground,
-      backstory: '', // AI no longer generates this part for this button
-      imageUrl: `https://placehold.co/400x400.png`, // Default placeholder
+      backstory: '', 
+      imageUrl: `https://placehold.co/400x400.png`, 
       level: 1,
       currentHp: 10,
       maxHp: 10,
@@ -97,7 +95,6 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       nextLevelExp: 1000,
       abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     };
-    // Directly pass to openCharacterForm to pre-fill
     openCharacterForm(randomizedData as Character); 
     setIsRandomizingCharacterInDialog(false);
   };
@@ -119,9 +116,17 @@ function MainLayoutContent({ children }: MainLayoutProps) {
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign.name}</h1>}
           </header>
           
-          <header className="sticky top-0 z-10 hidden h-14 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
+          <header className="sticky top-0 z-10 hidden h-14 shrink-0 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
              {mounted && <CampaignSwitcher />}
-             {mounted && <SessionTools />}
+             <div className="flex items-center gap-3">
+                {mounted && <SessionTools />}
+                {mounted && isCombatActive && (
+                  <Badge variant="alert" className="font-semibold px-2 py-1 text-xs">
+                    <Swords className="mr-1.5 h-3.5 w-3.5" />
+                    IN COMBAT
+                  </Badge>
+                )}
+              </div>
           </header>
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
@@ -131,16 +136,13 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
         <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground px-4 pt-2 pb-4 hidden md:flex flex-col overflow-hidden">
           <Tabs defaultValue="dice" className="w-full flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-3 shrink-0">
+            <TabsList className="grid w-full grid-cols-3 shrink-0 border border-neutral-500 dark:border-background">
               <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold">
                 <Dice2 className="h-4 w-4 mr-1 md:mr-2" />Dice 
               </TabsTrigger>
               <TabsTrigger 
                 value="combat" 
-                className={cn(
-                  "text-xs px-1 py-1.5 h-auto font-bold",
-                  isCombatActive && 'text-alert data-[state=active]:text-alert data-[state=inactive]:hover:text-alert'
-                )}
+                className="text-xs px-1 py-1.5 h-auto font-bold"
               >
                 <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
               </TabsTrigger>
@@ -154,9 +156,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
             <TabsContent
               forceMount
               value="combat"
-              className={cn( // This TabsContent now just handles overflow and basic flex properties
-                "flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0 pt-3"
-              )}
+              className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0 pt-3"
             >
               <CombatTrackerTool />
             </TabsContent>
