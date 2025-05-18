@@ -62,7 +62,7 @@ export function PartySheet() {
             </p>
             <p className="text-xs text-muted-foreground">{Math.round(partyStaminaPercentage)}%</p>
           </div>
-          <Progress value={partyStaminaPercentage} className="h-2 [&>div]:bg-primary dark:[&>div]:bg-primary-foreground" />
+          <Progress value={partyStaminaPercentage} className="h-2 [&>div]:bg-alert" />
         </div>
       )}
 
@@ -103,7 +103,7 @@ export function PartySheet() {
                         <span className="font-semibold text-foreground">{member.armorClass}</span>
                       </div>
                     )}
-                    {member.currentHp !== undefined && member.maxHp !== undefined && (
+                     {member.currentHp !== undefined && member.maxHp !== undefined && (
                       <div className="flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm text-xs">
                         <Heart className="h-3.5 w-3.5 mr-1 text-red-500" />
                         <span className="font-semibold text-foreground">{member.currentHp}/{member.maxHp}</span>
@@ -115,7 +115,7 @@ export function PartySheet() {
                     <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                       <span className="flex items-center">
                         <Award className="h-3 w-3 mr-1 text-amber-500" />
-                        EXP: {member.currentExp ?? '0'} / {member.nextLevelExp ?? '?'}
+                        EXP: {member.currentExp ?? 0} / {member.nextLevelExp ?? '?'}
                       </span>
                       {member.nextLevelExp && member.nextLevelExp > 0 && member.currentExp !== undefined && (
                          <span>{Math.round(expPercentage)}%</span>
