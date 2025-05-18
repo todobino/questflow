@@ -19,7 +19,7 @@ import { SessionTools } from '@/components/shared/session-tools';
 import { SwitchCampaignDialog } from '@/components/shared/switch-campaign-dialog';
 import { CharacterForm } from '@/components/character-creator/character-form';
 import type { Character } from '@/lib/types';
-import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS } from '@/lib/dnd-data';
+import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS, type DndClass } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
 import { Dialog } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -33,6 +33,8 @@ interface MainLayoutProps {
 function MainLayoutContent({ children }: MainLayoutProps) {
   const {
     activeCampaign,
+    campaigns,
+    setCampaignActive,
     selectedCharacterForProfile,
     isProfileOpen,
     closeProfileDialog,
@@ -70,11 +72,11 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     setIsRandomizingCharacterInDialog(true);
     const randomRace = RACES[Math.floor(Math.random() * RACES.length)];
     const randomClass = CLASSES[Math.floor(Math.random() * CLASSES.length)];
-    const subclassesForClass = SUBCLASSES[randomClass] || [];
+    const subclassesForClass = SUBCLASSES[randomClass as DndClass] || [];
     const randomSubclass = subclassesForClass.length > 0 ? subclassesForClass[Math.floor(Math.random() * subclassesForClass.length)] : '';
     const randomBackground = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
     
-    const namesForRace = DND_NAMES[randomRace] || DND_NAMES.Human; 
+    const namesForRace = DND_NAMES[randomRace as Race] || DND_NAMES.Human; 
     const randomFirstName = namesForRace.firstNames[Math.floor(Math.random() * namesForRace.firstNames.length)];
     const randomLastName = namesForRace.lastNames[Math.floor(Math.random() * namesForRace.lastNames.length)];
     const characterName = `${randomFirstName} ${randomLastName}`;
@@ -97,17 +99,15 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     };
     
-    // Directly pass the randomized data to the form update logic
-    if (editingCharacterForForm) { // If editing, merge with existing ID
+    if (editingCharacterForForm) { 
       openCharacterForm({ ...editingCharacterForForm, ...randomizedData } as Character);
-    } else { // If new, pass as partial
+    } else { 
       openCharacterForm(randomizedData as Character);
     }
     setIsRandomizingCharacterInDialog(false);
   };
 
   if (!mounted) {
-    // Return null or a skeleton loader if you prefer, to avoid rendering anything before client-side mount
     return null; 
   }
 
@@ -128,7 +128,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
              <div className="flex items-center gap-3">
                 {mounted && <SessionTools />}
                 {mounted && isCombatActive && (
-                  <Badge variant="alert" className="font-semibold px-2 py-1 text-xs rounded-md text-primary-foreground">
+                  <Badge variant="alert" className="font-medium px-2 py-1 text-xs rounded-md text-primary-foreground">
                     <Swords className="mr-1.5 h-3.5 w-3.5" />
                     In Combat
                   </Badge>
@@ -152,7 +152,10 @@ function MainLayoutContent({ children }: MainLayoutProps) {
               </TabsTrigger>
               <TabsTrigger 
                 value="combat" 
-                className="text-xs px-1 py-1.5 h-auto font-bold"
+                className={cn(
+                  "text-xs px-1 py-1.5 h-auto font-bold",
+                  isCombatActive && 'text-alert data-[state=active]:text-alert data-[state=inactive]:hover:text-alert'
+                )}
               >
                 <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
               </TabsTrigger>
@@ -160,7 +163,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 <Info className="h-4 w-4 mr-1 md:mr-2" />Info
               </TabsTrigger>
             </TabsList>
-            <TabsContent forceMount value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
+             <TabsContent forceMount value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               <DiceRollerTool />
             </TabsContent>
             <TabsContent
