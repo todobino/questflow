@@ -21,7 +21,7 @@ import type { Character } from '@/lib/types';
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
 import { Dialog } from '@/components/ui/dialog'; 
-// Removed PartySheet import as it's no longer directly used here
+import { cn } from '@/lib/utils'; // Added import for cn
 
 
 interface MainLayoutProps {
@@ -45,9 +45,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     isCharacterFormOpen,
     openCharacterForm,
     closeCharacterForm,
-    addCharacter,
-    updateCharacter,
-    isCombatActive, // Consumed from context
+    isCombatActive, 
   } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
   const [isRandomizingCharacterInDialog, setIsRandomizingCharacterInDialog] = useState(false);
@@ -198,9 +196,20 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; 
+  }
+  
   return (
     <CampaignProvider>
       <MainLayoutContent>{children}</MainLayoutContent>
     </CampaignProvider>
   )
 }
+
