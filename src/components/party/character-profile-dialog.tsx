@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Ensured useRef is imported
 import Image from 'next/image';
 import type { Character } from '@/lib/types';
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS, type DndClass } from '@/lib/dnd-data';
@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Added Label import
 import {
   Select,
   SelectContent,
@@ -28,15 +28,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Heart, Shield as ShieldIcon, Zap, Activity, ListChecks, Target, FileText, Edit3, Save, XCircle, UserCircle, Brain, VenetianMask, Puzzle, TrendingUp, UserRound, Dices, Swords, Sparkles, Loader2 } from 'lucide-react';
+import { Heart, Shield as ShieldIcon, Zap, Activity, ListChecks, Target, FileText, Edit3, Save, XCircle, UserCircle, Brain, VenetianMask, Puzzle, TrendingUp, Swords } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCampaignContext } from '@/contexts/campaign-context';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { generateCharacterImage } from '@/ai/flows/generate-character-image';
-
+// Removed generateCharacterImage import as New Portrait button was removed
 
 const characterProfileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
@@ -60,7 +59,7 @@ const characterProfileSchema = z.object({
     charisma: z.coerce.number().int().min(1).max(30).optional().default(10),
   }).optional(),
   backstory: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal('')).default('https://placehold.co/400x400.png'),
+  imageUrl: z.string().url().optional().or(z.literal('')).default('https://placehold.co/96x96.png'),
 }).refine(data => data.currentHp === undefined || data.maxHp === undefined || data.currentHp <= data.maxHp, {
   message: "Current HP cannot exceed Max HP",
   path: ["currentHp"],
@@ -75,6 +74,7 @@ interface CharacterProfileDialogProps {
   character: Character | null;
   isOpen: boolean;
   onClose: () => void;
+  // onEditCharacter prop removed as editing is now internal
 }
 
 const ABILITIES_ORDER: (keyof NonNullable<Character['abilities']>)[] = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
@@ -100,10 +100,10 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
   const { updateCharacter } = useCampaignContext();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  // const [isGeneratingImage, setIsGeneratingImage] = useState(false); // Removed as New Portrait button was removed
   const [availableSubclasses, setAvailableSubclasses] = useState<readonly string[]>([]);
   
-  const currentCharacterRef = React.useRef(character); 
+  const currentCharacterRef = useRef(character); // Use useRef directly
 
   const form = useForm<CharacterProfileFormData>({
     resolver: zodResolver(characterProfileSchema),
@@ -201,33 +201,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
     setIsEditing(false);
   };
   
-  const handleGenerateImage = async () => {
-    if (!character) return;
-    setIsGeneratingImage(true);
-    try {
-      const result = await generateCharacterImage({
-        name: form.getValues('name') || character.name,
-        race: form.getValues('race') || character.race,
-        characterClass: form.getValues('class') || character.class,
-        subclass: form.getValues('subclass') || character.subclass,
-        background: form.getValues('background') || character.background,
-        backstory: form.getValues('backstory') || character.backstory,
-      });
-      if (result.imageUrl) {
-        form.setValue('imageUrl', result.imageUrl);
-        // Optimistically update, or wait for save to update context
-         if (character) {
-             updateCharacter({ ...character, ...form.getValues(), imageUrl: result.imageUrl });
-         }
-        toast({ title: "Portrait Generated!", description: "New character portrait applied." });
-      }
-    } catch (error) {
-      console.error("Error generating image:", error);
-      toast({ title: "Image Generation Failed", description: (error as Error).message || "Could not generate portrait.", variant: "destructive" });
-    }
-    setIsGeneratingImage(false);
-  };
-
+  // Removed handleGenerateImage function as New Portrait button was removed
 
   const displayCharacter = isEditing ? form.watch() : character; 
   
@@ -284,7 +258,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col flex-1 min-h-0">
             <DialogHeader className="p-4 sm:p-6 border-b flex-shrink-0">
-              <div className="flex items-stretch justify-between gap-x-3 sm:gap-x-4"> {/* Main flex container for header content */}
+               <div className="flex items-stretch justify-between gap-x-3 sm:gap-x-4">
                 {/* Left Group (Image + Main Info) */}
                 <div className="flex items-start gap-x-3 sm:gap-x-4 flex-1 min-w-0">
                     <div className="flex-shrink-0 relative w-24 h-24"> {/* Reduced image size */}
@@ -304,12 +278,9 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                         ) : (
                             <DialogTitle className="text-xl sm:text-2xl text-left truncate">{displayCharacter.name || 'Character Profile'}</DialogTitle>
                         )}
-                        <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                            <span>{isEditing ? form.getValues('race') : displayCharacter.race || 'N/A'}</span>
-                            <span>{isEditing ? form.getValues('class') : displayCharacter.class || 'N/A'}</span>
-                            {(isEditing ? form.getValues('subclass') : displayCharacter.subclass) && <span>({isEditing ? form.getValues('subclass') : displayCharacter.subclass})</span>}
-                            {(isEditing ? form.getValues('background') : displayCharacter.background) && <span className="flex items-center"><span className="mr-1">,</span> {isEditing ? form.getValues('background') : displayCharacter.background}</span>}
-                        </p>
+                        <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                            {displayCharacter.race} {displayCharacter.class} {displayCharacter.subclass && `(${displayCharacter.subclass})`}{displayCharacter.background && `, ${displayCharacter.background}`}
+                        </div>
                          <div className="pt-0.5 text-xs">
                             <div className="flex justify-between text-xs text-muted-foreground mb-0.5 items-center">
                                 <strong className="text-foreground font-bold">XP:</strong> 
@@ -325,33 +296,39 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                 </div>
 
                 {/* Center Group (Combat Stats) */}
-                <div className="flex-1 min-w-0 p-3 border rounded-md bg-muted/30 flex flex-col justify-center items-start space-y-1">
+                <div className="flex-shrink-0 w-44 p-3 border rounded-md bg-muted/30 flex flex-col justify-center space-y-1 items-start min-w-0">
                   {isEditing ? (
                     <>
-                      <FormField control={form.control} name="currentHp" render={({ field }) => (<FormItem><Label className="text-xs">HP</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="Current HP" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
-                      <FormField control={form.control} name="maxHp" render={({ field }) => (<FormItem><Label className="text-xs">Max HP</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="Max HP" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
-                      <FormField control={form.control} name="armorClass" render={({ field }) => (<FormItem><Label className="text-xs">AC</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="AC" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
-                      <FormField control={form.control} name="level" render={({ field }) => (<FormItem><Label className="text-xs">Level</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="Level" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
-                      <FormField control={form.control} name="initiativeModifier" render={({ field }) => (<FormItem><Label className="text-xs">Init. Mod</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="Init Mod" className="h-6 p-1 w-20 text-xs"/></FormItem> )} />
+                      <FormField control={form.control} name="currentHp" render={({ field }) => (<FormItem className="w-full"><Label className="text-xs">HP</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="Current HP" className="h-6 p-1 w-full text-xs"/></FormItem> )} />
+                      <FormField control={form.control} name="maxHp" render={({ field }) => (<FormItem className="w-full"><Label className="text-xs">Max HP</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="Max HP" className="h-6 p-1 w-full text-xs"/></FormItem> )} />
+                      <FormField control={form.control} name="armorClass" render={({ field }) => (<FormItem className="w-full"><Label className="text-xs">AC</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="AC" className="h-6 p-1 w-full text-xs"/></FormItem> )} />
+                      <FormField control={form.control} name="level" render={({ field }) => (<FormItem className="w-full"><Label className="text-xs">Level</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="Level" className="h-6 p-1 w-full text-xs"/></FormItem> )} />
+                      <FormField control={form.control} name="initiativeModifier" render={({ field }) => (<FormItem className="w-full"><Label className="text-xs">Init. Mod</Label><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value,10))} placeholder="Init Mod" className="h-6 p-1 w-full text-xs"/></FormItem> )} />
                     </>
                   ) : (
-                    <>
-                      <StatDisplay icon={Heart} label="HP" value={`${displayCharacter.currentHp ?? '?'}/${displayCharacter.maxHp ?? '?'}`} iconClassName="text-red-500" />
-                      <StatDisplay icon={ShieldIcon} label="AC" value={displayCharacter.armorClass} iconClassName="text-sky-600"/>
-                       <StatDisplay icon={UserCircle} label="Lvl" value={displayCharacter.level || 1} />
-                      <StatDisplay icon={Zap} label="Init" value={displayCharacter.initiativeModifier !== undefined ? (displayCharacter.initiativeModifier >= 0 ? `+${displayCharacter.initiativeModifier}`: displayCharacter.initiativeModifier) : 'N/A'} iconClassName="text-yellow-500" />
+                     <>
+                        <div className="flex justify-between w-full">
+                           <StatDisplay icon={Heart} label="HP" value={`${displayCharacter.currentHp ?? '?'}/${displayCharacter.maxHp ?? '?'}`} iconClassName="text-red-500" />
+                        </div>
+                        <div className="flex justify-between w-full">
+                            <StatDisplay icon={ShieldIcon} label="AC" value={displayCharacter.armorClass} iconClassName="text-sky-600"/>
+                        </div>
+                        <div className="flex justify-between w-full">
+                           <StatDisplay icon={UserCircle} label="Lvl" value={displayCharacter.level || 1} />
+                        </div>
+                        <div className="flex justify-between w-full">
+                           <StatDisplay icon={Zap} label="Init" value={displayCharacter.initiativeModifier !== undefined ? (displayCharacter.initiativeModifier >= 0 ? `+${displayCharacter.initiativeModifier}`: displayCharacter.initiativeModifier) : 'N/A'} iconClassName="text-yellow-500" />
+                        </div>
                     </>
                   )}
                 </div>
 
                 {/* Right Group (Edit/Save/Cancel buttons) */}
-                <div className="flex-shrink-0 self-start">
-                   {/* This space is for edit/save/cancel buttons handled by DialogFooter or inline if preferred */}
-                </div>
+                 {/* Edit button removed from here, moved to footer if needed */}
               </div>
             </DialogHeader>
 
-            <ScrollArea className="flex-grow min-h-0"> {/* Ensures ScrollArea takes up remaining space and scrolls */}
+            <ScrollArea className="flex-grow min-h-0">
               <div className="p-4 sm:p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4 p-4 border rounded-lg shadow-sm bg-background/30">
@@ -417,7 +394,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                 </div>
               </div>
             </ScrollArea>
-            <DialogFooter className="flex-shrink-0 px-4 py-2 sm:px-6 sm:py-3 border-t bg-muted/50 justify-end">
+            <DialogFooter className="px-4 py-2 sm:px-6 sm:py-3 border-t bg-muted/50 flex-shrink-0">
                  {isEditing ? (
                     <>
                       <Button type="button" variant="ghost" onClick={handleCancelEdit} size="sm">
@@ -433,6 +410,7 @@ export function CharacterProfileDialog({ character, isOpen, onClose }: Character
                         onClick={() => setIsEditing(true)}
                         variant="outline"
                         size="sm"
+                        className="ml-auto" // Position Edit button to the right
                       >
                         <Edit3 className="mr-2 h-4 w-4" /> Edit
                       </Button>
