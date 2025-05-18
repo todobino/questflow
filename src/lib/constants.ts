@@ -34,12 +34,12 @@ export const SITE_NAV_ITEMS: NavItem[] = [
 
 export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
-    title: 'Session Log',
+    title: 'Sessions', // Changed from 'Session Log'
     href: '/journal',
     icon: BookMarked,
   },
   {
-    title: 'Party Manager', // Changed from Party Roster
+    title: 'Adventurers', // Changed from 'Party Manager'
     href: '/party',
     icon: UsersRound,
   },
@@ -50,24 +50,30 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     disabled: false, 
   },
   {
-    title: 'Factions & Quests',
+    title: 'Factions', // Changed from 'Factions & Quests'
     href: '/factions-quests',
     icon: Flag,
     disabled: false,
   },
   {
-    title: 'Maps & Boards',
+    title: 'Maps', // Changed from 'Maps & Boards'
     href: '/maps',
     icon: MapIcon,
   },
   {
-    title: 'Random Tables',
+    title: 'Tables', // Changed from 'Random Tables'
     href: '/tables',
     icon: Table,
     disabled: false,
   },
+   {
+    title: 'Questing', // No change requested for this one in this specific prompt, but kept for consistency with prior state
+    href: '/quests',
+    icon: ScrollIconEntry, 
+    disabled: true,
+  },
   {
-    title: 'Lore & World',
+    title: 'Story', // Changed from 'Lore & World'
     href: '/lore',
     icon: BookOpenText,
     disabled: true,
@@ -76,3 +82,4 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
 
 // Filter out the disabled "Characters" link for actual rendering if it's truly removed
 export const getFilteredCampaignNavItems = () => CAMPAIGN_MENU_NAV_ITEMS.filter(item => item.href !== '/characters' || !item.disabled);
+
