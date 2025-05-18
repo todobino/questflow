@@ -25,7 +25,7 @@
     --accent-foreground: 0 0% 98%; /* White */
     --destructive: 0 75% 45%; /* Darker Red */
     --destructive-foreground: 0 0% 98%; /* White */
-    --success: 145 63% 35%; /* Darker Green */
+    --success: 145 75% 35%; /* Darker Green */
     --success-foreground: 0 0% 98%; /* White */
     --alert: 40 90% 48%; /* Darker Orange-Yellow */
     --alert-foreground: 0 0% 10%; /* Dark Gray/Black for text on alert */
@@ -67,7 +67,7 @@
     --accent-foreground: 0 0% 98%; /* White */
     --destructive: 0 65% 40%; /* Darker Red for dark mode */
     --destructive-foreground: 0 0% 98%;
-    --success: 145 63% 35%; /* Darker Adjusted Green */
+    --success: 145 75% 35%; /* Darker Adjusted Green */
     --success-foreground: 0 0% 98%;
     --alert: 40 90% 55%; /* Darker Orange-Yellow for dark mode */
     --alert-foreground: 0 0% 10%;
@@ -97,7 +97,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-normal; /* Added font-normal for weight 400 */
+  }
+  h1, h2, h3 {
+    @apply font-bold; /* Corresponds to font-weight: 700 */
+  }
+  h4, h5, h6 {
+    @apply font-medium; /* Corresponds to font-weight: 500 */
   }
 }
 
