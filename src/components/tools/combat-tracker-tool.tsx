@@ -1,4 +1,4 @@
-
+// src/components/tools/combat-tracker-tool.tsx
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -7,14 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetDescription, 
-  SheetClose, 
-  SheetFooter as SheetFooterImport, // Alias SheetFooter
-} from '@/components/ui/sheet';
+  Dialog, 
+  DialogContent, 
+  DialogFooter as ShadDialogFooter, // Alias to avoid conflict if DialogFooter is used from main Dialog import
+  DialogHeader as ShadDialogHeader, 
+  DialogTitle as ShadDialogTitle, // Alias
+  DialogClose, // Added for the X button
+  DialogTrigger, // Re-added for Add Combatant button
+} from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   UserPlus, 
@@ -25,18 +25,41 @@ import {
   Shield as ShieldIcon, 
   PlusCircle, 
   Swords, 
-  X,
-  PlayCircle,
-  Skull,
-  ShieldPlus,
   ArrowRight,
+  PlayCircle,
   ShieldX,
   Dices,
   UserRound,
   Bot,
   Cat,
+  X, // For DialogClose
+  Info,
+  VenetianMask,
+  Puzzle,
+  TrendingUp,
+  Settings2,
+  Flag,
+  Table,
+  Crosshair,
+  BookOpenText,
+  BookMarked,
+  MapIcon as MapIconLucide, // Aliased to avoid conflict with Map component
+  Briefcase,
+  PanelLeft,
+  Moon, 
+  Sun,
+  ChevronDown,
+  Check,
+  Search as SearchIconLucide,
+  Disc3,
+  RotateCcw,
+  Sparkles,
+  ListChecks,
+  Rows,
+  Columns,
+  Edit3,
 } from 'lucide-react';
-import type { Combatant, Character, EncounterLogEntry } from '@/lib/types';
+import type { Combatant, Character, EncounterLogEntry, Campaign } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaignContext } from '@/contexts/campaign-context';
 import {
@@ -46,15 +69,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Dialog, 
-  DialogClose, 
-  DialogContent, 
-  DialogFooter as ShadDialogFooter, 
-  DialogHeader as ShadDialogHeader, 
-  DialogTitle as ShadDialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -68,22 +82,23 @@ import {
   AlertDialogDescription as ShadAlertDialogDescription, 
   AlertDialogFooter as ShadAlertDialogFooter, 
   AlertDialogHeader as ShadAlertDialogHeader, 
-  AlertDialogTitle as ShadAlertDialogTitleImport, // Alias AlertDialogTitle
+  AlertDialogTitle as ShadAlertDialogTitleImport, 
   AlertDialogTrigger as ShadAlertDialogTriggerImport,
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger, TabsContent as ShadTabsContent } from '@/components/ui/tabs'; 
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle as ShadCardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle as ShadCardTitle, CardFooter } from '@/components/ui/card'; // Aliased CardTitle
 
+// Define distinct background colors for combatant types (tile background)
+const PLAYER_CHARACTER_COLOR = 'bg-white dark:bg-gray-100'; // White for player characters
+const ALLY_COLOR = 'bg-white dark:bg-gray-100'; // White for allies
+const ENEMY_COLOR = 'bg-white dark:bg-gray-100'; // White for enemies
+
+// Define distinct colors for initiative number blocks
 const PLAYER_INITIATIVE_BG = 'bg-success text-success-foreground'; 
 const ALLY_INITIATIVE_BG = 'bg-slate-400 dark:bg-slate-500 text-white dark:text-gray-100'; 
 const ENEMY_INITIATIVE_BG = 'bg-destructive text-destructive-foreground';
-
-const PLAYER_CHARACTER_COLOR = 'bg-white dark:bg-gray-100'; 
-const ALLY_COLOR = 'bg-white dark:bg-gray-100'; 
-const ENEMY_COLOR = 'bg-white dark:bg-gray-100';
-
 
 export function CombatTrackerTool() {
   const { 
@@ -91,14 +106,14 @@ export function CombatTrackerTool() {
     characters: partyCharacters, 
     setIsCombatActive, 
     updateCharacterCurrentHp,
-    isCombatActive: globalIsCombatActive 
+    isCombatActive: globalIsCombatActive // Consuming global combat state
   } = useCampaignContext();
   
   const [combatants, setCombatants] = useState<Combatant[]>([]);
   
   const [isAddCombatantDialogOpen, setIsAddCombatantDialogOpen] = useState(false);
   const [addCombatantDialogTab, setAddCombatantDialogTab] = useState<'enemy' | 'ally'>('enemy');
-
+  
   const [newCombatantName, setNewCombatantName] = useState('');
   const [newCombatantHp, setNewCombatantHp] = useState('');
   const [newCombatantMaxHp, setNewCombatantMaxHp] = useState('');
@@ -130,11 +145,11 @@ export function CombatTrackerTool() {
 
 
   const sortedCombatants = useMemo(() => {
-    if (combatants.length === 0) return [];
+    if (!combatStarted || combatants.length === 0) return combatants; // Return unsorted if combat not started
     const listToSort = [...combatants];
     listToSort.sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
     return listToSort;
-  }, [combatants]);
+  }, [combatants, combatStarted]);
   
 
   const currentTurnCombatantId = combatStarted && sortedCombatants.length > 0 ? sortedCombatants[turnIndex]?.id : null;
@@ -180,7 +195,6 @@ export function CombatTrackerTool() {
       return;
     }
 
-
     const acValue = newCombatantAC.trim() !== '' ? parseInt(newCombatantAC, 10) : undefined;
      if (newCombatantAC.trim() !== '' && (acValue === undefined || isNaN(acValue) || acValue < 0)) {
       toast({ title: 'Invalid Armor Class', description: 'Armor Class (Optional) must be a non-negative number or empty.', variant: 'destructive' });
@@ -208,11 +222,10 @@ export function CombatTrackerTool() {
       let typeForCombatant: 'enemy' | 'player'; 
       let isPlayerCharacterFlag = false;
 
-
       if (addCombatantDialogTab === 'ally') {
         displayColor = ALLY_COLOR;
         typeForCombatant = 'player'; 
-        isPlayerCharacterFlag = false;
+        isPlayerCharacterFlag = false; 
       } else { // 'enemy'
         displayColor = ENEMY_COLOR;
         typeForCombatant = 'enemy';
@@ -235,7 +248,7 @@ export function CombatTrackerTool() {
       newCombatantsBatch.push(newCombatant);
     }
 
-    setCombatants(prev => [...prev, ...newCombatantsBatch].sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity)));
+    setCombatants(prev => [...prev, ...newCombatantsBatch]);
     setIsAddCombatantDialogOpen(false);
     // Reset form fields
     setNewCombatantName('');
@@ -247,9 +260,9 @@ export function CombatTrackerTool() {
     setNewCombatantInitiativeRollType('individual');
   };
   
- const handleAddPartyToCombatAndStart = () => {
+  const handleRollAndStartCombat = () => {
     if (!activeCampaign || !partyCharacters || partyCharacters.length === 0) {
-       toast({ title: "No Party Members", description: "No party members in active campaign to add.", variant: "destructive" });
+      toast({ title: "No Party Members", description: "No party members in active campaign to add.", variant: "destructive" });
       return;
     }
 
@@ -278,8 +291,8 @@ export function CombatTrackerTool() {
         if (existingCombatantIndex !== -1) {
           updatedCombatantsList[existingCombatantIndex] = {
             ...updatedCombatantsList[existingCombatantIndex],
-            ...combatantData, // Spread new data, keeping existing ID and conditions
-            initiative: newInitiative, // Always re-roll initiative
+            ...combatantData, 
+            initiative: newInitiative, 
           };
         } else {
           newPartyMembersToAdd.push({
@@ -293,49 +306,15 @@ export function CombatTrackerTool() {
     updatedCombatantsList = [...updatedCombatantsList, ...newPartyMembersToAdd];
     
     if (updatedCombatantsList.length > 0) {
-        const sortedList = updatedCombatantsList.sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
-        setCombatants(sortedList);
-
-        setRound(1);
-        setTurnIndex(0);
-        setCombatStartedState(true);
-        setRoundChangeMessage("Round 1");
+      const sortedList = updatedCombatantsList.sort((a, b) => (b.initiative ?? -Infinity) - (a.initiative ?? -Infinity));
+      setCombatants(sortedList);
+      setRound(1);
+      setTurnIndex(0);
+      setCombatStartedState(true);
+      setRoundChangeMessage("Round 1");
     } else {
       toast({ title: "No Party Members", description: "No party members in active campaign to start combat.", variant: "destructive" });
     }
-  };
-
-
-  const confirmDeleteCombatant = () => {
-    if (combatantToDeleteId) {
-      setCombatants(prev => prev.filter(c => c.id !== combatantToDeleteId));
-    }
-    setIsDeleteConfirmOpen(false);
-    setCombatantToDeleteId(null);
-    setOpenPopoverId(null); 
-  };
-
-  const handleApplyHitOrHeal = (combatantId: string, type: 'hit' | 'heal') => {
-    const amount = parseInt(hitHealAmount, 10);
-    if (isNaN(amount) || amount <= 0) {
-       toast({ title: 'Invalid Amount', description: 'Please enter a positive number.', variant: 'destructive' });
-      return;
-    }
-
-    setCombatants(prev => prev.map(c => {
-      if (c.id === combatantId) {
-        let newHp;
-        if (type === 'hit') {
-          newHp = Math.max(0, c.hp - amount);
-        } else {
-          newHp = Math.min(c.maxHp ?? Infinity, c.hp + amount);
-        }
-        return { ...c, hp: newHp };
-      }
-      return c;
-    }));
-    setOpenPopoverId(null);
-    setHitHealAmount('');
   };
 
   const nextTurn = () => {
@@ -346,11 +325,12 @@ export function CombatTrackerTool() {
       newTurnIndex = 0;
       newRound += 1;
       setRoundChangeMessage(`Round ${newRound}`);
+    } else {
+      setRoundChangeMessage(null); // Clear if not a new round
     }
     setTurnIndex(newTurnIndex);
     setRound(newRound);
   };
-  
 
   const endCombat = () => {
     if (activeCampaign && combatStarted) { 
@@ -381,18 +361,37 @@ export function CombatTrackerTool() {
     setCombatants([]); 
   };
 
-  useEffect(() => {
-    if (isAddCombatantDialogOpen) {
-      setNewCombatantName('');
-      setNewCombatantHp('');
-      setNewCombatantMaxHp('');
-      setNewCombatantAC('');
-      setNewCombatantInitiativeModifier('');
-      setNewCombatantQuantity('1');
-      setNewCombatantInitiativeRollType('individual');
+  const handleApplyHitOrHeal = (combatantId: string, type: 'hit' | 'heal') => {
+    const amount = parseInt(hitHealAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+       toast({ title: 'Invalid Amount', description: 'Please enter a positive number.', variant: 'destructive' });
+      return;
     }
-  }, [isAddCombatantDialogOpen, addCombatantDialogTab]);
 
+    setCombatants(prev => prev.map(c => {
+      if (c.id === combatantId) {
+        let newHp;
+        if (type === 'hit') {
+          newHp = Math.max(0, c.hp - amount);
+        } else {
+          newHp = Math.min(c.maxHp ?? Infinity, c.hp + amount);
+        }
+        return { ...c, hp: newHp };
+      }
+      return c;
+    }));
+    setOpenPopoverId(null);
+    setHitHealAmount('');
+  };
+
+  const confirmDeleteCombatant = () => {
+    if (combatantToDeleteId) {
+      setCombatants(prev => prev.filter(c => c.id !== combatantToDeleteId));
+    }
+    setIsDeleteConfirmOpen(false);
+    setCombatantToDeleteId(null);
+    setOpenPopoverId(null); 
+  };
 
   useEffect(() => {
     if (roundChangeMessage) {
@@ -400,7 +399,6 @@ export function CombatTrackerTool() {
       return () => clearTimeout(timer);
     }
   }, [roundChangeMessage]);
-
 
   return (
     <>
@@ -414,10 +412,10 @@ export function CombatTrackerTool() {
       
       <div className={cn(
         "flex flex-col h-full bg-card text-card-foreground rounded-lg shadow-lg",
-        globalIsCombatActive ? 'border-2 border-primary' : 'border border-border'
+        combatStarted ? 'border-2 border-primary' : 'border border-border'
         )}
       >
-        {/* Header for "Combat Order" */}
+        {/* Header for Combat Order */}
         <div className="px-3 py-2 flex flex-row items-center justify-between border-b border-border">
           <h3 className="flex items-center text-lg font-semibold">
             <Swords className="mr-2 h-5 w-5 text-primary" />
@@ -435,7 +433,7 @@ export function CombatTrackerTool() {
         </div>
 
         {/* Content for combatant list */}
-        <div className="p-3 flex-grow overflow-y-auto">
+        <div className="p-3 flex-grow overflow-y-auto min-h-0"> {/* Added min-h-0 here */}
           {sortedCombatants.length === 0 ? (
             <p className="text-center text-xs text-muted-foreground py-4">Add combatants to begin.</p>
           ) : (
@@ -451,7 +449,7 @@ export function CombatTrackerTool() {
                 const isCurrentTurn = c.id === currentTurnCombatantId;
                 
                 let initiativeBgColorClass: string;
-                let turnBorderClass = 'ring-primary dark:ring-foreground';
+                let turnBorderClass = 'ring-primary dark:ring-foreground'; // Default current turn border
 
                 if (c.isPlayerCharacter && c.type === 'player') {
                     initiativeBgColorClass = PLAYER_INITIATIVE_BG;
@@ -463,7 +461,7 @@ export function CombatTrackerTool() {
                     initiativeBgColorClass = ALLY_INITIATIVE_BG;
                     if(isCurrentTurn) turnBorderClass = 'ring-gray-500 dark:ring-gray-400';
                 } else { 
-                    initiativeBgColorClass = 'bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-800';
+                    initiativeBgColorClass = 'bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-800'; // Fallback
                 }
 
                 return (
@@ -473,15 +471,19 @@ export function CombatTrackerTool() {
                     <PopoverTrigger asChild>
                       <li
                         className={cn(
-                          'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-lg transition-all duration-300 cursor-pointer',
+                          'relative flex items-center gap-3 p-2.5 rounded-lg border shadow-md transition-all duration-300 cursor-pointer',
+                          c.displayColor, // Main tile background based on type
                           isCurrentTurn ? `ring-2 ${turnBorderClass} scale-[1.02]` : 'opacity-90 hover:opacity-100',
-                          c.hp <= 0 ? 'opacity-50 grayscale' : '',
-                          c.displayColor 
+                          c.hp <= 0 ? 'opacity-50 grayscale' : ''
                         )}
                         onClick={() => { setOpenPopoverId(c.id); setHitHealAmount(''); }}
                       >
                         <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                             <AlertDialog>
+                            <div className="flex items-center bg-background/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm text-xs">
+                                <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" /> 
+                                <span className="font-semibold text-foreground">{c.armorClass ?? 'N/A'}</span>
+                            </div>
+                            <AlertDialog>
                                 <ShadAlertDialogTriggerImport asChild onClick={(e) => e.stopPropagation()}>
                                     <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive-foreground hover:bg-destructive h-7 w-7 p-0">
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -493,8 +495,8 @@ export function CombatTrackerTool() {
                                         <ShadAlertDialogDescription>This action cannot be undone.</ShadAlertDialogDescription>
                                     </ShadAlertDialogHeader>
                                     <ShadAlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => { setCombatantToDeleteId(c.id); confirmDeleteCombatant();}}>Delete</AlertDialogAction>
+                                        <AlertDialogCancel onClick={(e) => { e.stopPropagation(); setIsDeleteConfirmOpen(false); setCombatantToDeleteId(null); }}>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={(e) => { e.stopPropagation(); setCombatantToDeleteId(c.id); confirmDeleteCombatant();}}>Delete</AlertDialogAction>
                                     </ShadAlertDialogFooter>
                                 </ShadAlertDialogContent>
                             </AlertDialog>
@@ -502,7 +504,7 @@ export function CombatTrackerTool() {
 
                           <div className={cn(
                             "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md text-xl font-bold",
-                              initiativeBgColorClass
+                              initiativeBgColorClass // Initiative block background
                           )}
                           >
                            {c.hp <= 0 ? <Skull className="h-6 w-6" /> : c.initiative ?? '-'}
@@ -523,14 +525,12 @@ export function CombatTrackerTool() {
                               )}
                                <div className="flex justify-between items-center text-xs mt-1">
                                 <div className="flex items-center text-muted-foreground dark:text-gray-400">
-                                  <ShieldIcon className="mr-1 h-3.5 w-3.5 text-sky-600" /> {c.armorClass ?? 'N/A'}
+                                  {/* AC is now in top right */}
                                 </div>
                                 <div className="flex items-center text-muted-foreground dark:text-gray-400">
                                     <Heart className="mr-1 h-3.5 w-3.5 text-red-500" /> {c.hp} / {c.maxHp}
                                 </div>
                                </div>
-
-
                               {c.maxHp > 0 && ( 
                                   <div className="w-full mt-1.5">
                                       <Progress
@@ -544,7 +544,6 @@ export function CombatTrackerTool() {
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" side="bottom" align="end" onClick={(e) => e.stopPropagation()}>
                         <div className="space-y-3">
-                        {/* Delete button removed from popover as it's now directly on the tile */}
                         <div className="space-y-1">
                           <Label htmlFor={`hit-heal-${c.id}`} className="text-xs">Amount</Label>
                           <Input
@@ -581,41 +580,33 @@ export function CombatTrackerTool() {
               })}
             </ul>
           )}
-        </div> {/* End of combatant list content div */}
-
-        {/* "Add Combatant" button section */}
-        <div className="p-2 border-t border-border"> 
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full hover:bg-accent hover:text-accent-foreground"
-            onClick={() => {
-                setNewCombatantName('');
-                setNewCombatantHp('');
-                setNewCombatantMaxHp('');
-                setNewCombatantAC('');
-                setNewCombatantInitiativeModifier('');
-                setNewCombatantQuantity('1');
-                setNewCombatantInitiativeRollType('individual');
-                setAddCombatantDialogTab('enemy'); 
-                setIsAddCombatantDialogOpen(true);
-            }}
-          >
-            <UserPlus className="mr-2 h-4 w-4" /> Add Combatant
-          </Button>
         </div>
 
-        {/* "Roll & Start" / "End Combat" buttons section */}
-        {(combatants.length > 0 || combatStarted) && (
-          <div className="p-2 border-t border-border flex items-center gap-2 w-full">
+        {/* Add Combatant button section */}
+        <div className="p-2 border-t border-border">
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full hover:bg-background hover:border-primary hover:text-primary"
+                onClick={() => {
+                    setAddCombatantDialogTab('enemy'); 
+                    setIsAddCombatantDialogOpen(true);
+                }}
+            >
+                Add Combatant
+            </Button>
+        </div>
+
+        {/* Footer with controls */}
+        <div className="p-2 border-t border-border flex items-center gap-2 w-full">
             {!combatStarted ? (
-              <Button onClick={handleAddPartyToCombatAndStart} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
-                <PlayCircle className="mr-2 h-4 w-4" /> Roll &amp; Start
-              </Button>
+                <Button onClick={handleRollAndStartCombat} className="flex-1 bg-success text-success-foreground hover:bg-success/90" size="sm">
+                    <PlayCircle className="mr-2 h-4 w-4" /> Roll & Start
+                </Button>
             ) : (
-              <Button onClick={nextTurn} className="flex-1" size="sm">
-                <ArrowRight className="mr-2 h-4 w-4" /> Next Turn
-              </Button>
+                <Button onClick={nextTurn} className="flex-1" size="sm">
+                    <ArrowRight className="mr-2 h-4 w-4" /> Next Turn
+                </Button>
             )}
             <Button
                 onClick={endCombat}
@@ -626,11 +617,10 @@ export function CombatTrackerTool() {
             >
                 <ShieldX className="mr-2 h-4 w-4" /> End Combat
             </Button>
-          </div>
-        )}
-      </div> {/* End of outermost div */}
+        </div>
+      </div>
 
-      {/* Dialogs and Sheets */}
+      {/* Dialog for Add Combatant */}
       <Dialog open={isAddCombatantDialogOpen} onOpenChange={(isOpen) => {
           setIsAddCombatantDialogOpen(isOpen);
           if (!isOpen) {
@@ -707,9 +697,9 @@ export function CombatTrackerTool() {
               <ShadDialogFooter className="pt-4">
                 <Button variant="outline" onClick={() => setIsAddCombatantDialogOpen(false)}>Cancel</Button>
                 <Button onClick={handleAddAllyOrEnemyFromDialog}>
-                  Add {parseInt(newCombatantQuantity, 10) > 1 && addCombatantDialogTab === 'enemy' 
-                    ? 'Enemies' 
-                    : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}
+                   Add {parseInt(newCombatantQuantity, 10) > 1 && addCombatantDialogTab === 'enemy' 
+                       ? 'Enemies' 
+                       : addCombatantDialogTab.charAt(0).toUpperCase() + addCombatantDialogTab.slice(1)}
                 </Button>
               </ShadDialogFooter>
             </ShadTabsContent>
@@ -839,15 +829,13 @@ export function CombatTrackerTool() {
               </div>
             </ScrollArea>
           </div>
-          <SheetFooterImport className="p-4 border-t"> 
+          <SheetFooter className="p-4 border-t"> 
             <SheetClose asChild>
               <Button variant="outline">Close</Button>
             </SheetClose>
-          </SheetFooterImport>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </>
   );
 }
-
-    
