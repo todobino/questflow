@@ -15,6 +15,7 @@ interface CampaignContextType {
   characters: Character[];
   addCharacter: (characterData: Omit<Character, 'id' | 'campaignId'>) => void;
   updateCharacter: (character: Character) => void;
+  updateCharacterCurrentHp: (characterId: string, newCurrentHp: number) => void; // New function
   deleteCharacter: (characterId: string) => void;
   selectedCharacterForProfile: Character | null;
   isProfileOpen: boolean;
@@ -36,8 +37,8 @@ interface CampaignContextType {
   isCharacterFormOpen: boolean;
   openCharacterForm: (characterToEdit?: Character) => void;
   closeCharacterForm: () => void;
-  isCombatActive: boolean; // New state for combat status
-  setIsCombatActive: (isActive: boolean) => void; // New setter for combat status
+  isCombatActive: boolean;
+  setIsCombatActive: (isActive: boolean) => void;
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -170,34 +171,9 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const [isSwitchCampaignDialogVisible, setIsSwitchCampaignDialogVisible] = useState(false);
   const [targetCampaignIdToSwitch, setTargetCampaignIdToSwitch] = useState<string | null>(null);
 
-  const [isCombatActiveInContext, setIsCombatActiveInContext] = useState(false); // Renamed to avoid conflict
+  const [isCombatActive, setIsCombatActive] = useState(false);
 
   useEffect(() => {
-    let effectiveCampaigns: Campaign[] = [];
-    try {
-      const storedCampaigns = localStorage.getItem('campaigns');
-      if (storedCampaigns) {
-        const parsed = JSON.parse(storedCampaigns);
-        if (Array.isArray(parsed)) {
-          effectiveCampaigns = parsed;
-        }
-      }
-    } catch (e) {
-      console.error("Failed to parse campaigns from localStorage, using mock data.", e);
-    }
-    if (effectiveCampaigns.length === 0) { // If still empty (no local, or parsing failed, or local was empty array)
-      effectiveCampaigns = initialMockCampaigns.map((c, idx) => ({ ...c, isActive: idx === 0 }));
-    }
-    setCampaignsState(effectiveCampaigns);
-    
-    let active = effectiveCampaigns.find(c => c.isActive);
-    if (!active && effectiveCampaigns.length > 0) {
-        active = { ...effectiveCampaigns[0], isActive: true };
-        // Ensure campaignsState reflects this new active status before next effect
-        setCampaignsState(prev => prev.map(c => (c.id === active!.id ? active! : { ...c, isActive: false })));
-    }
-    setActiveCampaignState(active || null);
-
     const loadItem = <T,>(key: string, fallback: T[]): T[] => {
       try {
         const stored = localStorage.getItem(key);
@@ -206,10 +182,21 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
           if (Array.isArray(parsed)) return parsed;
         }
       } catch (e) {
-        console.error(`Failed to parse ${key} from localStorage, using mock data.`, e);
+        console.warn(`Failed to parse ${key} from localStorage, using mock data.`, e);
       }
+      localStorage.setItem(key, JSON.stringify(fallback)); // Save fallback if nothing was loaded
       return fallback;
     };
+
+    const loadedCampaigns = loadItem('campaigns', initialMockCampaigns);
+    setCampaignsState(loadedCampaigns);
+    
+    let active = loadedCampaigns.find(c => c.isActive);
+    if (!active && loadedCampaigns.length > 0) {
+        active = { ...loadedCampaigns[0], isActive: true };
+        setCampaignsState(prev => prev.map(c => (c.id === active!.id ? active! : { ...c, isActive: false })));
+    }
+    setActiveCampaignState(active || null);
     
     setCharactersState(loadItem('characters', initialMockCharacters));
     setFactionsState(loadItem('factions', initialMockFactions));
@@ -337,20 +324,18 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   }, [activeCampaign]);
 
   const deleteCampaign = useCallback((campaignId: string) => {
-    setCampaignsState(prev => prev.filter(c => c.id !== campaignId));
+    const updatedCampaigns = campaigns.filter(c => c.id !== campaignId);
+    setCampaignsState(updatedCampaigns);
     setCharactersState(prevChars => prevChars.filter(char => char.campaignId !== campaignId));
     setFactionsState(prevFactions => prevFactions.filter(f => f.campaignId !== campaignId));
     setFactionReputationsState(prevReps => prevReps.filter(r => r.campaignId !== campaignId));
     setSessionLogsState(prevLogs => prevLogs.filter(log => log.campaignId !== campaignId));
 
     if (activeCampaign?.id === campaignId) {
-      const remainingCampaigns = campaigns.filter(c => c.id !== campaignId);
       let newActive: Campaign | null = null;
-      if (remainingCampaigns.length > 0) {
-        newActive = { ...remainingCampaigns[0], isActive: true };
+      if (updatedCampaigns.length > 0) {
+        newActive = { ...updatedCampaigns[0], isActive: true };
         setCampaignsState(prev => prev.map(c => c.id === newActive!.id ? newActive! : { ...c, isActive: false }));
-      } else {
-        setCampaignsState([]); 
       }
       setActiveCampaignState(newActive);
     }
@@ -387,6 +372,15 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [selectedCharacterForProfile, editingCharacterForForm]);
 
+  const updateCharacterCurrentHp = useCallback((characterId: string, newCurrentHp: number) => {
+    setCharactersState(prev =>
+      prev.map(c =>
+        c.id === characterId ? { ...c, currentHp: Math.max(0, Math.min(c.maxHp ?? newCurrentHp, newCurrentHp)) } : c
+      )
+    );
+  }, []);
+
+
   const deleteCharacter = useCallback((characterId: string) => {
     setCharactersState(prev => prev.filter(c => c.id !== characterId));
   }, []);
@@ -404,7 +398,7 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   const openCharacterForm = useCallback((characterToEdit?: Character) => {
     setEditingCharacterForForm(characterToEdit || null);
     setIsCharacterFormOpen(true);
-    closeProfileDialog(); // Close profile if it's open when edit starts
+    closeProfileDialog(); 
   }, [closeProfileDialog]);
 
   const closeCharacterForm = useCallback(() => {
@@ -484,14 +478,13 @@ export const CampaignProvider = ({ children }: { children: ReactNode }) => {
   return (
     <CampaignContext.Provider value={{
       campaigns, activeCampaign, setCampaignActive, addCampaign, updateCampaign, deleteCampaign, isLoading,
-      characters, addCharacter, updateCharacter, deleteCharacter,
+      characters, addCharacter, updateCharacter, updateCharacterCurrentHp, deleteCharacter,
       selectedCharacterForProfile, isProfileOpen, openProfileDialog, closeProfileDialog,
       factions, factionReputations,
       sessionLogs, currentSession, startNewSession, endCurrentSession, pauseCurrentSession, resumeSession,
       requestSwitchCampaign, confirmSwitchCampaign, cancelSwitchCampaign, isSwitchCampaignDialogVisible,
       editingCharacterForForm, isCharacterFormOpen, openCharacterForm, closeCharacterForm,
-      isCombatActive: isCombatActiveInContext, // Pass the renamed state
-      setIsCombatActive: setIsCombatActiveInContext // Pass the renamed setter
+      isCombatActive, setIsCombatActive
     }}>
       {children}
     </CampaignContext.Provider>
