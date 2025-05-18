@@ -34,12 +34,18 @@ export const SITE_NAV_ITEMS: NavItem[] = [
 
 export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
   {
-    title: 'Sessions', // Changed from 'Session Log'
+    title: 'Story', // Was 'Lore & World'
+    href: '/lore',
+    icon: BookOpenText,
+    disabled: true,
+  },
+  {
+    title: 'Sessions', // Was 'Session Log'
     href: '/journal',
     icon: BookMarked,
   },
   {
-    title: 'Adventurers', // Changed from 'Party Manager'
+    title: 'Adventurers', // Was 'Party Manager'
     href: '/party',
     icon: UsersRound,
   },
@@ -50,33 +56,27 @@ export const CAMPAIGN_MENU_NAV_ITEMS: NavItem[] = [
     disabled: false, 
   },
   {
-    title: 'Factions', // Changed from 'Factions & Quests'
-    href: '/factions-quests',
-    icon: Flag,
-    disabled: false,
-  },
-  {
-    title: 'Maps', // Changed from 'Maps & Boards'
-    href: '/maps',
-    icon: MapIcon,
-  },
-  {
-    title: 'Tables', // Changed from 'Random Tables'
-    href: '/tables',
-    icon: Table,
-    disabled: false,
-  },
-   {
-    title: 'Questing', // No change requested for this one in this specific prompt, but kept for consistency with prior state
+    title: 'Questing', // Moved up
     href: '/quests',
     icon: ScrollIconEntry, 
     disabled: true,
   },
   {
-    title: 'Story', // Changed from 'Lore & World'
-    href: '/lore',
-    icon: BookOpenText,
-    disabled: true,
+    title: 'Factions', // Was 'Factions & Quests'
+    href: '/factions-quests',
+    icon: Flag,
+    disabled: false,
+  },
+  {
+    title: 'Maps', // Was 'Maps & Boards'
+    href: '/maps',
+    icon: MapIcon,
+  },
+  {
+    title: 'Tables', // Was 'Random Tables'
+    href: '/tables',
+    icon: Table,
+    disabled: false,
   },
 ];
 
