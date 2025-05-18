@@ -47,8 +47,8 @@ export default function FactionsQuestsPage() {
   return (
     <>
       <PageHeader
-        title="Factions & Quests"
-        description={activeCampaign ? `Manage faction reputations and track quests for "${activeCampaign.name}".` : "Please select an active campaign."}
+        title="Factions & Reputation"
+        description={activeCampaign ? `Manage faction reputations for "${activeCampaign.name}".` : "Please select an active campaign."}
       />
 
       <Accordion type="single" collapsible className="w-full mb-6 shadow-lg rounded-lg border">
@@ -92,7 +92,7 @@ export default function FactionsQuestsPage() {
          <Card className="text-center py-12">
           <CardHeader>
             <CardTitle>No Active Campaign</CardTitle>
-            <CardDescription>Please select or create an active campaign to view its factions and quests.</CardDescription>
+            <CardDescription>Please select or create an active campaign to view its factions and reputations.</CardDescription>
           </CardHeader>
         </Card>
       ) : (
@@ -132,16 +132,6 @@ export default function FactionsQuestsPage() {
               })
             )}
           </div>
-
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle>Quest Log</CardTitle>
-              <CardDescription>Quest tracking is coming soon!</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>This section will allow you to create, manage, and track quests linked to factions and locations.</p>
-            </CardContent>
-          </Card>
         </>
       )}
     </>
