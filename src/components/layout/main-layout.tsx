@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
 import { ReferenceTool } from '@/components/tools/reference-tool'; 
-import { Dices, Swords, Info, UserRound, Dice2 } from 'lucide-react'; 
+import { Dice2, Swords, Info, UserRound } from 'lucide-react'; 
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
 import { CampaignSwitcher } from '@/components/shared/campaign-switcher';
@@ -21,7 +21,7 @@ import type { Character } from '@/lib/types';
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
 import { Dialog } from '@/components/ui/dialog'; 
-import { PartySheet } from '@/components/party/party-sheet';
+// Removed PartySheet import as it's no longer directly used here
 
 
 interface MainLayoutProps {
@@ -47,6 +47,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     closeCharacterForm,
     addCharacter,
     updateCharacter,
+    isCombatActive, // Consumed from context
   } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
   const [isRandomizingCharacterInDialog, setIsRandomizingCharacterInDialog] = useState(false);
@@ -94,7 +95,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       nextLevelExp: 1000,
       abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     };
-    openCharacterForm(randomizedData as Character); // Pass partial or full character for form prefill
+    openCharacterForm(randomizedData as Character); 
     setIsRandomizingCharacterInDialog(false);
   };
 
@@ -131,7 +132,13 @@ function MainLayoutContent({ children }: MainLayoutProps) {
               <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
                 <Dice2 className="h-4 w-4 mr-1 md:mr-2" />Dice 
               </TabsTrigger>
-              <TabsTrigger value="combat" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
+              <TabsTrigger 
+                value="combat" 
+                className={cn(
+                  "text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground",
+                  isCombatActive && 'text-alert data-[state=active]:text-alert data-[state=inactive]:hover:text-alert'
+                )}
+              >
                 <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
               </TabsTrigger>
               <TabsTrigger value="info" className="text-xs px-1 py-1.5 h-auto font-bold data-[state=inactive]:hover:bg-muted data-[state=inactive]:hover:text-foreground">
@@ -157,7 +164,6 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 character={selectedCharacterForProfile}
                 isOpen={isProfileOpen}
                 onClose={closeProfileDialog}
-                // onEditCharacter is no longer passed as editing is internal
             />
         </Dialog>
       )}
@@ -198,5 +204,3 @@ export function MainLayout({ children }: MainLayoutProps) {
     </CampaignProvider>
   )
 }
-
-    
