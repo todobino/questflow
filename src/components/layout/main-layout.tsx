@@ -2,15 +2,16 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SidebarNav } from './sidebar-nav';
 import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PartySheet } from '@/components/party/party-sheet';
 import { DiceRollerTool } from '@/components/tools/dice-roller-tool';
 import { CombatTrackerTool } from '@/components/tools/combat-tracker-tool';
-import { ReferenceTool } from '@/components/tools/reference-tool'; 
-import { Dice2, Swords, Info, UserRound } from 'lucide-react'; 
+import { ReferenceTool } from '@/components/tools/reference-tool';
+import { Dice2, Swords, Info, UserRound, UserPlus, Edit3, PlusCircle, Shuffle, Save, VenetianMask, Puzzle, TrendingUp, Activity, ListChecks, Target, FileText, XCircle, Heart, Shield as ShieldIcon, Award, Dices, Brain, Loader2 } from 'lucide-react';
 import { useCampaignContext, CampaignProvider } from '@/contexts/campaign-context';
 import { CharacterProfileDialog } from '@/components/party/character-profile-dialog';
 import { CampaignSwitcher } from '@/components/shared/campaign-switcher';
@@ -20,7 +21,7 @@ import { CharacterForm } from '@/components/character-creator/character-form';
 import type { Character } from '@/lib/types';
 import { RACES, CLASSES, SUBCLASSES, BACKGROUNDS } from '@/lib/dnd-data';
 import { DND_NAMES } from '@/lib/dnd-names';
-import { Dialog } from '@/components/ui/dialog'; 
+import { Dialog } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -32,11 +33,10 @@ interface MainLayoutProps {
 function MainLayoutContent({ children }: MainLayoutProps) {
   const {
     activeCampaign,
-    campaigns,
-    setCampaignActive,
     selectedCharacterForProfile,
     isProfileOpen,
     closeProfileDialog,
+    openCharacterForm,
     isSwitchCampaignDialogVisible,
     pauseCurrentSession,
     endCurrentSession,
@@ -44,8 +44,9 @@ function MainLayoutContent({ children }: MainLayoutProps) {
     cancelSwitchCampaign,
     editingCharacterForForm,
     isCharacterFormOpen,
-    openCharacterForm,
     closeCharacterForm,
+    addCharacter,
+    updateCharacter,
     isCombatActive,
   } = useCampaignContext();
   const [mounted, setMounted] = useState(false);
@@ -59,7 +60,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
   const handleSaveCharacterInDialog = (characterData: Omit<Character, 'id' | 'campaignId'> & { id?: string }) => {
     if (editingCharacterForForm?.id && activeCampaign) {
       updateCharacter({ ...characterData, id: editingCharacterForForm.id, campaignId: activeCampaign.id });
-    } else if (activeCampaign) { // Ensure activeCampaign exists for new characters
+    } else if (activeCampaign) {
       addCharacter(characterData);
     }
     closeCharacterForm();
@@ -95,10 +96,15 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       nextLevelExp: 1000,
       abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     };
-    openCharacterForm(randomizedData as Character); 
+    
+    // Directly pass the randomized data to the form update logic
+    if (editingCharacterForForm) { // If editing, merge with existing ID
+      openCharacterForm({ ...editingCharacterForForm, ...randomizedData } as Character);
+    } else { // If new, pass as partial
+      openCharacterForm(randomizedData as Character);
+    }
     setIsRandomizingCharacterInDialog(false);
   };
-
 
   if (!mounted) {
     return null; 
@@ -121,7 +127,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
              <div className="flex items-center gap-3">
                 {mounted && <SessionTools />}
                 {mounted && isCombatActive && (
-                  <Badge variant="alert" className="font-semibold px-2 py-1 text-xs">
+                  <Badge variant="alert" className="font-semibold px-2 py-1 text-xs rounded-md text-primary-foreground">
                     <Swords className="mr-1.5 h-3.5 w-3.5" />
                     IN COMBAT
                   </Badge>
@@ -137,7 +143,10 @@ function MainLayoutContent({ children }: MainLayoutProps) {
         <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground px-4 pt-2 pb-4 hidden md:flex flex-col overflow-hidden">
           <Tabs defaultValue="dice" className="w-full flex-1 flex flex-col min-h-0">
             <TabsList className="grid w-full grid-cols-3 shrink-0 border border-neutral-500 dark:border-background">
-              <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold">
+              <TabsTrigger 
+                value="dice" 
+                className="text-xs px-1 py-1.5 h-auto font-bold"
+              >
                 <Dice2 className="h-4 w-4 mr-1 md:mr-2" />Dice 
               </TabsTrigger>
               <TabsTrigger 
