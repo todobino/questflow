@@ -34,7 +34,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
   const {
     activeCampaign,
     campaigns,
-    setCampaignActive,
+    requestSwitchCampaign,
     selectedCharacterForProfile,
     isProfileOpen,
     closeProfileDialog,
@@ -99,10 +99,11 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     };
     
+    // If editing an existing character, merge randomized data with it, otherwise open form with purely randomized data
     if (editingCharacterForForm) { 
-      openCharacterForm({ ...editingCharacterForForm, ...randomizedData } as Character);
-    } else { 
-      openCharacterForm(randomizedData as Character);
+        openCharacterForm({ ...editingCharacterForForm, ...randomizedData });
+    } else {
+        openCharacterForm(randomizedData as Character);
     }
     setIsRandomizingCharacterInDialog(false);
   };
@@ -117,18 +118,21 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
         {mounted && <SidebarNav />}
 
+        {/* Central Column: Session Header + Main Scrollable Content */}
         <div className="w-[calc(100vw-var(--sidebar-width)-25vw)] md:w-[calc(100vw-var(--sidebar-width)-25vw)] flex-shrink-0 flex flex-col overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width-icon)-25vw)]">
+          {/* Mobile Header (already sticky) */}
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 py-2 backdrop-blur-sm md:hidden">
             <SidebarTrigger />
             {mounted && activeCampaign && <h1 className="text-lg font-semibold">{activeCampaign.name}</h1>}
           </header>
           
+          {/* Desktop Session Header */}
           <header className="sticky top-0 z-10 hidden h-14 shrink-0 items-center justify-between border-b bg-background/95 px-6 py-2 backdrop-blur-sm md:flex">
              {mounted && <CampaignSwitcher />}
              <div className="flex items-center gap-3">
                 {mounted && <SessionTools />}
                 {mounted && isCombatActive && (
-                  <Badge variant="alert" className="font-medium px-2 py-1 text-xs rounded-md text-primary-foreground">
+                  <Badge variant="alert" className="font-medium px-2 py-1 text-xs rounded-md text-primary-foreground border border-alert">
                     <Swords className="mr-1.5 h-3.5 w-3.5" />
                     In Combat
                   </Badge>
@@ -136,25 +140,23 @@ function MainLayoutContent({ children }: MainLayoutProps) {
               </div>
           </header>
 
+          {/* Main Scrollable Content Area */}
           <main className="flex-1 p-4 md:p-6 overflow-y-auto">
             {children}
           </main>
         </div>
 
+        {/* Right Sidebar (fixed relative to main scroll, internal content scrolls) */}
         <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground px-4 pt-2 pb-4 hidden md:flex flex-col overflow-hidden">
           <Tabs defaultValue="dice" className="w-full flex-1 flex flex-col min-h-0">
             <TabsList className="grid w-full grid-cols-3 shrink-0 border border-neutral-500 dark:border-background">
-               <TabsTrigger 
-                value="dice" 
-                className="text-xs px-1 py-1.5 h-auto font-bold"
-              >
+              <TabsTrigger value="dice" className="text-xs px-1 py-1.5 h-auto font-bold">
                 <Dice2 className="h-4 w-4 mr-1 md:mr-2" />Dice 
               </TabsTrigger>
               <TabsTrigger 
                 value="combat" 
                 className={cn(
                   "text-xs px-1 py-1.5 h-auto font-bold",
-                  isCombatActive && 'text-alert data-[state=active]:text-alert data-[state=inactive]:hover:text-alert'
                 )}
               >
                 <Swords className="h-4 w-4 mr-1 md:mr-2" />Combat
@@ -163,7 +165,8 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 <Info className="h-4 w-4 mr-1 md:mr-2" />Info
               </TabsTrigger>
             </TabsList>
-             <TabsContent forceMount value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
+            
+            <TabsContent forceMount value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               <DiceRollerTool />
             </TabsContent>
             <TabsContent
@@ -178,6 +181,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
             </TabsContent>
           </Tabs>
         </aside>
+
       </div>
       <Toaster />
       {mounted && selectedCharacterForProfile && (
@@ -227,7 +231,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, []);
 
   if (!mounted) {
-    return null; 
+    return null; // Or a loading skeleton for the whole page
   }
   
   return (
@@ -236,4 +240,3 @@ export function MainLayout({ children }: MainLayoutProps) {
     </CampaignProvider>
   )
 }
-
