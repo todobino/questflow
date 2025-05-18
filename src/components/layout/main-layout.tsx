@@ -107,6 +107,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
   };
 
   if (!mounted) {
+    // Return null or a skeleton loader if you prefer, to avoid rendering anything before client-side mount
     return null; 
   }
 
@@ -129,7 +130,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 {mounted && isCombatActive && (
                   <Badge variant="alert" className="font-semibold px-2 py-1 text-xs rounded-md text-primary-foreground">
                     <Swords className="mr-1.5 h-3.5 w-3.5" />
-                    IN COMBAT
+                    In Combat
                   </Badge>
                 )}
               </div>
@@ -143,7 +144,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
         <aside className="w-[25vw] flex-shrink-0 border-l border-border bg-card text-card-foreground px-4 pt-2 pb-4 hidden md:flex flex-col overflow-hidden">
           <Tabs defaultValue="dice" className="w-full flex-1 flex flex-col min-h-0">
             <TabsList className="grid w-full grid-cols-3 shrink-0 border border-neutral-500 dark:border-background">
-              <TabsTrigger 
+               <TabsTrigger 
                 value="dice" 
                 className="text-xs px-1 py-1.5 h-auto font-bold"
               >
@@ -159,17 +160,17 @@ function MainLayoutContent({ children }: MainLayoutProps) {
                 <Info className="h-4 w-4 mr-1 md:mr-2" />Info
               </TabsTrigger>
             </TabsList>
-            <TabsContent forceMount value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0 pt-3">
+            <TabsContent forceMount value="dice" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               <DiceRollerTool />
             </TabsContent>
             <TabsContent
               forceMount
               value="combat"
-              className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0 pt-3"
+              className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0"
             >
               <CombatTrackerTool />
             </TabsContent>
-            <TabsContent forceMount value="info" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0 pt-3">
+            <TabsContent forceMount value="info" className="flex-1 overflow-y-auto focus-visible:ring-0 focus-visible:ring-offset-0">
               <ReferenceTool />
             </TabsContent>
           </Tabs>
@@ -232,3 +233,4 @@ export function MainLayout({ children }: MainLayoutProps) {
     </CampaignProvider>
   )
 }
+
